@@ -64,6 +64,27 @@ cp "${SCRIPT_DIR}/install.sh" "${PACKAGE_DIR}/deploy/"
 cp "${SCRIPT_DIR}/deploy.py" "${PACKAGE_DIR}/deploy/"
 cp "${SCRIPT_DIR}/README.md" "${PACKAGE_DIR}/deploy/"
 cp "${SCRIPT_DIR}/projects.txt.example" "${PACKAGE_DIR}/deploy/"
+
+# Copy ESSENTIAL Claude Code whitelist documentation
+if [ -f "${SCRIPT_DIR}/CLAUDE_CODE_WHITELIST.md" ]; then
+    cp "${SCRIPT_DIR}/CLAUDE_CODE_WHITELIST.md" "${PACKAGE_DIR}/deploy/"
+    echo "  Added ESSENTIAL Claude Code whitelist documentation"
+fi
+
+# Copy internal team documentation
+if [ -f "${SCRIPT_DIR}/QUICKSTART_INTERNAL.md" ]; then
+    cp "${SCRIPT_DIR}/QUICKSTART_INTERNAL.md" "${PACKAGE_DIR}/deploy/"
+    echo "  Added internal quickstart guide"
+fi
+if [ -f "${SCRIPT_DIR}/INTEGRATION_NOTE_INTERNAL.md" ]; then
+    cp "${SCRIPT_DIR}/INTEGRATION_NOTE_INTERNAL.md" "${PACKAGE_DIR}/deploy/"
+    echo "  Added internal integration note"
+fi
+if [ -f "${SCRIPT_DIR}/TEAM_LEADS_BRIEF.md" ]; then
+    cp "${SCRIPT_DIR}/TEAM_LEADS_BRIEF.md" "${PACKAGE_DIR}/deploy/"
+    echo "  Added team leads brief"
+fi
+
 chmod +x "${PACKAGE_DIR}/deploy/install.sh"
 chmod +x "${PACKAGE_DIR}/deploy/deploy.py"
 

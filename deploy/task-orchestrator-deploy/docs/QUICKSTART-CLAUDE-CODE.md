@@ -128,24 +128,6 @@ export TM_AGENT_ID="api_specialist"
 
 ## 🔧 Configuration for Claude Code
 
-### ⚠️ ESSENTIAL: Claude Code Whitelist Setup
-
-**BEFORE using Task Orchestrator with Claude Code, you MUST configure command whitelisting to avoid confirmation prompts on every command:**
-
-```json
-{
-  "whitelisted_commands": [
-    "./tm *"
-  ]
-}
-```
-
-**📋 Complete whitelist configuration:** See [CLAUDE_CODE_WHITELIST.md](../../deploy/CLAUDE_CODE_WHITELIST.md) for:
-- Multiple security levels (permissive to restrictive)
-- Environment-specific configurations
-- Testing instructions
-- Troubleshooting guide
-
 ### Environment Variables (Optional)
 
 ```bash

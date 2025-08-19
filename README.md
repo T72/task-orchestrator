@@ -291,19 +291,21 @@ Task Orchestrator comes with comprehensive documentation for both users and deve
 
 ### 📚 Complete Documentation Suite
 
-- **[USER_GUIDE.md](USER_GUIDE.md)** - Complete user manual with tutorials, best practices, and advanced features
-- **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)** - Architecture overview, contributing guidelines, and extension development
-- **[API_REFERENCE.md](API_REFERENCE.md)** - Complete API documentation for all classes, methods, and CLI commands
-- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Common issues, solutions, and debugging techniques
+- **[USER_GUIDE.md](docs/guides/USER_GUIDE.md)** - Complete user manual with tutorials, best practices, and advanced features
+- **[DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md)** - Architecture overview, contributing guidelines, and extension development
+- **[API_REFERENCE.md](docs/reference/API_REFERENCE.md)** - Complete API documentation for all classes, methods, and CLI commands
+- **[TROUBLESHOOTING.md](docs/guides/TROUBLESHOOTING.md)** - Common issues, solutions, and debugging techniques
+- **[CLAUDE_CODE_WHITELIST.md](deploy/CLAUDE_CODE_WHITELIST.md)** - **ESSENTIAL:** Claude Code command whitelist configuration (required for seamless operation)
 
 ### 🎯 Quick Access
 
 | Document | Purpose | Audience |
 |----------|---------|----------|
-| [USER_GUIDE.md](USER_GUIDE.md) | Learn to use Task Orchestrator effectively | End users, team leads |
-| [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) | Contribute to and extend the codebase | Developers, contributors |
-| [API_REFERENCE.md](API_REFERENCE.md) | Complete technical reference | Developers, integrators |
-| [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Solve problems and optimize performance | All users |
+| [USER_GUIDE.md](docs/guides/USER_GUIDE.md) | Learn to use Task Orchestrator effectively | End users, team leads |
+| [DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md) | Contribute to and extend the codebase | Developers, contributors |
+| [API_REFERENCE.md](docs/reference/API_REFERENCE.md) | Complete technical reference | Developers, integrators |
+| [TROUBLESHOOTING.md](docs/guides/TROUBLESHOOTING.md) | Solve problems and optimize performance | All users |
+| [CLAUDE_CODE_WHITELIST.md](deploy/CLAUDE_CODE_WHITELIST.md) | **REQUIRED:** Claude Code integration setup | **All Claude Code users** |
 
 ## Examples
 

@@ -1,0 +1,45 @@
+# Task Orchestrator - Project Deployment List
+# 
+# Add your project paths here, one per line
+# Lines starting with # are ignored
+# Blank lines are ignored
+#
+# Example usage:
+#   python3 deploy.py --batch projects.txt
+#
+
+# Frontend Projects
+/home/dev/projects/react-dashboard
+/home/dev/projects/vue-admin-panel
+/home/dev/projects/angular-webapp
+
+# Backend Services
+/home/dev/projects/api-gateway
+/home/dev/projects/auth-service
+/home/dev/projects/data-service
+/home/dev/projects/notification-service
+
+# Mobile Applications
+/home/dev/projects/ios-app
+/home/dev/projects/android-app
+/home/dev/projects/react-native-app
+
+# Infrastructure & DevOps
+/home/dev/projects/terraform-configs
+/home/dev/projects/ansible-playbooks
+/home/dev/projects/kubernetes-manifests
+
+# Data & Analytics
+/home/dev/projects/data-pipeline
+/home/dev/projects/ml-models
+/home/dev/projects/analytics-dashboard
+
+# Internal Tools
+/home/dev/projects/admin-tools
+/home/dev/projects/developer-portal
+/home/dev/projects/monitoring-suite
+
+# Experimental/POC Projects
+/home/dev/experiments/new-framework-test
+/home/dev/experiments/performance-optimization
+/home/dev/experiments/security-audit-tool
