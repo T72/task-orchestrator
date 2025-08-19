@@ -288,20 +288,20 @@ Task Orchestrator comes with comprehensive documentation for both users and deve
 
 ### 📚 Complete Documentation Suite
 
-- **[USER_GUIDE.md](docs/guides/USER_GUIDE.md)** - Complete user manual with tutorials, best practices, and advanced features
-- **[DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md)** - Architecture overview, contributing guidelines, and extension development
-- **[API_REFERENCE.md](docs/reference/API_REFERENCE.md)** - Complete API documentation for all classes, methods, and CLI commands
-- **[TROUBLESHOOTING.md](docs/guides/TROUBLESHOOTING.md)** - Common issues, solutions, and debugging techniques
+- **[user-guide.md](docs/guides/user-guide.md)** - Complete user manual with tutorials, best practices, and advanced features
+- **[developer-guide.md](docs/guides/developer-guide.md)** - Architecture overview, contributing guidelines, and extension development
+- **[api-reference.md](docs/reference/api-reference.md)** - Complete API documentation for all classes, methods, and CLI commands
+- **[troubleshooting.md](docs/guides/troubleshooting.md)** - Common issues, solutions, and debugging techniques
 - **[CLAUDE_CODE_WHITELIST.md](deploy/CLAUDE_CODE_WHITELIST.md)** - **ESSENTIAL:** Claude Code command whitelist configuration (required for seamless operation)
 
 ### 🎯 Quick Access
 
 | Document | Purpose | Audience |
 |----------|---------|----------|
-| [USER_GUIDE.md](docs/guides/USER_GUIDE.md) | Learn to use Task Orchestrator effectively | End users, team leads |
-| [DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md) | Contribute to and extend the codebase | Developers, contributors |
-| [API_REFERENCE.md](docs/reference/API_REFERENCE.md) | Complete technical reference | Developers, integrators |
-| [TROUBLESHOOTING.md](docs/guides/TROUBLESHOOTING.md) | Solve problems and optimize performance | All users |
+| [user-guide.md](docs/guides/user-guide.md) | Learn to use Task Orchestrator effectively | End users, team leads |
+| [developer-guide.md](docs/guides/developer-guide.md) | Contribute to and extend the codebase | Developers, contributors |
+| [api-reference.md](docs/reference/api-reference.md) | Complete technical reference | Developers, integrators |
+| [troubleshooting.md](docs/guides/troubleshooting.md) | Solve problems and optimize performance | All users |
 | [CLAUDE_CODE_WHITELIST.md](deploy/CLAUDE_CODE_WHITELIST.md) | **REQUIRED:** Claude Code integration setup | **All Claude Code users** |
 
 ## Examples
@@ -435,9 +435,9 @@ Get help and support through multiple channels:
 
 ### 📖 Documentation Resources
 
-- **[USER_GUIDE.md](USER_GUIDE.md)** - Complete usage guide with tutorials and best practices
-- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Common issues, solutions, and debugging help
-- **[API_REFERENCE.md](API_REFERENCE.md)** - Complete technical reference
+- **[user-guide.md](user-guide.md)** - Complete usage guide with tutorials and best practices
+- **[troubleshooting.md](troubleshooting.md)** - Common issues, solutions, and debugging help
+- **[api-reference.md](api-reference.md)** - Complete technical reference
 - **[docs/examples/](docs/examples/)** - Working code examples for common scenarios
 
 ### 🤝 Community Support
@@ -449,10 +449,10 @@ Get help and support through multiple channels:
 
 ### 🚀 Quick Help
 
-- **Getting started**: See [USER_GUIDE.md](USER_GUIDE.md#quick-start-5-minutes) for 5-minute setup
-- **Common problems**: Check [TROUBLESHOOTING.md](TROUBLESHOOTING.md#frequently-asked-questions-faq)
+- **Getting started**: See [user-guide.md](user-guide.md#quick-start-5-minutes) for 5-minute setup
+- **Common problems**: Check [troubleshooting.md](troubleshooting.md#frequently-asked-questions-faq)
 - **Integration help**: Review [claude_integration.py](docs/examples/claude_integration.py) for Claude Code setup
-- **Performance issues**: See [TROUBLESHOOTING.md](TROUBLESHOOTING.md#performance-issues) for optimization
+- **Performance issues**: See [troubleshooting.md](troubleshooting.md#performance-issues) for optimization
 
 ---
 
