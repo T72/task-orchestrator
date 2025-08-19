@@ -249,7 +249,7 @@ export TM_LOCK_TIMEOUT=30
 ## 📚 Next Steps
 
 - Read the [User Guide](user-guide.md) for complete documentation
-- Check [Examples](../examples/) for real-world usage patterns
+- Check [Examples](examples/) for real-world usage patterns
 - See [Troubleshooting](troubleshooting.md) for common issues
 - Review [API Reference](reference/api-reference.md) for all commands
 
@@ -259,4 +259,4 @@ Start using Task Orchestrator with Claude Code to manage complex projects effici
 
 ---
 
-**Need help?** Check our [documentation](../../README.md) or file an issue on [GitHub](https://github.com/T72/task-orchestrator/issues).
+**Need help?** Check our [documentation](../README.md) or file an issue on [GitHub](https://github.com/T72/task-orchestrator/issues).
