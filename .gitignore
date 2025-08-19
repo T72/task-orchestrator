@@ -9,6 +9,10 @@
 .task-orchestrator/
 .task-manager/  # Legacy directory name, also contains private data
 
+# CLAUDE.md is for local development only - contains personal workflow preferences
+CLAUDE.md
+/CLAUDE.md
+
 # ====================
 # Archive & Development Files
 # ====================
