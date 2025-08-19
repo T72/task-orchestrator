@@ -9,6 +9,13 @@
 .task-manager/
 
 # ====================
+# Private Development Files
+# ====================
+# Claude Code private development files - not for public release
+.claude/
+CLAUDE.md
+
+# ====================
 # Python Runtime
 # ====================
 __pycache__/
