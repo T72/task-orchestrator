@@ -137,6 +137,52 @@ fi
 
 ---
 
+## Git Branching Strategy (Added 2025-08-19)
+
+### IMPORTANT: Development Workflow
+This project follows a Git Flow branching strategy:
+
+1. **`develop` branch** - PRIMARY DEVELOPMENT BRANCH
+   - All active development happens here
+   - Feature branches are created from and merged back to `develop`
+   - This is the default branch for all work
+
+2. **`master` branch** - PRODUCTION RELEASE BRANCH
+   - Only contains production-ready code
+   - Merges from `develop` only when releasing
+   - Tagged with version numbers (e.g., v2.0.0)
+
+### Workflow Commands
+```bash
+# Daily development (ALWAYS use develop)
+git checkout develop
+git pull origin develop
+
+# Creating a feature
+git checkout -b feature/my-feature develop
+# ... work on feature ...
+git checkout develop
+git merge feature/my-feature
+
+# Releasing to production
+git checkout master
+git merge develop
+git tag -a v2.0.1 -m "Release v2.0.1"
+git push origin master --tags
+git checkout develop  # Return to develop immediately
+
+# NEVER work directly on master!
+```
+
+### Key Rules
+- ✅ ALWAYS work on `develop` branch by default
+- ✅ Create feature branches from `develop`
+- ✅ Only merge to `master` for releases
+- ❌ NEVER commit directly to `master`
+- ❌ NO `main` branch exists (we use `master` for releases)
+
+---
+
 ## Project Overview
 
 Task Orchestrator is a sophisticated task management system designed for Claude Code, enabling enhanced capabilities for successful task orchestration through specialized sub-agents. It provides shared context, private notes, notifications with lightweight hooks, and delivers durable, dependency-aware, and event-driven coordination across agents.
@@ -225,5 +271,5 @@ When creating new tests:
 
 ---
 
-*Last Updated: 2024*
-*Version: 1.0.0*
+*Last Updated: August 19, 2025*
+*Version: 2.0.0*
