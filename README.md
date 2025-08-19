@@ -53,9 +53,6 @@ chmod +x tm
 ./tm --version
 ```
 
-### Alternative: Download Release
-Download the latest release from [GitHub Releases](https://github.com/your-org/task-orchestrator/releases) and follow the same steps.
-
 ## Quick Start
 
 ```bash

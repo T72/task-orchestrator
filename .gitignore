@@ -20,6 +20,17 @@ development-docs/
 analysis-reports/
 legacy-implementations/
 
+# Internal documentation and reports
+*_VERIFICATION.md
+*_REPORT.md
+*_SUMMARY.md
+*_STATUS.md
+*_IMPROVEMENTS.md
+*_ANALYSIS.md
+PRODUCTION_READY.md
+REQUIREMENTS_TRACEABILITY.md
+test_debug_log.txt
+
 # ====================
 # Specifications & Requirements Docs
 # ====================
@@ -239,6 +250,10 @@ temp/
 *.temp
 cache/
 .cache/
+
+# Duplicate Python modules in root (already in src/)
+/tm_*.py
+VERSION
 
 # ====================
 # Documentation Builds

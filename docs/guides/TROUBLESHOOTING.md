@@ -938,14 +938,6 @@ For questions and usage help:
 - Feature discussions
 - Best practices
 
-### Professional Support
-
-For enterprise users:
-- Priority bug fixes
-- Custom feature development
-- Integration consulting
-- Training and best practices
-
 ### Reporting Bugs
 
 **Bug Report Template**:
