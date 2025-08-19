@@ -4,7 +4,7 @@
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-org/task-orchestrator.git
+git clone https://github.com/T72/task-orchestrator.git
 cd task-orchestrator
 
 # 2. Make executable and initialize
@@ -245,4 +245,4 @@ Start using Task Orchestrator with Claude Code to manage complex projects effici
 
 ---
 
-**Need help?** Check our [documentation](../../README.md) or file an issue on [GitHub](https://github.com/your-org/task-orchestrator/issues).
+**Need help?** Check our [documentation](../../README.md) or file an issue on [GitHub](https://github.com/T72/task-orchestrator/issues).

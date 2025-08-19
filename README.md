@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Tests](https://img.shields.io/badge/tests-passing-green.svg)](#testing)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/your-org/task-orchestrator/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/T72/task-orchestrator/releases)
 
 A powerful, lightweight task management and dependency orchestration system designed for developers, AI agents, and project teams working in parallel across complex workflows.
 
@@ -40,7 +40,7 @@ A powerful, lightweight task management and dependency orchestration system desi
 ### Quick Install
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/task-orchestrator.git
+git clone https://github.com/T72/task-orchestrator.git
 cd task-orchestrator
 
 # Make the script executable (Linux/macOS)
@@ -442,10 +442,10 @@ Get help and support through multiple channels:
 
 ### 🤝 Community Support
 
-- 📋 **Issues**: [Report bugs or request features](https://github.com/your-org/task-orchestrator/issues)
-- 💬 **Discussions**: [Join the community discussion](https://github.com/your-org/task-orchestrator/discussions)
-- 🔖 **Releases**: [View changelog and releases](https://github.com/your-org/task-orchestrator/releases)
-- 📚 **Wiki**: [Community-contributed guides and tips](https://github.com/your-org/task-orchestrator/wiki)
+- 📋 **Issues**: [Report bugs or request features](https://github.com/T72/task-orchestrator/issues)
+- 💬 **Discussions**: [Join the community discussion](https://github.com/T72/task-orchestrator/discussions)
+- 🔖 **Releases**: [View changelog and releases](https://github.com/T72/task-orchestrator/releases)
+- 📚 **Wiki**: [Community-contributed guides and tips](https://github.com/T72/task-orchestrator/wiki)
 
 ### 🚀 Quick Help
 

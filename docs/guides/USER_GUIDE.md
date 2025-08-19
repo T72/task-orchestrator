@@ -20,7 +20,7 @@ Get up and running with Task Orchestrator in under 5 minutes:
 
 ```bash
 # 1. Clone and setup (30 seconds)
-git clone https://github.com/your-org/task-orchestrator.git
+git clone https://github.com/T72/task-orchestrator.git
 cd task-orchestrator
 chmod +x tm
 ./tm init
@@ -59,7 +59,7 @@ You now have a working task orchestration system! Continue reading for advanced 
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/task-orchestrator.git
+git clone https://github.com/T72/task-orchestrator.git
 cd task-orchestrator
 
 # Make executable (Linux/macOS)
@@ -73,7 +73,7 @@ python tm init
 
 ```bash
 # Download latest release
-curl -L https://github.com/your-org/task-orchestrator/releases/latest/download/tm -o tm
+curl -L https://github.com/T72/task-orchestrator/releases/latest/download/tm -o tm
 chmod +x tm
 ```
 

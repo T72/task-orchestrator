@@ -312,7 +312,7 @@ tm context <task_id>
 ### Quick Installation
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/task-orchestrator.git
+git clone https://github.com/T72/task-orchestrator.git
 cd task-orchestrator
 
 # Make executable
@@ -444,7 +444,7 @@ This release represents a complete transformation to production-ready quality th
 
 ## 📞 Support
 
-- **Issues**: https://github.com/your-org/task-orchestrator/issues
+- **Issues**: https://github.com/T72/task-orchestrator/issues
 - **Documentation**: See docs/ directory
 - **Examples**: See docs/examples/ directory
 

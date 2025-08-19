@@ -241,7 +241,7 @@ python3 -m pip install mypy    # For type checking
 
 ```bash
 # 1. Clone and setup
-git clone https://github.com/your-org/task-orchestrator.git
+git clone https://github.com/T72/task-orchestrator.git
 cd task-orchestrator
 
 # 2. Create development environment

@@ -234,7 +234,7 @@ export TM_LOCK_TIMEOUT=30
 
 ```bash
 # 1. Clone or download task-orchestrator
-git clone https://github.com/your-org/task-orchestrator.git
+git clone https://github.com/T72/task-orchestrator.git
 
 # 2. Navigate to deploy directory
 cd task-orchestrator/deploy

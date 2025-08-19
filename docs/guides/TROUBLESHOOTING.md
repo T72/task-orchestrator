@@ -967,7 +967,7 @@ For questions and usage help:
 - [User Guide](USER_GUIDE.md) - Complete usage documentation
 - [Developer Guide](DEVELOPER_GUIDE.md) - Contributing and extending
 - [API Reference](API_REFERENCE.md) - Complete API documentation
-- [GitHub Repository](https://github.com/your-org/task-orchestrator) - Latest code and issues
+- [GitHub Repository](https://github.com/T72/task-orchestrator) - Latest code and issues
 
 ---
 
