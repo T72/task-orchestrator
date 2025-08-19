@@ -1,0 +1,77 @@
+# Task Orchestrator Public Repository .gitignore
+# This is the clean public version - excludes private development files
+
+# ====================
+# Runtime Data
+# ====================
+# User task data - created locally by users
+.task-orchestrator/
+.task-manager/
+
+# ====================
+# Python Runtime
+# ====================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+
+# ====================
+# Environment Files
+# ====================
+.env
+.env.*
+*.env
+
+# ====================
+# Database Files
+# ====================
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+
+# ====================
+# Logs and Debug
+# ====================
+*.log
+debug/
+logs/
+
+# ====================
+# IDE and OS Files
+# ====================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ====================
+# Temporary Files
+# ====================
+*.tmp
+*.temp
+tmp/
+temp/
+*.bak
+*.backup
+
+# ====================
+# Test Coverage
+# ====================
+.coverage
+htmlcov/
+.pytest_cache/
+
+# ====================
+# Build Artifacts
+# ====================
+build/
+dist/
+*.egg-info/
