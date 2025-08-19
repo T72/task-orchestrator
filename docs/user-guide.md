@@ -755,6 +755,6 @@ tail -f .task-orchestrator/debug.log
 - **Examples**: Browse the `docs/examples/` directory
 
 For more advanced topics, see:
-- [Developer Guide](DEVELOPER_GUIDE.md) - Contributing and extending
-- [API Reference](API_REFERENCE.md) - Complete API documentation
-- [Troubleshooting Guide](TROUBLESHOOTING.md) - Detailed problem resolution
+- [Developer Guide](developer-guide.md) - Contributing and extending
+- [API Reference](reference/api-reference.md) - Complete API documentation
+- [Troubleshooting Guide](troubleshooting.md) - Detailed problem resolution

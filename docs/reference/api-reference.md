@@ -1121,4 +1121,4 @@ class TaskOrchestratorPlugin:
         return suggestions
 ```
 
-This comprehensive API reference provides complete documentation for all public interfaces in Task Orchestrator. For additional examples and integration patterns, see the [User Guide](USER_GUIDE.md) and [Developer Guide](DEVELOPER_GUIDE.md).
+This comprehensive API reference provides complete documentation for all public interfaces in Task Orchestrator. For additional examples and integration patterns, see the [User Guide](../user-guide.md) and [Developer Guide](../developer-guide.md).

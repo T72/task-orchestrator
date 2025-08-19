@@ -140,11 +140,7 @@ export TM_AGENT_ID="api_specialist"
 }
 ```
 
-**📋 Complete whitelist configuration:** See [CLAUDE_CODE_WHITELIST.md](../../deploy/CLAUDE_CODE_WHITELIST.md) for:
-- Multiple security levels (permissive to restrictive)
-- Environment-specific configurations
-- Testing instructions
-- Troubleshooting guide
+**📋 Command Whitelisting:** Configure Claude Code to allow `./tm *` commands without confirmation prompts by adding to your Claude Code configuration.
 
 ### Environment Variables (Optional)
 
@@ -252,10 +248,10 @@ export TM_LOCK_TIMEOUT=30
 
 ## 📚 Next Steps
 
-- Read the [User Guide](USER_GUIDE.md) for complete documentation
+- Read the [User Guide](user-guide.md) for complete documentation
 - Check [Examples](../examples/) for real-world usage patterns
-- See [Troubleshooting](TROUBLESHOOTING.md) for common issues
-- Review [API Reference](../reference/API_REFERENCE.md) for all commands
+- See [Troubleshooting](troubleshooting.md) for common issues
+- Review [API Reference](reference/api-reference.md) for all commands
 
 ## 🎉 You're Ready!
 
