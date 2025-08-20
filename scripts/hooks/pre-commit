@@ -1,0 +1,29 @@
+#!/bin/bash
+# Pre-commit hook to auto-generate database schema documentation
+# Install: cp scripts/hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+# Check if tm_production.py was modified
+if git diff --cached --name-only | grep -q "src/tm_production.py"; then
+    echo "📝 Database schema changed, regenerating documentation..."
+    
+    # Generate new documentation
+    python3 scripts/extract-schema.py > docs/reference/database-schema-auto.md
+    
+    if [ $? -eq 0 ]; then
+        # Add the updated documentation to the commit
+        git add docs/reference/database-schema-auto.md
+        echo "✅ Database schema documentation updated and added to commit"
+        
+        # Show a summary of what was documented
+        echo "📊 Documentation generated for:"
+        grep "^- \[" docs/reference/database-schema-auto.md | head -10
+    else
+        echo "❌ Failed to generate schema documentation"
+        echo "   Please run: python3 scripts/extract-schema.py"
+        echo "   Fix any errors and try again"
+        exit 1
+    fi
+fi
+
+# Continue with the commit
+exit 0

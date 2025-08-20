@@ -87,45 +87,50 @@ class TaskManager:
                     
                     conn.execute("""
                         CREATE TABLE IF NOT EXISTS tasks (
-                            id TEXT PRIMARY KEY,
-                            title TEXT NOT NULL,
-                            description TEXT,
-                            status TEXT DEFAULT 'pending',
-                            priority TEXT DEFAULT 'medium',
-                            assignee TEXT,
-                            created_at TEXT NOT NULL,
-                            updated_at TEXT NOT NULL,
-                            completed_at TEXT
+                            id TEXT PRIMARY KEY,           -- @doc: 8-character unique identifier, auto-generated
+                            title TEXT NOT NULL,            -- @doc: Task title/description (required, max 500 chars recommended)
+                            description TEXT,               -- @doc: Extended task details (optional)
+                            status TEXT DEFAULT 'pending',  -- @doc: Task status - Values: pending|in_progress|completed|blocked|cancelled
+                            priority TEXT DEFAULT 'medium', -- @doc: Task priority - Values: low|medium|high|critical
+                            assignee TEXT,                  -- @doc: Agent ID or username assigned to task (optional)
+                            created_at TEXT NOT NULL,       -- @doc: ISO 8601 timestamp when task was created
+                            updated_at TEXT NOT NULL,       -- @doc: ISO 8601 timestamp of last modification
+                            completed_at TEXT               -- @doc: ISO 8601 timestamp when task was completed (NULL if not completed)
                         )
+                        -- @table-doc: Core task storage table. Tracks all tasks with status, priority, and assignment.
                     """)
                     
                     conn.execute("""
                         CREATE TABLE IF NOT EXISTS dependencies (
-                            task_id TEXT NOT NULL,
-                            depends_on TEXT NOT NULL,
+                            task_id TEXT NOT NULL,     -- @doc: Task that has the dependency (must exist in tasks table)
+                            depends_on TEXT NOT NULL,   -- @doc: Task that must complete first (must exist in tasks table)
                             PRIMARY KEY (task_id, depends_on)
                         )
+                        -- @table-doc: Defines task dependencies for workflow management. Tasks block until dependencies complete.
+                        -- @constraint: No circular dependencies allowed (enforced in application logic)
                     """)
                     
                     conn.execute("""
                         CREATE TABLE IF NOT EXISTS notifications (
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            agent_id TEXT,
-                            task_id TEXT,
-                            type TEXT NOT NULL,
-                            message TEXT NOT NULL,
-                            created_at TEXT NOT NULL,
-                            read BOOLEAN DEFAULT 0
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,  -- @doc: Unique notification ID, auto-incremented
+                            agent_id TEXT,              -- @doc: Target agent for notification (NULL for broadcast to all)
+                            task_id TEXT,               -- @doc: Related task ID (references tasks.id)
+                            type TEXT NOT NULL,         -- @doc: Notification type - Values: task_completed|task_unblocked|task_assigned|discovery|critical
+                            message TEXT NOT NULL,      -- @doc: Human-readable notification message
+                            created_at TEXT NOT NULL,   -- @doc: ISO 8601 timestamp when notification was created
+                            read BOOLEAN DEFAULT 0      -- @doc: Read status - 0=unread, 1=read
                         )
+                        -- @table-doc: Stores notifications for agents about task state changes and important events.
                     """)
                     
                     conn.execute("""
                         CREATE TABLE IF NOT EXISTS participants (
-                            task_id TEXT NOT NULL,
-                            agent_id TEXT NOT NULL,
-                            joined_at TEXT NOT NULL,
+                            task_id TEXT NOT NULL,     -- @doc: Task ID that agent is participating in (references tasks.id)
+                            agent_id TEXT NOT NULL,     -- @doc: Agent identifier (from TM_AGENT_ID env var or auto-generated)
+                            joined_at TEXT NOT NULL,    -- @doc: ISO 8601 timestamp when agent joined the task
                             PRIMARY KEY (task_id, agent_id)
                         )
+                        -- @table-doc: Tracks which agents are actively participating in each task for coordination.
                     """)
                     
                     conn.commit()
