@@ -144,7 +144,7 @@ def main():
             try:
                 task_id = tm.add(title, description=description, priority=priority, 
                                depends_on=depends_on if depends_on else None)
-                print(f"Task created with ID: {task_id}")
+                print(task_id)  # Output only ID for script compatibility
             except ValueError as e:
                 print(f"Error: {e}")
                 sys.exit(1)

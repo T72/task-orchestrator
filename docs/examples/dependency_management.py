@@ -25,8 +25,7 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 try:
-    from tm import TaskManager, ValidationError, CircularDependencyError
-except ImportError as e:
+    from src.tm_production import TaskManagerexcept ImportError as e:
     print(f"Error importing TaskManager: {e}")
     print("Make sure you're running this from the task-orchestrator directory")
     sys.exit(1)

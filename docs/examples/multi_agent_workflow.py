@@ -28,7 +28,7 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 try:
-    from tm import TaskManager, ValidationError
+    from src.tm_production import TaskManager, ValidationError
     from tm_orchestrator import Orchestrator
 except ImportError as e:
     print(f"Error importing modules: {e}")

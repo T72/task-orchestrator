@@ -19,7 +19,7 @@ sys.path.insert(0, str(project_root))
 
 # Import TaskManager from the main module
 try:
-    from tm import TaskManager, ValidationError, CircularDependencyError
+    from src.tm_production import TaskManager
 except ImportError as e:
     print(f"Error importing TaskManager: {e}")
     print("Make sure you're running this from the task-orchestrator directory")
@@ -75,17 +75,17 @@ def demonstrate_basic_operations():
     # Create simple tasks
     print("\n1. Creating Simple Tasks:")
     
-    task1_id = tm.add_task("Set up development environment")
+    task1_id = tm.add("Set up development environment")
     print(f"   Created task: {task1_id}")
     
-    task2_id = tm.add_task(
+    task2_id = tm.add(
         "Write user authentication module",
         description="Implement secure login and session management",
         priority="high"
     )
     print(f"   Created task: {task2_id}")
     
-    task3_id = tm.add_task(
+    task3_id = tm.add(
         "Create unit tests",
         priority="medium"
     )
@@ -124,25 +124,25 @@ def demonstrate_dependencies():
     print("1. Creating Tasks with Dependencies:")
     
     # Create a foundation task
-    foundation_id = tm.add_task("Design system architecture", priority="critical")
+    foundation_id = tm.add("Design system architecture", priority="critical")
     print(f"   Foundation task: {foundation_id}")
     
     # Create dependent tasks
-    api_id = tm.add_task(
+    api_id = tm.add(
         "Implement REST API",
         depends_on=[foundation_id],
         priority="high"
     )
     print(f"   API task (depends on foundation): {api_id}")
     
-    ui_id = tm.add_task(
+    ui_id = tm.add(
         "Build user interface",
         depends_on=[api_id],
         priority="medium"
     )
     print(f"   UI task (depends on API): {ui_id}")
     
-    tests_id = tm.add_task(
+    tests_id = tm.add(
         "Write integration tests",
         depends_on=[api_id, ui_id],
         priority="medium"
@@ -180,21 +180,21 @@ def demonstrate_circular_dependency_prevention():
     print("1. Creating tasks that would create circular dependency:")
     
     # Create first task
-    task_a_id = tm.add_task("Task A")
+    task_a_id = tm.add("Task A")
     print(f"   Created Task A: {task_a_id}")
     
     # Create second task depending on first
-    task_b_id = tm.add_task("Task B", depends_on=[task_a_id])
+    task_b_id = tm.add("Task B", depends_on=[task_a_id])
     print(f"   Created Task B (depends on A): {task_b_id}")
     
     # Try to make Task A depend on Task B (would create cycle)
     print(f"   Attempting to make Task A depend on Task B...")
     try:
-        task_c_id = tm.add_task("Task C", depends_on=[task_b_id])
+        task_c_id = tm.add("Task C", depends_on=[task_b_id])
         print(f"   Created Task C: {task_c_id}")
         
         # This should fail due to circular dependency
-        circular_task = tm.add_task("Circular task", depends_on=[task_a_id, task_c_id])
+        circular_task = tm.add("Circular task", depends_on=[task_a_id, task_c_id])
         if circular_task:
             print(f"   ERROR: Circular dependency not detected!")
         else:
@@ -211,7 +211,7 @@ def demonstrate_file_references():
     print("1. Creating tasks with file references:")
     
     # Task with single file reference
-    file_task_id = tm.add_task(
+    file_task_id = tm.add(
         "Fix authentication bug",
         description="The login validation is failing for special characters",
         priority="high",
@@ -225,7 +225,7 @@ def demonstrate_file_references():
     print(f"   Created task with file reference: {file_task_id}")
     
     # Task with multiple file references
-    refactor_task_id = tm.add_task(
+    refactor_task_id = tm.add(
         "Refactor user model",
         description="Move user-related functions to separate modules",
         priority="medium",
@@ -273,28 +273,28 @@ def demonstrate_tags_and_filtering():
     print("1. Creating tasks with tags:")
     
     # Create tasks with different tags
-    bug_task = tm.add_task(
+    bug_task = tm.add(
         "Fix login timeout issue",
         priority="critical",
         tags=["bug", "security", "urgent"]
     )
     print(f"   Bug task: {bug_task}")
     
-    feature_task = tm.add_task(
+    feature_task = tm.add(
         "Add password strength indicator",
         priority="medium",
         tags=["feature", "ui", "security"]
     )
     print(f"   Feature task: {feature_task}")
     
-    docs_task = tm.add_task(
+    docs_task = tm.add(
         "Update API documentation",
         priority="low",
         tags=["documentation", "maintenance"]
     )
     print(f"   Documentation task: {docs_task}")
     
-    test_task = tm.add_task(
+    test_task = tm.add(
         "Write security tests",
         priority="high",
         tags=["testing", "security"]
@@ -324,8 +324,8 @@ def demonstrate_notifications():
     print("1. Setting up tasks for notification demo:")
     
     # Create a dependency chain
-    parent_id = tm.add_task("Complete user stories", priority="high")
-    child_id = tm.add_task(
+    parent_id = tm.add("Complete user stories", priority="high")
+    child_id = tm.add(
         "Deploy to staging", 
         depends_on=[parent_id],
         priority="medium"
@@ -357,8 +357,8 @@ def demonstrate_export_functionality():
     
     # Ensure we have some tasks
     if not tm.list_tasks():
-        tm.add_task("Sample task for export", priority="medium", tags=["sample"])
-        tm.add_task("Another sample task", priority="low")
+        tm.add("Sample task for export", priority="medium", tags=["sample"])
+        tm.add("Another sample task", priority="low")
     
     print("1. Exporting to JSON:")
     json_export = tm.export_tasks(format="json")
