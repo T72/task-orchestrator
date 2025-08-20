@@ -9,11 +9,36 @@
 .task-manager/
 
 # ====================
-# Private Development Files
+# Private Development Files - NEVER EXPOSE
 # ====================
 # Claude Code private development files - not for public release
 .claude/
 CLAUDE.md
+
+# Internal development scripts and tools
+scripts/
+hooks/
+.hooks/
+
+# Private documentation and notes
+docs/architecture/
+docs/protocols/
+docs/developer/development/
+*-notes.md
+*-notes.txt
+session-*.md
+SESSION-*.md
+
+# Archive directories
+archive/
+ARCHIVE/
+.archive/
+
+# Private analysis and planning
+analysis/
+planning/
+internal/
+private/
 
 # ====================
 # Python Runtime
