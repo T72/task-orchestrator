@@ -4,9 +4,10 @@ This template provides essential Task Orchestrator integration for quick setup.
 
 ## 📋 **COPY THIS ENTIRE SECTION TO YOUR CLAUDE.md**
 
-**Select everything from "START COPY" to "END COPY" and paste into your project's CLAUDE.md file:**
+**Select everything from "▼ START COPY" to "▲ END COPY" and paste into your project's CLAUDE.md file:**
 
-<!-- START COPY -->
+---
+## ▼ START COPY
 
 ## Task Orchestrator
 
@@ -59,8 +60,7 @@ export TM_AGENT_ID="[role]_[specialty]_[session]"
 
 Add to whitelisted commands: `./tm *`
 
-<!-- END COPY -->
-
+## ▲ END COPY
 ---
 
 ## What This Provides

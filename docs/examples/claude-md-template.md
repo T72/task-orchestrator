@@ -4,9 +4,10 @@ This template provides comprehensive Task Orchestrator integration with mandator
 
 ## 📋 **COPY THIS ENTIRE SECTION TO YOUR CLAUDE.md**
 
-**Select everything from "START COPY" to "END COPY" and paste into your project's CLAUDE.md file:**
+**Select everything from "▼ START COPY" to "▲ END COPY" and paste into your project's CLAUDE.md file:**
 
-<!-- START COPY -->
+---
+## ▼ START COPY
 
 ## Task Orchestrator Integration
 
@@ -257,8 +258,7 @@ Add to your Claude Code configuration:
 }
 ```
 
-<!-- END COPY -->
-
+## ▲ END COPY
 ---
 
 ## What This Provides
