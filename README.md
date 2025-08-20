@@ -29,10 +29,10 @@ Task Orchestrator helps by automatically managing dependencies, unblocking work 
 # 1. Clone and setup (30 seconds)
 git clone https://github.com/T72/task-orchestrator.git
 cd task-orchestrator
-chmod +x tm
+chmod +x tm  # Make executable (Linux/Mac) or use: python3 tm
 
 # 2. Initialize (instant)
-./tm init
+./tm init  # Or: python3 tm init
 
 # 3. Your first orchestrated workflow (90 seconds)
 SETUP=$(./tm add "Setup environment")  # Returns task ID: abc12345

@@ -9,10 +9,13 @@ import os
 import subprocess
 from pathlib import Path
 
-# Add src directory to path
-script_dir = Path(__file__).parent
+# Add src directory to path - robust handling for different execution methods
+script_path = Path(__file__).resolve()
+script_dir = script_path.parent
 src_dir = script_dir / "src"
-if src_dir.exists():
+
+# Ensure src is in path regardless of how script is executed
+if src_dir.exists() and str(src_dir) not in sys.path:
     sys.path.insert(0, str(src_dir))
 
 # Import the collaboration module
@@ -87,10 +90,15 @@ def main():
         # Handle standard tm commands using tm_production module
         if len(sys.argv) < 2:
             print("Usage: tm <command> [args]")
-            print("Commands: init, add, list, show, update, complete, export, etc.")
+            print("Commands: init, add, list, show, update, complete, export, version, etc.")
             sys.exit(1)
         
         command = sys.argv[1]
+        
+        # Handle version command
+        if command == "version":
+            print("Task Orchestrator v2.0.1")
+            sys.exit(0)
         
         # Route to appropriate TaskManager method
         if command == "init":
@@ -173,7 +181,7 @@ def main():
                 for key, value in task.items():
                     print(f"{key}: {value}")
             else:
-                print(f"Task {task_id} not found")
+                print(f"Task {task_id} not found. Use './tm list' to see all tasks.")
                 sys.exit(1)
         elif command == "update":
             if len(sys.argv) < 3:
@@ -216,7 +224,7 @@ def main():
             if tm.delete(task_id):
                 print(f"Task {task_id} deleted")
             else:
-                print(f"Failed to delete task {task_id}")
+                print(f"Failed to delete task {task_id}. Task may not exist or have dependencies.")
                 sys.exit(1)
         elif command == "assign":
             if len(sys.argv) < 4:
@@ -227,7 +235,7 @@ def main():
             if tm.update(task_id, assignee=assignee):
                 print(f"Task {task_id} assigned to {assignee}")
             else:
-                print(f"Failed to assign task {task_id}")
+                print(f"Failed to assign task {task_id}. Task may not exist.")
                 sys.exit(1)
         elif command == "export":
             # Export implementation using tm_production method
