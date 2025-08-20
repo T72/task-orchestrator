@@ -94,10 +94,12 @@ python3 test_validation.py  # Validation tests
 ### Database Schema Changes
 
 If your contribution modifies the database schema:
-1. Create a migration function
-2. Ensure backward compatibility
-3. Test with existing databases
-4. Update the schema documentation
+1. Review the current schema: [Database Schema Documentation](docs/reference/database-schema.md)
+2. Create a migration function in `src/tm_production.py`
+3. Ensure backward compatibility with existing databases
+4. Test migration with both new and existing databases
+5. Update the [database schema documentation](docs/reference/database-schema.md) with your changes
+6. Update the schema version number in the documentation
 
 ### Performance Considerations
 

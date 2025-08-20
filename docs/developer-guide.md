@@ -141,85 +141,20 @@ class Orchestrator:
 
 ### Database Schema
 
-#### Core Tables
+The complete database schema is documented in [Database Schema Reference](reference/database-schema.md).
 
-```sql
--- Main tasks table
-CREATE TABLE tasks (
-    id TEXT PRIMARY KEY CHECK(length(id) = 8),
-    title TEXT NOT NULL CHECK(length(title) > 0 AND length(title) <= 500),
-    description TEXT CHECK(length(description) <= 5000),
-    status TEXT NOT NULL CHECK(status IN ('pending', 'in_progress', 'completed', 'blocked', 'cancelled')),
-    priority TEXT NOT NULL CHECK(priority IN ('low', 'medium', 'high', 'critical')),
-    assignee TEXT,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    completed_at TIMESTAMP,
-    created_by TEXT NOT NULL,
-    impact_notes TEXT,
-    tags TEXT,
-    version INTEGER DEFAULT 1
-);
+**Key tables include:**
+- `tasks` - Core task information
+- `dependencies` - Task dependency relationships  
+- `notifications` - Agent notifications
+- `participants` - Task participation tracking
+- `context_updates` - Shared context and private notes
+- `file_refs` - File reference associations
+- `audit_log` - Change tracking
 
--- Task dependencies
-CREATE TABLE dependencies (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    task_id TEXT NOT NULL,
-    depends_on TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
-    FOREIGN KEY (depends_on) REFERENCES tasks(id) ON DELETE CASCADE,
-    UNIQUE(task_id, depends_on),
-    CHECK(task_id != depends_on)
-);
+For schema modifications, migration guidelines, and performance considerations, see the [Database Schema Documentation](reference/database-schema.md).
 
--- File references
-CREATE TABLE file_refs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    task_id TEXT NOT NULL,
-    file_path TEXT NOT NULL CHECK(length(file_path) > 0),
-    line_start INTEGER CHECK(line_start > 0),
-    line_end INTEGER CHECK(line_end >= line_start),
-    context TEXT,
-    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
-);
-
--- Notifications
-CREATE TABLE notifications (
-    id TEXT PRIMARY KEY,
-    task_id TEXT NOT NULL,
-    type TEXT NOT NULL,
-    target_agent TEXT,
-    message TEXT NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    acknowledged BOOLEAN DEFAULT 0,
-    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
-);
-
--- Audit log
-CREATE TABLE audit_log (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    task_id TEXT NOT NULL,
-    action TEXT NOT NULL,
-    old_value TEXT,
-    new_value TEXT,
-    changed_by TEXT NOT NULL,
-    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-#### Key Indexes
-
-```sql
-CREATE INDEX idx_task_status ON tasks(status);
-CREATE INDEX idx_task_assignee ON tasks(assignee);
-CREATE INDEX idx_task_priority ON tasks(priority);
-CREATE INDEX idx_deps_task ON dependencies(task_id);
-CREATE INDEX idx_deps_depends ON dependencies(depends_on);
-CREATE INDEX idx_notif_target ON notifications(target_agent, acknowledged);
-CREATE INDEX idx_file_refs_task ON file_refs(task_id);
-CREATE INDEX idx_audit_task ON audit_log(task_id);
-```
+**Schema Implementation**: The actual schema is implemented in `src/tm_production.py` (lines 89-130).
 
 ## Development Setup
 
