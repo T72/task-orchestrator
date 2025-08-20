@@ -726,7 +726,7 @@ Examples:
     
     if args.command == "add":
         task_id = tm.add(args.title, args.description, args.priority, args.depends_on)
-        print(f"Created task: {task_id}")
+        print(task_id)  # Output only the ID for script compatibility
     
     elif args.command == "list":
         tasks = tm.list(args.status, args.assignee)

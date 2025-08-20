@@ -35,7 +35,7 @@ chmod +x tm
 ./tm init
 
 # 3. Your first orchestrated workflow (90 seconds)
-SETUP=$(./tm add "Setup environment" | grep -o '[a-f0-9]\{8\}')
+SETUP=$(./tm add "Setup environment")  # Returns task ID: abc12345
 ./tm add "Run tests" --depends-on $SETUP
 ./tm add "Deploy" --depends-on $SETUP --file deploy.sh:15
 
@@ -73,7 +73,7 @@ TEST=$(./tm add "Integration tests" --depends-on $UI | grep -o '[a-f0-9]\{8\}')
 ### Multiple Developers, Zero Conflicts
 ```bash
 # Developer 1 creates the main feature
-FEATURE=$(./tm add "Payment system" | grep -o '[a-f0-9]\{8\}')
+FEATURE=$(./tm add "Payment system")
 
 # Developer 2 claims and starts work
 ./tm assign $FEATURE dev2

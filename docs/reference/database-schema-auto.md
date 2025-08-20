@@ -1,6 +1,6 @@
 # Database Schema Documentation
 
-**Generated**: 2025-08-20 14:06:17
+**Generated**: 2025-08-20 14:21:56
 **Source**: `src/tm_production.py`
 
 > **Note**: This documentation is auto-generated from code comments. Do not edit directly.
