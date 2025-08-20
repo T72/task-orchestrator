@@ -41,7 +41,7 @@ def print_dependency_graph(tm, title="Dependency Graph"):
     print(f"\n{title}:")
     print("-" * 50)
     
-    tasks = tm.list_tasks()
+    tasks = tm.list()
     if not tasks:
         print("No tasks found.")
         return
@@ -90,7 +90,7 @@ def create_feature_development_workflow():
     print("This simulates developing a 'User Profile Management' feature.")
     
     # 1. Planning and Design Phase
-    epic_id = tm.add_task(
+    epic_id = tm.add(
         "User Profile Management Feature Epic",
         description="Complete user profile management system with editing, privacy controls, and image upload",
         priority="high",
@@ -99,21 +99,21 @@ def create_feature_development_workflow():
     print(f"✓ Epic created: {epic_id}")
     
     # Design tasks
-    requirements_id = tm.add_task(
+    requirements_id = tm.add(
         "Gather user profile requirements",
         depends_on=[epic_id],
         priority="critical",
         tags=["planning", "requirements"]
     )
     
-    ui_design_id = tm.add_task(
+    ui_design_id = tm.add(
         "Design user profile UI mockups",
         depends_on=[requirements_id],
         priority="high",
         tags=["design", "ui"]
     )
     
-    api_design_id = tm.add_task(
+    api_design_id = tm.add(
         "Design profile API specification",
         depends_on=[requirements_id],
         priority="high",
@@ -121,21 +121,21 @@ def create_feature_development_workflow():
     )
     
     # 2. Backend Development
-    db_schema_id = tm.add_task(
+    db_schema_id = tm.add(
         "Create user profile database schema",
         depends_on=[api_design_id],
         priority="high",
         tags=["backend", "database"]
     )
     
-    api_impl_id = tm.add_task(
+    api_impl_id = tm.add(
         "Implement profile API endpoints",
         depends_on=[api_design_id, db_schema_id],
         priority="high",
         tags=["backend", "api"]
     )
     
-    image_upload_id = tm.add_task(
+    image_upload_id = tm.add(
         "Implement image upload service",
         depends_on=[api_design_id],
         priority="medium",
@@ -143,21 +143,21 @@ def create_feature_development_workflow():
     )
     
     # 3. Frontend Development (can start after UI design)
-    components_id = tm.add_task(
+    components_id = tm.add(
         "Build profile UI components",
         depends_on=[ui_design_id],
         priority="medium",
         tags=["frontend", "components"]
     )
     
-    forms_id = tm.add_task(
+    forms_id = tm.add(
         "Create profile edit forms",
         depends_on=[components_id],
         priority="medium",
         tags=["frontend", "forms"]
     )
     
-    integration_id = tm.add_task(
+    integration_id = tm.add(
         "Integrate frontend with API",
         depends_on=[forms_id, api_impl_id],
         priority="high",
@@ -165,21 +165,21 @@ def create_feature_development_workflow():
     )
     
     # 4. Testing Phase
-    backend_tests_id = tm.add_task(
+    backend_tests_id = tm.add(
         "Write backend unit tests",
         depends_on=[api_impl_id, image_upload_id],
         priority="high",
         tags=["testing", "backend"]
     )
     
-    frontend_tests_id = tm.add_task(
+    frontend_tests_id = tm.add(
         "Write frontend component tests",
         depends_on=[integration_id],
         priority="high",
         tags=["testing", "frontend"]
     )
     
-    e2e_tests_id = tm.add_task(
+    e2e_tests_id = tm.add(
         "Create end-to-end tests",
         depends_on=[integration_id, backend_tests_id],
         priority="medium",
@@ -187,14 +187,14 @@ def create_feature_development_workflow():
     )
     
     # 5. Deployment and Documentation
-    docs_id = tm.add_task(
+    docs_id = tm.add(
         "Update user documentation",
         depends_on=[integration_id],
         priority="medium",
         tags=["documentation"]
     )
     
-    deployment_id = tm.add_task(
+    deployment_id = tm.add(
         "Deploy to staging environment",
         depends_on=[e2e_tests_id, frontend_tests_id, docs_id],
         priority="critical",
@@ -220,34 +220,34 @@ def simulate_parallel_development():
     print("Creating parallel development streams that can work independently...")
     
     # Core infrastructure (blocking for others)
-    auth_service_id = tm.add_task(
+    auth_service_id = tm.add(
         "Implement authentication service",
         priority="critical",
         tags=["infrastructure", "auth"]
     )
     
-    database_id = tm.add_task(
+    database_id = tm.add(
         "Set up production database",
         priority="critical",
         tags=["infrastructure", "database"]
     )
     
     # Team A: User Management
-    team_a_lead_id = tm.add_task(
+    team_a_lead_id = tm.add(
         "User management API design",
         depends_on=[auth_service_id],
         priority="high",
         tags=["team-a", "api"]
     )
     
-    user_crud_id = tm.add_task(
+    user_crud_id = tm.add(
         "Implement user CRUD operations",
         depends_on=[team_a_lead_id, database_id],
         priority="high",
         tags=["team-a", "backend"]
     )
     
-    user_ui_id = tm.add_task(
+    user_ui_id = tm.add(
         "Build user management UI",
         depends_on=[team_a_lead_id],  # Can start with just API design
         priority="medium",
@@ -255,21 +255,21 @@ def simulate_parallel_development():
     )
     
     # Team B: Content Management (independent)
-    content_api_id = tm.add_task(
+    content_api_id = tm.add(
         "Content management API design",
         depends_on=[database_id],  # Only needs database
         priority="high",
         tags=["team-b", "api"]
     )
     
-    content_crud_id = tm.add_task(
+    content_crud_id = tm.add(
         "Implement content CRUD operations",
         depends_on=[content_api_id],
         priority="high",
         tags=["team-b", "backend"]
     )
     
-    content_ui_id = tm.add_task(
+    content_ui_id = tm.add(
         "Build content management UI",
         depends_on=[content_api_id],
         priority="medium",
@@ -277,14 +277,14 @@ def simulate_parallel_development():
     )
     
     # Team C: Analytics (depends on both teams)
-    analytics_design_id = tm.add_task(
+    analytics_design_id = tm.add(
         "Design analytics data collection",
         depends_on=[user_crud_id, content_crud_id],
         priority="medium",
         tags=["team-c", "analytics"]
     )
     
-    analytics_impl_id = tm.add_task(
+    analytics_impl_id = tm.add(
         "Implement analytics tracking",
         depends_on=[analytics_design_id],
         priority="low",
@@ -292,7 +292,7 @@ def simulate_parallel_development():
     )
     
     # Integration tasks (require multiple teams)
-    integration_tests_id = tm.add_task(
+    integration_tests_id = tm.add(
         "Cross-team integration tests",
         depends_on=[user_ui_id, content_ui_id, analytics_impl_id],
         priority="high",
@@ -303,13 +303,13 @@ def simulate_parallel_development():
     
     # Simulate completing infrastructure first
     print("\n1. Completing infrastructure tasks...")
-    tm.complete_task(auth_service_id)
-    tm.complete_task(database_id)
+    tm.complete(auth_service_id)
+    tm.complete(database_id)
     
     print_dependency_graph(tm, "After Infrastructure Completion")
     
     # Show how teams can now work in parallel
-    ready_tasks = tm.list_tasks(status="pending")
+    ready_tasks = tm.list(status="pending")
     print(f"\nTasks ready for parallel development: {len(ready_tasks)}")
     for task in ready_tasks:
         team = [tag for tag in task.get('tags', []) if tag.startswith('team-')]
@@ -325,28 +325,28 @@ def demonstrate_release_workflow():
     print("Creating release preparation workflow for v2.0.0...")
     
     # Release planning
-    release_planning_id = tm.add_task(
+    release_planning_id = tm.add(
         "Plan v2.0.0 release scope",
         priority="critical",
         tags=["release", "planning"]
     )
     
     # Feature completion (parallel)
-    feature1_id = tm.add_task(
+    feature1_id = tm.add(
         "Complete authentication redesign",
         depends_on=[release_planning_id],
         priority="critical",
         tags=["release", "feature"]
     )
     
-    feature2_id = tm.add_task(
+    feature2_id = tm.add(
         "Complete dashboard improvements",
         depends_on=[release_planning_id],
         priority="high",
         tags=["release", "feature"]
     )
     
-    feature3_id = tm.add_task(
+    feature3_id = tm.add(
         "Complete mobile responsiveness",
         depends_on=[release_planning_id],
         priority="medium",
@@ -354,14 +354,14 @@ def demonstrate_release_workflow():
     )
     
     # Code quality tasks
-    security_audit_id = tm.add_task(
+    security_audit_id = tm.add(
         "Perform security audit",
         depends_on=[feature1_id],  # Auth changes need security review
         priority="critical",
         tags=["release", "security"]
     )
     
-    performance_testing_id = tm.add_task(
+    performance_testing_id = tm.add(
         "Run performance tests",
         depends_on=[feature1_id, feature2_id, feature3_id],
         priority="high",
@@ -369,21 +369,21 @@ def demonstrate_release_workflow():
     )
     
     # Documentation tasks
-    changelog_id = tm.add_task(
+    changelog_id = tm.add(
         "Update changelog",
         depends_on=[feature1_id, feature2_id, feature3_id],
         priority="medium",
         tags=["release", "documentation"]
     )
     
-    api_docs_id = tm.add_task(
+    api_docs_id = tm.add(
         "Update API documentation",
         depends_on=[feature1_id, feature2_id],  # Only features affecting API
         priority="medium",
         tags=["release", "documentation"]
     )
     
-    user_guide_id = tm.add_task(
+    user_guide_id = tm.add(
         "Update user guide",
         depends_on=[feature2_id, feature3_id],  # UI-affecting features
         priority="low",
@@ -391,14 +391,14 @@ def demonstrate_release_workflow():
     )
     
     # Pre-release validation
-    staging_deployment_id = tm.add_task(
+    staging_deployment_id = tm.add(
         "Deploy to staging",
         depends_on=[security_audit_id, performance_testing_id],
         priority="critical",
         tags=["release", "deployment"]
     )
     
-    qa_testing_id = tm.add_task(
+    qa_testing_id = tm.add(
         "QA acceptance testing",
         depends_on=[staging_deployment_id],
         priority="critical",
@@ -406,14 +406,14 @@ def demonstrate_release_workflow():
     )
     
     # Release tasks
-    version_bump_id = tm.add_task(
+    version_bump_id = tm.add(
         "Version bump and tagging",
         depends_on=[qa_testing_id, changelog_id],
         priority="critical",
         tags=["release", "versioning"]
     )
     
-    production_deployment_id = tm.add_task(
+    production_deployment_id = tm.add(
         "Deploy to production",
         depends_on=[version_bump_id],
         priority="critical",
@@ -421,14 +421,14 @@ def demonstrate_release_workflow():
     )
     
     # Post-release
-    monitoring_id = tm.add_task(
+    monitoring_id = tm.add(
         "Monitor production deployment",
         depends_on=[production_deployment_id],
         priority="high",
         tags=["release", "monitoring"]
     )
     
-    announcement_id = tm.add_task(
+    announcement_id = tm.add(
         "Release announcement",
         depends_on=[production_deployment_id, api_docs_id, user_guide_id],
         priority="medium",
@@ -438,7 +438,7 @@ def demonstrate_release_workflow():
     print_dependency_graph(tm, "Release Workflow")
     
     # Show critical path
-    critical_tasks = tm.list_tasks()
+    critical_tasks = tm.list()
     critical_path = [t for t in critical_tasks if t['priority'] == 'critical']
     print(f"\nCritical path tasks ({len(critical_path)} tasks):")
     for task in critical_path:
@@ -455,22 +455,22 @@ def analyze_workflow_efficiency():
     print("Creating a workflow with optimization opportunities...")
     
     # Sequential workflow (suboptimal)
-    task1 = tm.add_task("Research requirements", priority="high")
-    task2 = tm.add_task("Write specification", depends_on=[task1], priority="high")
-    task3 = tm.add_task("Design database schema", depends_on=[task2], priority="medium")
-    task4 = tm.add_task("Design API", depends_on=[task2], priority="medium")
-    task5 = tm.add_task("Design UI mockups", depends_on=[task2], priority="low")
-    task6 = tm.add_task("Implement database", depends_on=[task3], priority="medium")
-    task7 = tm.add_task("Implement API", depends_on=[task4, task6], priority="high")
-    task8 = tm.add_task("Implement UI", depends_on=[task5, task7], priority="medium")
-    task9 = tm.add_task("Integration testing", depends_on=[task8], priority="high")
-    task10 = tm.add_task("Deploy", depends_on=[task9], priority="critical")
+    task1 = tm.add("Research requirements", priority="high")
+    task2 = tm.add("Write specification", depends_on=[task1], priority="high")
+    task3 = tm.add("Design database schema", depends_on=[task2], priority="medium")
+    task4 = tm.add("Design API", depends_on=[task2], priority="medium")
+    task5 = tm.add("Design UI mockups", depends_on=[task2], priority="low")
+    task6 = tm.add("Implement database", depends_on=[task3], priority="medium")
+    task7 = tm.add("Implement API", depends_on=[task4, task6], priority="high")
+    task8 = tm.add("Implement UI", depends_on=[task5, task7], priority="medium")
+    task9 = tm.add("Integration testing", depends_on=[task8], priority="high")
+    task10 = tm.add("Deploy", depends_on=[task9], priority="critical")
     
     print_dependency_graph(tm, "Original Workflow")
     
     # Analyze bottlenecks
     print("\nWorkflow Analysis:")
-    all_tasks = tm.list_tasks()
+    all_tasks = tm.list()
     
     # Find tasks with no dependencies (can start immediately)
     ready_tasks = [t for t in all_tasks if not t['dependencies']]
@@ -531,10 +531,10 @@ def demonstrate_advanced_patterns():
     #    \ /
     #     D
     
-    a_id = tm.add_task("Define project requirements", priority="critical")
-    b_id = tm.add_task("Backend development", depends_on=[a_id], priority="high")
-    c_id = tm.add_task("Frontend development", depends_on=[a_id], priority="high")
-    d_id = tm.add_task("Integration testing", depends_on=[b_id, c_id], priority="high")
+    a_id = tm.add("Define project requirements", priority="critical")
+    b_id = tm.add("Backend development", depends_on=[a_id], priority="high")
+    c_id = tm.add("Frontend development", depends_on=[a_id], priority="high")
+    d_id = tm.add("Integration testing", depends_on=[b_id, c_id], priority="high")
     
     print(f"   A (requirements): {a_id}")
     print(f"   B (backend): {b_id}")
@@ -544,7 +544,7 @@ def demonstrate_advanced_patterns():
     print("\n2. Fan-out Pattern:")
     print("   One task enables many parallel tasks")
     
-    foundation_id = tm.add_task("Set up development environment", priority="critical")
+    foundation_id = tm.add("Set up development environment", priority="critical")
     
     parallel_tasks = []
     for i, task_name in enumerate([
@@ -554,7 +554,7 @@ def demonstrate_advanced_patterns():
         "Create project documentation template",
         "Set up monitoring"
     ]):
-        task_id = tm.add_task(task_name, depends_on=[foundation_id], priority="medium")
+        task_id = tm.add(task_name, depends_on=[foundation_id], priority="medium")
         parallel_tasks.append(task_id)
     
     print(f"   Foundation: {foundation_id}")
@@ -571,10 +571,10 @@ def demonstrate_advanced_patterns():
         "Complete logging",
         "Complete security review"
     ]:
-        task_id = tm.add_task(task_name, priority="high")
+        task_id = tm.add(task_name, priority="high")
         milestone_deps.append(task_id)
     
-    milestone_id = tm.add_task(
+    milestone_id = tm.add(
         "Release candidate ready",
         depends_on=milestone_deps,
         priority="critical"
@@ -594,7 +594,6 @@ def main():
     try:
         # Initialize clean database for examples
         tm = TaskManager()
-        tm.init_db()
         
         # Run demonstrations
         feature_workflow = create_feature_development_workflow()

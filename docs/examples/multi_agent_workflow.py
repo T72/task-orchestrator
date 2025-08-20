@@ -59,7 +59,7 @@ def print_team_status(agents: Dict, tm: TaskManager):
     print("-" * 50)
     
     for agent_id, agent in agents.items():
-        assigned_tasks = tm.list_tasks(assignee=agent_id)
+        assigned_tasks = tm.list(assignee=agent_id)
         in_progress = [t for t in assigned_tasks if t['status'] == 'in_progress']
         pending = [t for t in assigned_tasks if t['status'] == 'pending']
         completed = [t for t in assigned_tasks if t['status'] == 'completed']
@@ -81,7 +81,7 @@ def simulate_agent_work(agent: Dict, tm: TaskManager, task_id: str, work_duratio
     print(f"🔨 {agent['name']} starting work on task {task_id}")
     
     # Start the task
-    tm.update_task(task_id, status="in_progress")
+    tm.update(task_id, status="in_progress")
     agent['current_workload'] += 1
     
     # Simulate work (in real scenarios, this would be actual work)
@@ -89,13 +89,13 @@ def simulate_agent_work(agent: Dict, tm: TaskManager, task_id: str, work_duratio
     
     # Random chance of completion vs. partial progress
     if random.random() < 0.7:  # 70% chance of completion
-        tm.complete_task(task_id)
+        tm.complete(task_id)
         agent['current_workload'] -= 1
         agent['completed_tasks'] += 1
         print(f"✅ {agent['name']} completed task {task_id}")
         return True
     else:
-        tm.update_task(task_id, impact_notes=f"Work in progress by {agent['name']}")
+        tm.update(task_id, impact_notes=f"Work in progress by {agent['name']}")
         print(f"⏸️  {agent['name']} made progress on task {task_id}")
         return False
 
@@ -152,28 +152,28 @@ def create_project_tasks(tm: TaskManager):
     
     # Backend tasks
     backend_tasks = []
-    backend_tasks.append(tm.add_task(
+    backend_tasks.append(tm.add(
         "Implement user authentication API",
         description="JWT-based authentication with refresh tokens",
         priority="critical",
         tags=["backend", "api", "security"]
     ))
     
-    backend_tasks.append(tm.add_task(
+    backend_tasks.append(tm.add(
         "Design product catalog database schema",
         description="Optimize for product search and filtering",
         priority="high",
         tags=["backend", "database"]
     ))
     
-    backend_tasks.append(tm.add_task(
+    backend_tasks.append(tm.add(
         "Implement payment processing API",
         description="Integrate with Stripe and PayPal",
         priority="critical",
         tags=["backend", "api", "payment"]
     ))
     
-    backend_tasks.append(tm.add_task(
+    backend_tasks.append(tm.add(
         "Add product search API with filtering",
         depends_on=[backend_tasks[1]],  # Depends on database schema
         priority="high",
@@ -182,28 +182,28 @@ def create_project_tasks(tm: TaskManager):
     
     # Frontend tasks
     frontend_tasks = []
-    frontend_tasks.append(tm.add_task(
+    frontend_tasks.append(tm.add(
         "Create responsive product listing page",
         description="Grid layout with filters and sorting",
         priority="high",
         tags=["frontend", "ui", "responsive"]
     ))
     
-    frontend_tasks.append(tm.add_task(
+    frontend_tasks.append(tm.add(
         "Build shopping cart component",
         description="Persistent cart with local storage backup",
         priority="high",
         tags=["frontend", "ui", "components"]
     ))
     
-    frontend_tasks.append(tm.add_task(
+    frontend_tasks.append(tm.add(
         "Implement checkout flow UI",
         depends_on=[frontend_tasks[1], backend_tasks[2]],  # Needs cart and payment API
         priority="critical",
         tags=["frontend", "ui", "checkout"]
     ))
     
-    frontend_tasks.append(tm.add_task(
+    frontend_tasks.append(tm.add(
         "Add user authentication forms",
         depends_on=[backend_tasks[0]],  # Needs auth API
         priority="medium",
@@ -212,14 +212,14 @@ def create_project_tasks(tm: TaskManager):
     
     # Full-stack integration tasks
     integration_tasks = []
-    integration_tasks.append(tm.add_task(
+    integration_tasks.append(tm.add(
         "Integrate product listing with search API",
         depends_on=[frontend_tasks[0], backend_tasks[3]],
         priority="high",
         tags=["integration", "frontend", "backend"]
     ))
     
-    integration_tasks.append(tm.add_task(
+    integration_tasks.append(tm.add(
         "End-to-end checkout flow integration",
         depends_on=[frontend_tasks[2]],
         priority="critical",
@@ -228,19 +228,19 @@ def create_project_tasks(tm: TaskManager):
     
     # DevOps tasks
     devops_tasks = []
-    devops_tasks.append(tm.add_task(
+    devops_tasks.append(tm.add(
         "Set up production database cluster",
         priority="critical",
         tags=["devops", "infrastructure", "database"]
     ))
     
-    devops_tasks.append(tm.add_task(
+    devops_tasks.append(tm.add(
         "Configure CI/CD pipeline",
         priority="high",
         tags=["devops", "ci-cd", "automation"]
     ))
     
-    devops_tasks.append(tm.add_task(
+    devops_tasks.append(tm.add(
         "Set up monitoring and alerting",
         depends_on=[devops_tasks[0]],  # Needs production environment
         priority="medium",
@@ -249,21 +249,21 @@ def create_project_tasks(tm: TaskManager):
     
     # QA tasks
     qa_tasks = []
-    qa_tasks.append(tm.add_task(
+    qa_tasks.append(tm.add(
         "Write automated tests for auth API",
         depends_on=[backend_tasks[0]],
         priority="high",
         tags=["qa", "testing", "api"]
     ))
     
-    qa_tasks.append(tm.add_task(
+    qa_tasks.append(tm.add(
         "Create UI automation tests for checkout",
         depends_on=[integration_tasks[1]],
         priority="high",
         tags=["qa", "testing", "ui"]
     ))
     
-    qa_tasks.append(tm.add_task(
+    qa_tasks.append(tm.add(
         "Perform security testing on payment flow",
         depends_on=[backend_tasks[2], frontend_tasks[2]],
         priority="critical",
@@ -295,7 +295,7 @@ def intelligent_task_assignment(agents: Dict, tm: TaskManager):
     print("Assigning tasks based on agent specialties and current workload...")
     
     # Get all unassigned pending tasks
-    unassigned_tasks = [t for t in tm.list_tasks(status="pending") if not t['assignee']]
+    unassigned_tasks = [t for t in tm.list(status="pending") if not t['assignee']]
     
     assignments = []
     
@@ -318,7 +318,7 @@ def intelligent_task_assignment(agents: Dict, tm: TaskManager):
             
             # Check if agent has capacity
             if best_agent['current_workload'] < best_agent['workload_capacity']:
-                tm.update_task(task['id'], assignee=best_agent_id)
+                tm.update(task['id'], assignee=best_agent_id)
                 best_agent['current_workload'] += 1
                 assignments.append((task['id'], task['title'], best_agent['name'], score))
     
@@ -341,7 +341,7 @@ def simulate_team_collaboration(agents: Dict, tm: TaskManager):
         
         # Each agent works on their assigned tasks
         for agent_id, agent in agents.items():
-            assigned_tasks = tm.list_tasks(assignee=agent_id, status="pending")
+            assigned_tasks = tm.list(assignee=agent_id, status="pending")
             
             if assigned_tasks:
                 # Pick a random task to work on
@@ -349,7 +349,7 @@ def simulate_team_collaboration(agents: Dict, tm: TaskManager):
                 simulate_agent_work(agent, tm, task['id'], work_duration=1)
             
             # Check for notifications
-            notifications = tm.check_notifications()
+            notifications = tm.watch()
             if notifications:
                 print(f"📬 {agent['name']} has {len(notifications)} notifications")
                 for notif in notifications[:2]:  # Show first 2
@@ -365,7 +365,7 @@ def demonstrate_conflict_detection(agents: Dict, tm: TaskManager):
     print("Creating scenario with potential conflicts...")
     
     # Create tasks that might conflict
-    shared_file_task1 = tm.add_task(
+    shared_file_task1 = tm.add(
         "Refactor authentication middleware",
         priority="high",
         file_refs=[{
@@ -376,7 +376,7 @@ def demonstrate_conflict_detection(agents: Dict, tm: TaskManager):
         tags=["backend", "refactoring"]
     )
     
-    shared_file_task2 = tm.add_task(
+    shared_file_task2 = tm.add(
         "Add rate limiting to authentication",
         priority="medium", 
         file_refs=[{
@@ -388,8 +388,8 @@ def demonstrate_conflict_detection(agents: Dict, tm: TaskManager):
     )
     
     # Assign to different agents
-    tm.update_task(shared_file_task1, assignee="alice_backend")
-    tm.update_task(shared_file_task2, assignee="charlie_fullstack")
+    tm.update(shared_file_task1, assignee="alice_backend")
+    tm.update(shared_file_task2, assignee="charlie_fullstack")
     
     print("✓ Created conflicting tasks:")
     print(f"  Task 1 (Alice): {shared_file_task1} - Refactor auth middleware")
@@ -398,10 +398,10 @@ def demonstrate_conflict_detection(agents: Dict, tm: TaskManager):
     
     # Simulate both agents starting work
     print("\n🔄 Simulating concurrent work:")
-    tm.update_task(shared_file_task1, status="in_progress")
+    tm.update(shared_file_task1, status="in_progress")
     print("  Alice started refactoring...")
     
-    tm.update_task(shared_file_task2, status="in_progress") 
+    tm.update(shared_file_task2, status="in_progress") 
     print("  Charlie started adding rate limiting...")
     
     # In a real system, this would trigger conflict detection
@@ -414,7 +414,7 @@ def demonstrate_conflict_detection(agents: Dict, tm: TaskManager):
     
     # Demonstrate resolution by creating dependency
     print("\n✅ Resolution: Converting to dependency")
-    tm.update_task(shared_file_task2, status="blocked")
+    tm.update(shared_file_task2, status="blocked")
     
     # Update task dependencies manually (in practice, this would be more sophisticated)
     print("  Charlie's task now waits for Alice's refactoring to complete")
@@ -426,7 +426,7 @@ def demonstrate_cross_team_coordination(agents: Dict, tm: TaskManager):
     print("Creating cross-team feature requiring coordination...")
     
     # Epic that requires multiple teams
-    epic_id = tm.add_task(
+    epic_id = tm.add(
         "Implement real-time notifications",
         description="Users get real-time updates for orders, messages, etc.",
         priority="high",
@@ -434,49 +434,49 @@ def demonstrate_cross_team_coordination(agents: Dict, tm: TaskManager):
     )
     
     # Backend work
-    websocket_api = tm.add_task(
+    websocket_api = tm.add(
         "Implement WebSocket notification API",
         depends_on=[epic_id],
         priority="high",
         tags=["backend", "api", "websocket"]
     )
-    tm.update_task(websocket_api, assignee="alice_backend")
+    tm.update(websocket_api, assignee="alice_backend")
     
     # Frontend work
-    notification_ui = tm.add_task(
+    notification_ui = tm.add(
         "Build notification UI components",
         depends_on=[epic_id],
         priority="medium",
         tags=["frontend", "ui", "components"]
     )
-    tm.update_task(notification_ui, assignee="bob_frontend")
+    tm.update(notification_ui, assignee="bob_frontend")
     
     # Integration work
-    integration_task = tm.add_task(
+    integration_task = tm.add(
         "Integrate WebSocket with notification UI",
         depends_on=[websocket_api, notification_ui],
         priority="high",
         tags=["integration", "real-time"]
     )
-    tm.update_task(integration_task, assignee="charlie_fullstack")
+    tm.update(integration_task, assignee="charlie_fullstack")
     
     # Infrastructure work
-    infra_task = tm.add_task(
+    infra_task = tm.add(
         "Set up WebSocket load balancing",
         depends_on=[websocket_api],
         priority="medium",
         tags=["devops", "infrastructure", "scalability"]
     )
-    tm.update_task(infra_task, assignee="diana_devops")
+    tm.update(infra_task, assignee="diana_devops")
     
     # QA work
-    testing_task = tm.add_task(
+    testing_task = tm.add(
         "Test real-time notification reliability",
         depends_on=[integration_task, infra_task],
         priority="high",
         tags=["qa", "testing", "real-time"]
     )
-    tm.update_task(testing_task, assignee="eve_qa")
+    tm.update(testing_task, assignee="eve_qa")
     
     print("✓ Cross-team feature created:")
     print("  👤 Alice (Backend): WebSocket API")
@@ -486,7 +486,7 @@ def demonstrate_cross_team_coordination(agents: Dict, tm: TaskManager):
     print("  👤 Eve (QA): Testing")
     
     # Show dependency chain
-    tasks = tm.list_tasks()
+    tasks = tm.list()
     feature_tasks = [t for t in tasks if 'notification' in t['title'].lower() or 'websocket' in t['title'].lower()]
     
     print("\nDependency flow:")
@@ -516,7 +516,7 @@ def demonstrate_workload_balancing(agents: Dict, tm: TaskManager):
             print(f"  Overloaded: {overloaded_agent['name']} ({overloaded_agent['current_workload']}/{overloaded_agent['workload_capacity']})")
             
             # Find tasks that could be reassigned
-            overloaded_tasks = tm.list_tasks(assignee=overloaded_id, status="pending")
+            overloaded_tasks = tm.list(assignee=overloaded_id, status="pending")
             
             for task in overloaded_tasks[:2]:  # Consider first 2 tasks
                 task_tags = set(task.get('tags', []))
@@ -529,7 +529,7 @@ def demonstrate_workload_balancing(agents: Dict, tm: TaskManager):
                         print(f"      From: {overloaded_agent['name']} → To: {underutil_agent['name']}")
                         
                         # Actually reassign (in demo)
-                        tm.update_task(task['id'], assignee=underutil_id)
+                        tm.update(task['id'], assignee=underutil_id)
                         overloaded_agent['current_workload'] -= 1
                         underutil_agent['current_workload'] += 1
                         print(f"      ✅ Reassigned!")
@@ -546,7 +546,7 @@ def generate_team_report(agents: Dict, tm: TaskManager):
     print("=" * 60)
     
     # Overall statistics
-    all_tasks = tm.list_tasks()
+    all_tasks = tm.list()
     total_tasks = len(all_tasks)
     completed_tasks = len([t for t in all_tasks if t['status'] == 'completed'])
     in_progress_tasks = len([t for t in all_tasks if t['status'] == 'in_progress'])
@@ -563,7 +563,7 @@ def generate_team_report(agents: Dict, tm: TaskManager):
     # Agent performance
     print(f"\n👥 Individual Performance:")
     for agent_id, agent in agents.items():
-        agent_tasks = tm.list_tasks(assignee=agent_id)
+        agent_tasks = tm.list(assignee=agent_id)
         completed_count = len([t for t in agent_tasks if t['status'] == 'completed'])
         active_count = len([t for t in agent_tasks if t['status'] == 'in_progress'])
         
@@ -606,7 +606,6 @@ def main():
     try:
         # Initialize clean environment
         tm = TaskManager()
-        tm.init_db()
         
         # Create development team
         agents = create_development_team()

@@ -120,7 +120,7 @@ def create_large_project_structure(demo: LargeScaleDemo) -> Dict:
     
     print("\n📋 Creating program epics:")
     for name, priority, description in epic_definitions:
-        epic_id = demo.tm.add_task(
+        epic_id = demo.tm.add(
             f"EPIC: {name}",
             description=description,
             priority=priority,
@@ -301,7 +301,7 @@ def create_massive_task_set(demo: LargeScaleDemo, epics: Dict) -> Dict:
             if 'performance' in title.lower():
                 tags.append('performance')
             
-            task_id = demo.tm.add_task(
+            task_id = demo.tm.add(
                 title,
                 depends_on=[config['epic']],
                 priority=priority,
@@ -380,7 +380,7 @@ def simulate_team_assignments(demo: LargeScaleDemo, task_data: Dict):
         for i, task_id in enumerate(suitable_tasks):
             if assignments < team_info['capacity']:
                 assignee = team_members[i % len(team_members)]  # Round-robin assignment
-                demo.tm.update_task(task_id, assignee=assignee)
+                demo.tm.update(task_id, assignee=assignee)
                 assignments += 1
         
         team_assignments[team_id] = {
@@ -405,13 +405,13 @@ def demonstrate_performance_at_scale(demo: LargeScaleDemo, task_data: Dict):
     # 1. List operations
     print("\n1. Testing list operations:")
     start_time = time.time()
-    all_tasks = demo.tm.list_tasks(limit=None)  # Get all tasks
+    all_tasks = demo.tm.list(limit=None)  # Get all tasks
     list_all_time = time.time() - start_time
     performance_results['list_all'] = list_all_time
     print(f"   List all tasks: {list_all_time:.3f}s ({len(all_tasks)} tasks)")
     
     start_time = time.time()
-    pending_tasks = demo.tm.list_tasks(status="pending")
+    pending_tasks = demo.tm.list(status="pending")
     list_filtered_time = time.time() - start_time
     performance_results['list_filtered'] = list_filtered_time
     print(f"   List pending tasks: {list_filtered_time:.3f}s ({len(pending_tasks)} tasks)")
@@ -433,7 +433,7 @@ def demonstrate_performance_at_scale(demo: LargeScaleDemo, task_data: Dict):
     
     start_time = time.time()
     for task in update_sample:
-        demo.tm.update_task(task['id'], impact_notes=f"Performance test update {datetime.now().isoformat()}")
+        demo.tm.update(task['id'], impact_notes=f"Performance test update {datetime.now().isoformat()}")
     update_time = time.time() - start_time
     performance_results['updates'] = update_time / len(update_sample)
     print(f"   Average task update: {performance_results['updates']:.3f}s per task")
@@ -441,13 +441,13 @@ def demonstrate_performance_at_scale(demo: LargeScaleDemo, task_data: Dict):
     # 4. Export operations
     print("\n4. Testing export operations:")
     start_time = time.time()
-    json_export = demo.tm.export_tasks(format="json")
+    json_export = demo.tm.export(format="json")
     export_json_time = time.time() - start_time
     performance_results['export_json'] = export_json_time
     print(f"   JSON export: {export_json_time:.3f}s ({len(json_export)} characters)")
     
     start_time = time.time()
-    markdown_export = demo.tm.export_tasks(format="markdown")
+    markdown_export = demo.tm.export(format="markdown")
     export_md_time = time.time() - start_time
     performance_results['export_markdown'] = export_md_time
     print(f"   Markdown export: {export_md_time:.3f}s ({len(markdown_export)} characters)")
@@ -486,7 +486,7 @@ def demonstrate_analytics_and_reporting(demo: LargeScaleDemo, task_data: Dict):
     print("📈 Generating enterprise-level project analytics...")
     
     # Get all current tasks
-    all_tasks = demo.tm.list_tasks(limit=None)
+    all_tasks = demo.tm.list(limit=None)
     
     # 1. Overall project health metrics
     print("\n1. 📊 Project Health Metrics:")
@@ -663,7 +663,7 @@ def demonstrate_data_lifecycle_management(demo: LargeScaleDemo):
     print("     - Notifications >30 days: Delete after archival")
     
     # Simulate archival process
-    archival_candidates = demo.tm.list_tasks(status="completed")
+    archival_candidates = demo.tm.list(status="completed")
     archival_count = len([t for t in archival_candidates if 'old' in str(t)])  # Simplified
     
     print(f"   Tasks eligible for archival: {archival_count:,}")
@@ -701,7 +701,7 @@ def generate_executive_summary(demo: LargeScaleDemo, task_data: Dict, performanc
     print(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"Project: Next-Gen E-commerce Platform v3.0")
     
-    all_tasks = demo.tm.list_tasks(limit=None)
+    all_tasks = demo.tm.list(limit=None)
     completed_tasks = [t for t in all_tasks if t['status'] == 'completed']
     in_progress_tasks = [t for t in all_tasks if t['status'] == 'in_progress']
     blocked_tasks = [t for t in all_tasks if t['status'] == 'blocked']
@@ -769,7 +769,6 @@ def main():
     try:
         # Initialize demo environment
         demo = LargeScaleDemo()
-        demo.tm.init_db()
         
         # Create large-scale project structure
         print("🚀 Setting up large-scale enterprise project...")

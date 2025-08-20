@@ -36,7 +36,7 @@ def print_tasks(tm, title="Current Tasks"):
     print(f"\n{title}:")
     print("-" * 40)
     
-    tasks = tm.list_tasks()
+    tasks = tm.list()
     if not tasks:
         print("No tasks found.")
         return
@@ -67,7 +67,6 @@ def demonstrate_basic_operations():
     
     # Initialize database
     try:
-        tm.init_db()
         print("✓ Database initialized")
     except Exception as e:
         print(f"Database already exists or error: {e}")
@@ -97,18 +96,18 @@ def demonstrate_basic_operations():
     print("\n2. Updating Task Status:")
     
     # Start working on first task
-    success = tm.update_task(task1_id, status="in_progress")
+    success = tm.update(task1_id, status="in_progress")
     print(f"   Task {task1_id} set to in_progress: {success}")
     
     # Assign second task
-    success = tm.update_task(task2_id, assignee="alice_dev")
+    success = tm.update(task2_id, assignee="alice_dev")
     print(f"   Task {task2_id} assigned to alice_dev: {success}")
     
     print_tasks(tm, "After Status Updates")
     
     # Complete first task
     print("\n3. Completing Tasks:")
-    success = tm.complete_task(task1_id)
+    success = tm.complete(task1_id)
     print(f"   Task {task1_id} completed: {success}")
     
     print_tasks(tm, "After Completion")
@@ -155,19 +154,19 @@ def demonstrate_dependencies():
     
     # Complete foundation task - should unblock API task
     print(f"   Completing foundation task {foundation_id}...")
-    tm.complete_task(foundation_id)
+    tm.complete(foundation_id)
     
     print_tasks(tm, "After Foundation Completion")
     
     # Complete API task - should unblock UI task
     print(f"   Completing API task {api_id}...")
-    tm.complete_task(api_id)
+    tm.complete(api_id)
     
     print_tasks(tm, "After API Completion")
     
     # Complete UI task - should unblock tests (since API is also done)
     print(f"   Completing UI task {ui_id}...")
-    tm.complete_task(ui_id)
+    tm.complete(ui_id)
     
     print_tasks(tm, "After UI Completion")
 
@@ -306,11 +305,11 @@ def demonstrate_tags_and_filtering():
     print("\n2. Filtering tasks:")
     
     # Filter by status
-    pending_tasks = tm.list_tasks(status="pending")
+    pending_tasks = tm.list(status="pending")
     print(f"   Pending tasks: {len(pending_tasks)}")
     
     # Filter by priority
-    high_priority_tasks = [t for t in tm.list_tasks() if t['priority'] in ['high', 'critical']]
+    high_priority_tasks = [t for t in tm.list() if t['priority'] in ['high', 'critical']]
     print(f"   High/Critical priority tasks: {len(high_priority_tasks)}")
     for task in high_priority_tasks:
         print(f"     - [{task['id']}] {task['title']} ({task['priority']})")
@@ -337,14 +336,14 @@ def demonstrate_notifications():
     print_tasks(tm)
     
     print("\n2. Checking notifications before completion:")
-    notifications = tm.check_notifications()
+    notifications = tm.watch()
     print(f"   Current notifications: {len(notifications)}")
     
     print("\n3. Completing parent task (should generate notifications):")
-    tm.complete_task(parent_id)
+    tm.complete(parent_id)
     
     print("\n4. Checking notifications after completion:")
-    notifications = tm.check_notifications()
+    notifications = tm.watch()
     print(f"   New notifications: {len(notifications)}")
     for notif in notifications:
         print(f"     - [{notif['type']}] {notif['message']}")
@@ -356,18 +355,18 @@ def demonstrate_export_functionality():
     tm = TaskManager()
     
     # Ensure we have some tasks
-    if not tm.list_tasks():
+    if not tm.list():
         tm.add("Sample task for export", priority="medium", tags=["sample"])
         tm.add("Another sample task", priority="low")
     
     print("1. Exporting to JSON:")
-    json_export = tm.export_tasks(format="json")
+    json_export = tm.export(format="json")
     print(f"   JSON export length: {len(json_export)} characters")
     print("   JSON sample:")
     print("   " + json_export[:200] + "..." if len(json_export) > 200 else "   " + json_export)
     
     print("\n2. Exporting to Markdown:")
-    markdown_export = tm.export_tasks(format="markdown")
+    markdown_export = tm.export(format="markdown")
     print(f"   Markdown export length: {len(markdown_export)} characters")
     print("   Markdown sample:")
     lines = markdown_export.split('\n')[:10]

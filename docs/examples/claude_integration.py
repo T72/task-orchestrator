@@ -113,7 +113,7 @@ class ClaudeIntegrationDemo:
         
         # Process TODOs
         for todo in analysis['todos']:
-            task_id = self.tm.add_task(
+            task_id = self.tm.add(
                 f"TODO: {todo['text']}",
                 description=f"Found in code analysis of {analysis['file_path']}",
                 priority=todo['priority'],
@@ -129,7 +129,7 @@ class ClaudeIntegrationDemo:
         
         # Process FIXMEs (higher priority)
         for fixme in analysis['fixmes']:
-            task_id = self.tm.add_task(
+            task_id = self.tm.add(
                 f"FIXME: {fixme['text']}",
                 description=f"Critical issue found in {analysis['file_path']}",
                 priority=fixme['priority'],
@@ -145,7 +145,7 @@ class ClaudeIntegrationDemo:
         
         # Process code smells
         for smell in analysis['code_smells']:
-            task_id = self.tm.add_task(
+            task_id = self.tm.add(
                 f"Refactor: {smell['text']}",
                 description=f"Code quality improvement suggested for {analysis['file_path']}",
                 priority=smell['priority'],
@@ -161,7 +161,7 @@ class ClaudeIntegrationDemo:
         
         # Process optimization opportunities
         for opt in analysis['optimization_opportunities']:
-            task_id = self.tm.add_task(
+            task_id = self.tm.add(
                 f"Optimize: {opt['text']}",
                 description=f"Performance improvement opportunity in {analysis['file_path']}",
                 priority=opt['priority'],
@@ -177,7 +177,7 @@ class ClaudeIntegrationDemo:
         
         # Process security concerns
         for security in analysis['security_concerns']:
-            task_id = self.tm.add_task(
+            task_id = self.tm.add(
                 f"Security: {security['text']}",
                 description=f"Security improvement needed in {analysis['file_path']}",
                 priority=security['priority'],
@@ -193,7 +193,7 @@ class ClaudeIntegrationDemo:
         
         # Process test suggestions
         for test in analysis['test_suggestions']:
-            task_id = self.tm.add_task(
+            task_id = self.tm.add(
                 f"Test: {test['text']}",
                 description=f"Testing improvement suggested for {analysis['file_path']}",
                 priority=test['priority'],
@@ -360,7 +360,7 @@ def demonstrate_intelligent_prioritization():
     print("   - Business value")
     
     # Get all tasks
-    tasks = claude_demo.tm.list_tasks()
+    tasks = claude_demo.tm.list()
     claude_tasks = [t for t in tasks if 'claude-generated' in t.get('tags', [])]
     
     if not claude_tasks:
@@ -430,7 +430,7 @@ def demonstrate_intelligent_prioritization():
         if task['priority'] != suggested_priority:
             print(f"     💡 Suggest changing priority from '{task['priority']}' to '{suggested_priority}'")
             # Actually update priority in demo
-            claude_demo.tm.update_task(task['id'], impact_notes=f"Priority updated by Claude analysis (score: {score})")
+            claude_demo.tm.update(task['id'], impact_notes=f"Priority updated by Claude analysis (score: {score})")
 
 def demonstrate_workflow_integration():
     """Show Claude Code integrating with development workflows."""
@@ -444,7 +444,7 @@ def demonstrate_workflow_integration():
     print("\n1. Claude Code starts working on authentication improvements:")
     
     # Create a feature task
-    feature_task_id = claude_demo.tm.add_task(
+    feature_task_id = claude_demo.tm.add(
         "Improve authentication security",
         description="Enhance login security with rate limiting and better validation",
         priority="high",
@@ -452,8 +452,8 @@ def demonstrate_workflow_integration():
     )
     
     # Assign to Claude
-    claude_demo.tm.update_task(feature_task_id, assignee=claude_demo.claude_agent_id)
-    claude_demo.tm.update_task(feature_task_id, status="in_progress")
+    claude_demo.tm.update(feature_task_id, assignee=claude_demo.claude_agent_id)
+    claude_demo.tm.update(feature_task_id, status="in_progress")
     
     print(f"   ✅ Started work on task: {feature_task_id}")
     
@@ -480,7 +480,7 @@ def demonstrate_workflow_integration():
     
     subtask_ids = []
     for subtask in subtasks:
-        task_id = claude_demo.tm.add_task(
+        task_id = claude_demo.tm.add(
             subtask['title'],
             depends_on=[feature_task_id],
             priority=subtask['priority'],
@@ -496,7 +496,7 @@ def demonstrate_workflow_integration():
     # Simulate completing main task and creating handoff
     print("\n3. Claude completes main implementation and creates handoff:")
     
-    claude_demo.tm.complete_task(feature_task_id)
+    claude_demo.tm.complete(feature_task_id)
     
     # Generate handoff documentation
     handoff_doc = claude_demo.generate_handoff_documentation(subtask_ids[0])  # For first subtask
@@ -522,7 +522,7 @@ def demonstrate_human_ai_collaboration():
     print("\n1. Creating collaborative workflow for 'User Dashboard Redesign':")
     
     # Epic created by human
-    epic_id = claude_demo.tm.add_task(
+    epic_id = claude_demo.tm.add(
         "User Dashboard Redesign",
         description="Complete redesign of user dashboard with modern UI and improved UX",
         priority="high",
@@ -538,13 +538,13 @@ def demonstrate_human_ai_collaboration():
     
     human_task_ids = []
     for title, assignee, tags in human_tasks:
-        task_id = claude_demo.tm.add_task(
+        task_id = claude_demo.tm.add(
             title,
             depends_on=[epic_id],
             priority="medium",
             tags=tags + ["human-created"]
         )
-        claude_demo.tm.update_task(task_id, assignee=assignee)
+        claude_demo.tm.update(task_id, assignee=assignee)
         human_task_ids.append(task_id)
         print(f"   👤 Human task: [{task_id}] {title} → {assignee}")
     
@@ -561,7 +561,7 @@ def demonstrate_human_ai_collaboration():
     
     claude_task_ids = []
     for title, priority, file_path in claude_tasks:
-        task_id = claude_demo.tm.add_task(
+        task_id = claude_demo.tm.add(
             title,
             depends_on=human_task_ids[:2],  # Depends on research and mockups
             priority=priority,
@@ -584,11 +584,11 @@ def demonstrate_human_ai_collaboration():
     print("\n4. Simulating task completion and notifications:")
     
     # Human completes design
-    claude_demo.tm.complete_task(human_task_ids[1])  # UI mockups
+    claude_demo.tm.complete(human_task_ids[1])  # UI mockups
     print("   ✅ Human completed: UI mockups")
     
     # This should unblock Claude tasks
-    unblocked_tasks = claude_demo.tm.list_tasks(status="pending")
+    unblocked_tasks = claude_demo.tm.list(status="pending")
     claude_ready_tasks = [t for t in unblocked_tasks if t['id'] in claude_task_ids]
     
     if claude_ready_tasks:
@@ -596,13 +596,13 @@ def demonstrate_human_ai_collaboration():
         
         # Claude starts working on ready tasks
         for task in claude_ready_tasks[:2]:  # Start first 2
-            claude_demo.tm.update_task(task['id'], 
+            claude_demo.tm.update(task['id'], 
                                      assignee=claude_demo.claude_agent_id,
                                      status="in_progress")
             print(f"   🤖 Claude started: [{task['id']}] {task['title']}")
     
     # Show notifications
-    notifications = claude_demo.tm.check_notifications()
+    notifications = claude_demo.tm.watch()
     if notifications:
         print(f"\n📬 Notifications generated ({len(notifications)}):")
         for notif in notifications[:3]:
@@ -639,7 +639,7 @@ def demonstrate_claude_code_commands():
     print("\n🚀 Demonstrating actual CLI integration:")
     
     # Create a task that Claude Code might create
-    task_id = claude_demo.tm.add_task(
+    task_id = claude_demo.tm.add(
         "Implement error boundary for React components",
         description="Add error boundaries to prevent component crashes from breaking the entire app",
         priority="medium",
@@ -654,7 +654,7 @@ def demonstrate_claude_code_commands():
         print(f"   ✅ Claude Code created task: [{task_id}]")
         
         # Show how Claude would update the task
-        claude_demo.tm.update_task(
+        claude_demo.tm.update(
             task_id, 
             assignee=claude_demo.claude_agent_id,
             status="in_progress"
@@ -662,14 +662,14 @@ def demonstrate_claude_code_commands():
         print(f"   🤖 Claude Code started working on task")
         
         # Generate progress update
-        claude_demo.tm.update_task(
+        claude_demo.tm.update(
             task_id,
             impact_notes="Implemented basic error boundary, adding tests and documentation"
         )
         print(f"   📝 Claude Code added progress notes")
         
         # Complete the task
-        claude_demo.tm.complete_task(task_id)
+        claude_demo.tm.complete(task_id)
         print(f"   ✅ Claude Code completed task")
 
 def main():
@@ -682,7 +682,6 @@ def main():
     try:
         # Initialize clean environment
         tm = TaskManager()
-        tm.init_db()
         
         # Run demonstrations
         created_tasks = demonstrate_automated_task_creation()
