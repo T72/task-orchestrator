@@ -1,8 +1,12 @@
 # Minimal Task Orchestrator Instructions for CLAUDE.md
 
-**Copy everything between the horizontal lines below and paste it into your project's CLAUDE.md file:**
+This template provides essential Task Orchestrator integration for quick setup.
 
----
+## 📋 **COPY THIS ENTIRE SECTION TO YOUR CLAUDE.md**
+
+**Select everything from "START COPY" to "END COPY" and paste into your project's CLAUDE.md file:**
+
+<!-- START COPY -->
 
 ## Task Orchestrator
 
@@ -55,4 +59,18 @@ export TM_AGENT_ID="[role]_[specialty]_[session]"
 
 Add to whitelisted commands: `./tm *`
 
+<!-- END COPY -->
+
 ---
+
+## What This Provides
+
+This minimal setup enables:
+- Basic task management with Task Orchestrator
+- Essential multi-agent coordination protocols
+- Mandatory communication channels for AI agents
+- Quick start without overwhelming complexity
+
+## Upgrade Options
+
+For comprehensive multi-agent coordination with all scenarios and protocols, use the [Full Template](claude-md-template.md).
