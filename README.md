@@ -147,11 +147,11 @@ This enables true parallel development where specialized agents (database, backe
 ## 📚 Documentation & Resources
 
 ### Essential Guides
-- **[User Guide](docs/guides/user-guide.md)** - Complete manual with best practices
-- **[Developer Guide](docs/guides/developer-guide.md)** - Architecture and contribution guide
+- **[User Guide](docs/user-guide.md)** - Complete manual with best practices
+- **[Developer Guide](docs/developer-guide.md)** - Architecture and contribution guide
 - **[API Reference](docs/reference/api-reference.md)** - Complete technical documentation
-- **[Troubleshooting](docs/guides/troubleshooting.md)** - Solutions to common issues
-- **[Claude Code Integration](deploy/claude-code-whitelist.md)** - **REQUIRED** for Claude Code users
+- **[Troubleshooting](docs/troubleshooting.md)** - Solutions to common issues
+- **[Claude Code Quick Start](docs/quickstart-claude-code.md)** - Quick setup for Claude Code users
 
 ### Working Examples
 Run these directly to learn by doing:
