@@ -16,8 +16,10 @@ Task Orchestrator helps by automatically managing dependencies, unblocking work 
 ## What You Get
 
 - **Reduced Blocking**: Dependencies resolve automatically - when task A completes, task B can be unblocked
-- **Better Context**: Tasks can link directly to specific files and line numbers
-- **Improved Parallel Work**: Helps multiple developers and AI agents coordinate better
+- **Better Context**: Tasks carry shared context between agents, eliminating re-explanation
+- **AI Agent Collaboration**: Specialized agents can share progress, maintain private notes, and coordinate seamlessly
+- **Improved Parallel Work**: Multiple developers and AI agents work together without conflicts
+- **Real-Time Orchestration**: Watch command enables instant coordination when tasks unblock
 - **Minimal Setup**: Simple configuration, Python standard library only
 - **Cross-Platform**: Works on Linux, macOS, and Windows with Python 3.8+
 
@@ -80,6 +82,67 @@ FEATURE=$(./tm add "Payment system" | grep -o '[a-f0-9]\{8\}')
 # Developer 3 watches for completion
 ./tm watch  # Gets instant notification when payment system is ready
 ```
+
+## 🤖 AI Agent Orchestration
+
+Task Orchestrator is designed for the era of AI-powered development, where multiple specialized agents work together on complex tasks.
+
+### Shared Context - No More Copy-Pasting
+
+When you delegate a task to an agent, you can provide rich context that travels with the task:
+
+```bash
+# Provide context when creating a task
+./tm add "Implement OAuth2 authentication" \
+  --context "Use existing User model, integrate with Google & GitHub providers" \
+  --assignee backend-agent
+
+# The backend agent receives all context automatically
+# No need to re-explain requirements to each new agent
+```
+
+### Private Agent Notes - Clean Reasoning Space
+
+Agents can maintain private notes during their work without cluttering the shared space:
+
+```bash
+# Agent adds private reasoning notes
+./tm note $TASK_ID --private "Considering JWT vs session tokens. 
+JWT better for our stateless architecture. Checking token rotation strategy..."
+
+# These notes help agents reason through problems
+# Other agents see results, not the entire thought process
+```
+
+### Real-Time Orchestration
+
+An orchestrating agent can monitor and coordinate multiple specialists:
+
+```bash
+# Orchestrator watches for tasks to unblock
+./tm watch
+
+# When backend agent completes authentication:
+# > "Task 'OAuth2 authentication' completed. Task 'Frontend login UI' now unblocked."
+
+# Orchestrator immediately assigns to frontend specialist
+./tm assign $FRONTEND_TASK frontend-agent
+```
+
+### Progress Transparency
+
+Agents share progress updates, enabling smooth handoffs:
+
+```bash
+# Database agent updates progress
+./tm progress $TASK_ID "Schema designed, 3/5 tables created"
+
+# Backend agent can see exactly where things stand
+./tm show $TASK_ID
+# Shows: "In Progress: Schema designed, 3/5 tables created"
+```
+
+This enables true parallel development where specialized agents (database, backend, frontend, testing) work simultaneously without stepping on each other's toes.
 
 ## 📚 Documentation & Resources
 
