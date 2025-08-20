@@ -153,6 +153,18 @@ This enables true parallel development where specialized agents (database, backe
 - **[Troubleshooting](docs/troubleshooting.md)** - Solutions to common issues
 - **[Claude Code Quick Start](docs/quickstart-claude-code.md)** - Quick setup for Claude Code users
 
+### Claude Code Integration
+
+To enable optimal Task Orchestrator usage with Claude Code in your projects:
+
+1. **Add to CLAUDE.md**: Include Task Orchestrator instructions in your project's CLAUDE.md file
+2. **Choose a template**:
+   - **[Full Template](docs/examples/claude-md-template.md)** - Comprehensive instructions with all features
+   - **[Minimal Template](docs/examples/claude-md-minimal.md)** - Just the essentials for quick setup
+3. **Whitelist commands**: Add `./tm *` to your whitelisted commands
+
+This ensures Claude Code knows exactly how to leverage Task Orchestrator for your specific needs.
+
 ### Working Examples
 Run these directly to learn by doing:
 ```bash

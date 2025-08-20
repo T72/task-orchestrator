@@ -128,9 +128,19 @@ export TM_AGENT_ID="api_specialist"
 
 ## 🔧 Configuration for Claude Code
 
-### ⚠️ ESSENTIAL: Claude Code Whitelist Setup
+### ⚠️ ESSENTIAL: Add Task Orchestrator to Your CLAUDE.md
 
-**BEFORE using Task Orchestrator with Claude Code, you MUST configure command whitelisting to avoid confirmation prompts on every command:**
+**For optimal Claude Code integration, add Task Orchestrator instructions to your project's CLAUDE.md file:**
+
+1. **Copy our template**: See [claude-md-template.md](examples/claude-md-template.md) for a complete template section
+2. **Add to your CLAUDE.md**: Include the Task Orchestrator section in your project's CLAUDE.md
+3. **Customize as needed**: Adjust workflows and rules to match your project
+
+This ensures Claude Code knows exactly how to use Task Orchestrator for your specific project needs.
+
+### Command Whitelisting Setup
+
+**Configure command whitelisting to avoid confirmation prompts on every command:**
 
 ```json
 {
