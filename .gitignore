@@ -105,4 +105,4 @@ htmlcov/
 # ====================
 build/
 dist/
-*.egg-info/
+*.egg-info/scripts/
