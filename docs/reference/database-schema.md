@@ -8,7 +8,9 @@ This document describes the complete database schema for Task Orchestrator.
 **Last Updated**: 2025-08-20  
 **Location**: Implementation in `src/tm_production.py`
 
-## Core Tables
+> **⚠️ IMPORTANT NOTICE**: This documentation describes both the **current implementation** and **planned enhancements**. Tables marked as "PLANNED" are documented for future implementation but are not yet in the codebase.
+
+## Core Tables (IMPLEMENTED)
 
 ### 1. `tasks` Table
 
@@ -38,18 +40,19 @@ CREATE TABLE IF NOT EXISTS tasks (
 
 Manages task dependency relationships.
 
+**Current Implementation:**
 ```sql
 CREATE TABLE IF NOT EXISTS dependencies (
     task_id TEXT NOT NULL,     -- Task that has the dependency
     depends_on TEXT NOT NULL,   -- Task that must complete first
-    PRIMARY KEY (task_id, depends_on),
-    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
-    FOREIGN KEY (depends_on) REFERENCES tasks(id) ON DELETE CASCADE
+    PRIMARY KEY (task_id, depends_on)
 )
 ```
 
-**Constraints**:
-- No circular dependencies (enforced in application)
+**Note**: Foreign key constraints are not currently enforced in the implementation but are planned for future versions.
+
+**Constraints (enforced in application)**:
+- No circular dependencies
 - Self-dependencies not allowed
 - Composite primary key ensures unique dependency pairs
 
@@ -90,11 +93,11 @@ CREATE TABLE IF NOT EXISTS participants (
 )
 ```
 
-## Extended Tables (Production Version)
+## Extended Tables (PLANNED - Not Yet Implemented)
 
-### 5. `context_updates` Table
+### 5. `context_updates` Table (PLANNED)
 
-Stores shared context and private notes for tasks.
+**Note**: Currently, context sharing is implemented using YAML files in `.task-orchestrator/contexts/` directory. This table is planned for future database-based implementation.
 
 ```sql
 CREATE TABLE IF NOT EXISTS context_updates (
@@ -108,14 +111,18 @@ CREATE TABLE IF NOT EXISTS context_updates (
 )
 ```
 
+**Current Implementation**: 
+- Context stored in `.task-orchestrator/contexts/{task_id}.yaml`
+- Private notes stored in `.task-orchestrator/private_notes/{task_id}.yaml`
+
 **Update Types**:
 - `shared`: Public coordination information
 - `private`: Internal agent reasoning
 - `discovery`: Important findings for all agents
 
-### 6. `file_refs` Table
+### 6. `file_refs` Table (PLANNED)
 
-Links tasks to specific file locations.
+Links tasks to specific file locations. Currently file references are stored as part of task creation but not in a separate table.
 
 ```sql
 CREATE TABLE IF NOT EXISTS file_refs (
@@ -129,9 +136,9 @@ CREATE TABLE IF NOT EXISTS file_refs (
 )
 ```
 
-### 7. `audit_log` Table
+### 7. `audit_log` Table (PLANNED)
 
-Tracks all changes for accountability.
+Tracks all changes for accountability. Not yet implemented in current version.
 
 ```sql
 CREATE TABLE IF NOT EXISTS audit_log (
@@ -145,9 +152,9 @@ CREATE TABLE IF NOT EXISTS audit_log (
 )
 ```
 
-## Indexes
+## Indexes (PLANNED)
 
-For optimal performance, the following indexes are created:
+**Note**: These indexes are planned for performance optimization but are not yet implemented in the current version.
 
 ```sql
 CREATE INDEX idx_tasks_status ON tasks(status);
@@ -159,6 +166,30 @@ CREATE INDEX idx_notifications_agent ON notifications(agent_id, read);
 CREATE INDEX idx_context_task ON context_updates(task_id);
 CREATE INDEX idx_file_refs_task ON file_refs(task_id);
 ```
+
+## Current Implementation vs Documentation
+
+### What's Actually Implemented
+- ✅ `tasks` table (core functionality)
+- ✅ `dependencies` table (without foreign keys)
+- ✅ `notifications` table
+- ✅ `participants` table
+- ✅ Context sharing via YAML files (not database)
+- ✅ Private notes via YAML files (not database)
+
+### What's Planned but Not Implemented
+- ❌ Foreign key constraints
+- ❌ CHECK constraints  
+- ❌ Performance indexes
+- ❌ `context_updates` table (using YAML files instead)
+- ❌ `file_refs` table
+- ❌ `audit_log` table
+
+### File-Based Storage (Current)
+Instead of some database tables, the current implementation uses files:
+- **Contexts**: `.task-orchestrator/contexts/{task_id}.yaml`
+- **Private Notes**: `.task-orchestrator/private_notes/{task_id}.yaml`
+- **Discoveries**: Stored in context YAML files
 
 ## Migration Guidelines
 
