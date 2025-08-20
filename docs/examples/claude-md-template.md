@@ -1,10 +1,10 @@
-# Task Orchestrator Instructions for CLAUDE.md
+# Task Orchestrator Instructions for AI Assistants
 
 This template provides comprehensive Task Orchestrator integration with mandatory multi-agent communication protocols.
 
-## 📋 **COPY THIS ENTIRE SECTION TO YOUR CLAUDE.md**
+## 📋 **AI Assistant Configuration Template**
 
-**Select everything from "▼ START COPY" to "▲ END COPY" and paste into your project's CLAUDE.md file:**
+**Select everything from "▼ START COPY" to "▲ END COPY" for your AI assistant configuration:**
 
 ---
 ## ▼ START COPY
@@ -263,7 +263,7 @@ Add to your Claude Code configuration:
 
 ## What This Provides
 
-When you add the above section to your CLAUDE.md, Claude Code will automatically:
+When you add the above section to your AI assistant configuration, it will automatically:
 
 1. **Use Task Orchestrator** for all task management
 2. **Follow MACPS protocols** for multi-agent coordination

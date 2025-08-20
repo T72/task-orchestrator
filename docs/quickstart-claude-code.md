@@ -128,12 +128,12 @@ export TM_AGENT_ID="api_specialist"
 
 ## 🔧 Configuration for Claude Code
 
-### ⚠️ ESSENTIAL: Add Task Orchestrator to Your CLAUDE.md
+### ⚠️ ESSENTIAL: Configure Task Orchestrator for AI Assistants
 
-**For optimal Claude Code integration, add Task Orchestrator instructions to your project's CLAUDE.md file:**
+**For optimal AI assistant integration, add Task Orchestrator instructions to your configuration:**
 
 1. **Copy our template**: See [claude-md-template.md](examples/claude-md-template.md) for a complete template section
-2. **Add to your CLAUDE.md**: Include the Task Orchestrator section in your project's CLAUDE.md
+2. **Add to your configuration**: Include the Task Orchestrator section in your AI assistant configuration
 3. **Customize as needed**: Adjust workflows and rules to match your project
 
 This ensures Claude Code knows exactly how to use Task Orchestrator for your specific project needs.

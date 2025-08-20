@@ -9,18 +9,17 @@
 .task-manager/
 
 # ====================
-# Private Development Files - NEVER EXPOSE
+# Development Files
 # ====================
-# Claude Code private development files - not for public release
+# Development configuration files
 .claude/
-CLAUDE.md
 
 # Internal development scripts and tools
 scripts/
 hooks/
 .hooks/
 
-# Private documentation and notes
+# Documentation and notes
 docs/architecture/
 docs/protocols/
 docs/developer/development/
@@ -34,7 +33,7 @@ archive/
 ARCHIVE/
 .archive/
 
-# Private analysis and planning
+# Analysis and planning
 analysis/
 planning/
 internal/

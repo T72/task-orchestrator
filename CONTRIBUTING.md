@@ -94,15 +94,11 @@ python3 test_validation.py  # Validation tests
 ### Database Schema Changes
 
 If your contribution modifies the database schema:
-1. Review the current schema: [Auto-Generated Schema](docs/reference/database-schema-auto.md)
-2. Add `@doc` comments to your schema changes in `src/tm_production.py`:
-   ```python
-   column_name TEXT,  -- @doc: Description of column purpose
-   ```
+1. Review the current schema in `src/tm_production.py`
+2. Add clear comments to your schema changes
 3. Create a migration function for backward compatibility
 4. Test migration with both new and existing databases
-5. Documentation updates automatically via pre-commit hook
-6. For details, see [Single Source of Truth Documentation](docs/developer/single-source-of-truth-documentation.md)
+5. Update relevant documentation
 
 ### Performance Considerations
 

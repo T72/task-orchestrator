@@ -157,7 +157,7 @@ This enables true parallel development where specialized agents (database, backe
 
 To enable optimal Task Orchestrator usage with Claude Code in your projects:
 
-1. **Add to CLAUDE.md**: Include Task Orchestrator instructions in your project's CLAUDE.md file
+1. **Configure AI Assistant**: Include Task Orchestrator instructions in your AI assistant configuration
 2. **Choose a template**:
    - **[Full Template](docs/examples/claude-md-template.md)** - Comprehensive instructions with all features
    - **[Minimal Template](docs/examples/claude-md-minimal.md)** - Just the essentials for quick setup

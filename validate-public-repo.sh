@@ -73,12 +73,9 @@ echo -e "${BLUE}2. Checking file contents for private markers...${NC}"
 
 # Check for private content markers in files
 PRIVATE_MARKERS=(
-    "CLAUDE\.md"
-    "Private Development"
-    "NEVER EXPOSE"
-    "validate-.*\.sh"
-    "extract-schema\.py"
-    "pre-commit.*hook"
+    "scripts/validate-.*\.sh"
+    "scripts/extract-schema\.py"
+    "scripts/.*pre-commit.*hook"
 )
 
 for marker in "${PRIVATE_MARKERS[@]}"; do

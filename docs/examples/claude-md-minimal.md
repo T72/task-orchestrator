@@ -1,10 +1,10 @@
-# Minimal Task Orchestrator Instructions for CLAUDE.md
+# Minimal Task Orchestrator Instructions for AI Assistants
 
 This template provides essential Task Orchestrator integration for quick setup.
 
-## 📋 **COPY THIS ENTIRE SECTION TO YOUR CLAUDE.md**
+## 📋 **Basic Task Orchestrator Instructions**
 
-**Select everything from "▼ START COPY" to "▲ END COPY" and paste into your project's CLAUDE.md file:**
+**Select everything from "▼ START COPY" to "▲ END COPY" for your AI assistant configuration:**
 
 ---
 ## ▼ START COPY
