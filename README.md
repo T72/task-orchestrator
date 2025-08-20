@@ -5,62 +5,21 @@
 [![Tests](https://img.shields.io/badge/tests-passing-green.svg)](#testing)
 [![Version](https://img.shields.io/badge/version-2.0.1-demo-blue.svg)](https://github.com/T72/task-orchestrator/releases)
 
-## 🎯 WHY: Our Mission
+## Stop Fighting Task Dependencies
 
-**We believe that complex software development should be orchestrated, not chaotic.**
+**Many teams report spending up to 30% of development time on coordination. Task Orchestrator can help significantly reduce this overhead.**
 
-In today's world of parallel development, multi-agent AI systems, and distributed teams, task coordination has become the critical bottleneck. We exist to transform task management from a burden into a competitive advantage.
+When multiple developers and AI agents work on the same codebase, coordination becomes challenging. Tasks often block each other. Context can get lost. Simple changes sometimes cascade into larger delays.
 
-### The Problem We Solve
+Task Orchestrator helps by automatically managing dependencies, unblocking work when prerequisites complete, and maintaining context across your team.
 
-Modern development faces unprecedented coordination challenges:
-- **Parallel Work Conflicts**: Multiple developers and AI agents working simultaneously create dependency chaos
-- **Context Loss**: Critical information gets buried in tickets, chat, and disconnected tools
-- **Integration Friction**: Teams waste 30% of their time on coordination overhead
-- **Brittle Workflows**: One blocked task cascades into project-wide delays
+## What You Get
 
-### Our Purpose
-
-Task Orchestrator eliminates coordination waste by providing a single source of truth for task dependencies, enabling teams and AI agents to work in perfect harmony. We maximize delivered value by focusing on what matters: getting work done, not managing it.
-
-## 🚀 HOW: Our Approach
-
-We achieve orchestration excellence through **LEAN principles** and **radical simplicity**:
-
-### Core Principles
-
-1. **Zero Waste Philosophy**
-   - No external dependencies (Python stdlib only)
-   - No configuration overhead (works out of the box)
-   - No learning curve (Unix-style CLI)
-
-2. **Value-First Design**
-   - Every feature must eliminate coordination waste
-   - Automatic dependency resolution prevents blocking
-   - File-level tracking connects tasks to actual code
-
-3. **Continuous Flow**
-   - Lock-free concurrent access for parallel work
-   - Instant notification when blockers clear
-   - Seamless handoffs between agents and developers
-
-4. **Built-In Resilience**
-   - ACID-compliant SQLite for data integrity
-   - Automatic recovery from failures
-   - Cross-worktree synchronization
-
-## 🛠️ WHAT: The Task Orchestrator
-
-A lightweight, powerful orchestration system that transforms how teams and AI agents coordinate work.
-
-### Key Capabilities
-
-- **🔄 Smart Dependencies**: Automatic resolution, circular prevention, instant unblocking
-- **🔒 Concurrent Safe**: ACID-compliant with safe multi-agent access
-- **📁 Code-Aware**: Direct file and line number references for precise context
-- **🌐 Cross-Platform**: Linux, macOS, Windows - zero configuration needed
-- **📊 Export Ready**: JSON and Markdown for seamless tool integration
-- **🏷️ Flexible Organization**: Tags, priorities, and custom metadata
+- **Reduced Blocking**: Dependencies resolve automatically - when task A completes, task B can be unblocked
+- **Better Context**: Tasks can link directly to specific files and line numbers
+- **Improved Parallel Work**: Helps multiple developers and AI agents coordinate better
+- **Minimal Setup**: Simple configuration, Python standard library only
+- **Cross-Platform**: Works on Linux, macOS, and Windows with Python 3.8+
 
 ## ⚡ Quick Start (2 Minutes)
 
@@ -83,42 +42,43 @@ SETUP=$(./tm add "Setup environment" | grep -o '[a-f0-9]\{8\}')
 ./tm complete $SETUP  # Automatically unblocks dependent tasks!
 ```
 
-That's it! You're orchestrating. No configuration, no dependencies, just results.
+That's it! You're ready to start organizing your tasks more effectively.
 
-## 💡 Core Usage Patterns
+## 💡 Real-World Usage
 
-### Eliminate Blocking - Dependency Chains
+### Reduce Dependency Blocking
 ```bash
-# Create a feature workflow that never blocks
+# Create a feature that requires backend → frontend → tests
 API=$(./tm add "Create API endpoints" | grep -o '[a-f0-9]\{8\}')
 UI=$(./tm add "Build UI" --depends-on $API | grep -o '[a-f0-9]\{8\}')
 TEST=$(./tm add "Integration tests" --depends-on $UI | grep -o '[a-f0-9]\{8\}')
 
-# Complete API work → UI automatically unblocks → Tests automatically unblock
-./tm complete $API --impact-review
+# When you complete the API, the UI task automatically unblocks
+./tm complete $API
+# Now your frontend developer can immediately start working
 ```
 
-### Maximize Context - File-Aware Tasks
+### Track Exactly What Code Needs Work
 ```bash
-# Connect tasks directly to code
+# Link tasks to specific code locations
 ./tm add "Fix memory leak" --file src/cache.py:234 --priority critical
-./tm add "Refactor auth module" --file src/auth.py:100:250
 
-# See exactly what needs attention
+# See all tasks affecting specific files
 ./tm list --has-files
+# Shows: "Fix memory leak - src/cache.py:234" with direct line reference
 ```
 
-### Enable Parallel Work - Multi-Agent Coordination
+### Multiple Developers, Zero Conflicts
 ```bash
-# Agent 1: Create main task
-MAIN=$(./tm add "User dashboard" | grep -o '[a-f0-9]\{8\}')
+# Developer 1 creates the main feature
+FEATURE=$(./tm add "Payment system" | grep -o '[a-f0-9]\{8\}')
 
-# Agent 2: Pick up and work
-./tm assign $MAIN agent2
-./tm update $MAIN --status in_progress
+# Developer 2 claims and starts work
+./tm assign $FEATURE dev2
+./tm update $FEATURE --status in_progress
 
-# Agent 3: Get notified when ready
-./tm watch  # Real-time notifications when blockers clear
+# Developer 3 watches for completion
+./tm watch  # Gets instant notification when payment system is ready
 ```
 
 ## 📚 Documentation & Resources
@@ -188,19 +148,14 @@ We embrace LEAN contributions that eliminate waste and maximize value:
 
 MIT License - see [LICENSE](LICENSE) for details.
 
-## 🌟 Join the Movement
+## Try Task Orchestrator
 
-Task Orchestrator isn't just a tool—it's a philosophy. We believe that:
+Task Orchestrator can help reduce the time you spend on coordination, allowing more focus on development.
 
-- **Coordination should be invisible**: Focus on work, not workflow
-- **Dependencies should resolve themselves**: No manual tracking
-- **Context should travel with tasks**: Never lose critical information
-- **Simplicity beats complexity**: Every time, without exception
+**Quick setup:** Clone, initialize, and try creating your first dependency chain.
 
-**Ready to eliminate coordination waste?** Star us on [GitHub](https://github.com/T72/task-orchestrator) and join developers worldwide who are orchestrating their way to success.
+If you find it helpful, consider starring us on [GitHub](https://github.com/T72/task-orchestrator).
 
 ---
 
-*"We don't manage tasks. We orchestrate success."*
-
-**Task Orchestrator v2.0.1** | Built with purpose, delivered with passion.
+**Task Orchestrator v2.0.1** - A simple tool to help manage task dependencies.
