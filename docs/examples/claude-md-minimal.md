@@ -1,8 +1,9 @@
 # Minimal Task Orchestrator Instructions for CLAUDE.md
 
-**Copy the entire code block below and paste it into your project's CLAUDE.md file:**
+**Copy everything between the horizontal lines below and paste it into your project's CLAUDE.md file:**
 
-```markdown
+---
+
 ## Task Orchestrator
 
 This project uses Task Orchestrator (`./tm`) for task management.
@@ -53,6 +54,5 @@ export TM_AGENT_ID="[role]_[specialty]_[session]"
 ### Auto-Approved Commands
 
 Add to whitelisted commands: `./tm *`
-```
 
 ---

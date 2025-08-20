@@ -277,9 +277,10 @@ Link tasks to specific code locations:
 
 ## 📋 COPY-PASTE SECTION FOR YOUR CLAUDE.md
 
-**Copy the entire code block below and paste it into your project's CLAUDE.md file:**
+**Copy everything between the horizontal lines below and paste it into your project's CLAUDE.md file:**
 
-```markdown
+---
+
 ## Task Orchestrator Integration
 
 This project uses Task Orchestrator (`./tm`) for task management and multi-agent coordination.
@@ -474,7 +475,6 @@ Add to your Claude Code configuration:
     "./tm *"
   ]
 }
-```
 ```
 
 ---
