@@ -11,14 +11,25 @@ import statistics
 
 
 class MetricsCalculator:
-    """Calculate metrics from task data."""
+    """
+    Calculate metrics from task data.
+    
+    @implements FR-037: Metrics Collection Framework
+    @implements FR-038: Performance Analytics System
+    @implements FR-039: Feedback Analytics
+    """
     
     def __init__(self, db_path: str):
         """Initialize metrics calculator."""
         self.db_path = db_path
     
     def get_feedback_metrics(self) -> Dict[str, Any]:
-        """Calculate feedback-related metrics."""
+        """
+        Calculate feedback-related metrics.
+        
+        @implements FR-039: Feedback Analytics
+        @implements FR-037: Metrics Collection Framework
+        """
         with sqlite3.connect(str(self.db_path)) as conn:
             # Get all tasks with feedback
             cursor = conn.execute("""

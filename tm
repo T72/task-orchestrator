@@ -8,6 +8,7 @@ import sys
 import os
 import subprocess
 import shutil
+import json
 from pathlib import Path
 
 # Add src directory to path
@@ -484,6 +485,117 @@ def main():
                 print(f"  Feedback coverage: {metrics['feedback_coverage']:.1%}")
             else:
                 print("Usage: tm metrics [--feedback]")
+        elif command == "critical-path":
+            # Critical path visualization
+            # @implements FR-043: Critical Path Visualization Support
+            
+            # Import dependency graph
+            sys.path.insert(0, str(Path(__file__).parent / "src"))
+            from dependency_graph import DependencyGraph
+            
+            # Get all tasks (exclude completed)
+            tasks = tm.list(status="pending")
+            
+            if not tasks:
+                print("No active tasks to analyze")
+                sys.exit(0)
+            
+            # Build dependency graph
+            graph = DependencyGraph()
+            task_map = {}  # Map task ID to task details
+            
+            # Add nodes
+            for task in tasks:
+                task_id = task.get('id', '')
+                task_map[task_id] = task
+                estimated_hours = task.get('estimated_hours', 1.0)
+                graph.add_node(task_id, weight=estimated_hours)
+            
+            # Add edges based on dependencies
+            for task in tasks:
+                task_id = task.get('id', '')
+                depends_on = task.get('depends_on', [])
+                for dep_id in depends_on:
+                    # Note: task depends on dep_id
+                    graph.add_edge(task_id, dep_id)
+            
+            # Find critical path
+            critical_path, total_hours = graph.find_critical_path()
+            
+            if not critical_path:
+                print("No critical path found (possible cycle or no dependencies)")
+                sys.exit(0)
+            
+            # Identify blocking tasks
+            blocking_scores = graph.identify_blocking_tasks()
+            
+            # Sort tasks by blocking score
+            sorted_blockers = sorted(
+                blocking_scores.items(), 
+                key=lambda x: x[1], 
+                reverse=True
+            )[:5]  # Top 5 blockers
+            
+            # Display results
+            print("\n🎯 CRITICAL PATH ANALYSIS")
+            print("=" * 60)
+            
+            print(f"\n📊 Critical Path ({total_hours:.1f} hours total):")
+            print("-" * 40)
+            for i, node_id in enumerate(critical_path, 1):
+                task = task_map.get(node_id, {})
+                description = task.get('description') or task.get('title') or 'Unknown task'
+                description = description[:50] if description else 'Unknown'
+                hours = graph.weights.get(node_id, 1.0)
+                print(f"{i}. [{node_id[:8]}] {description} ({hours:.1f}h)")
+            
+            print(f"\n⏱️  Total Critical Path Duration: {total_hours:.1f} hours")
+            
+            print("\n🚫 Top Blocking Tasks:")
+            print("-" * 40)
+            for node_id, score in sorted_blockers:
+                task = task_map.get(node_id, {})
+                description = task.get('description') or task.get('title') or 'Unknown task'
+                description = description[:50] if description else 'Unknown'
+                dependents = len(graph.get_dependents(node_id))
+                on_critical = "🔴 CRITICAL" if node_id in critical_path else ""
+                print(f"• [{node_id[:8]}] {description}")
+                print(f"  Blocks: {dependents} tasks | Score: {score:.1f} {on_critical}")
+            
+            # Optional: Generate DOT file for graphical visualization
+            if len(sys.argv) > 2 and sys.argv[2] == "--dot":
+                dot_content = graph.to_dot()
+                dot_file = Path(".task-orchestrator/critical-path.dot")
+                dot_file.parent.mkdir(parents=True, exist_ok=True)
+                dot_file.write_text(dot_content)
+                print(f"\n📈 DOT file saved to: {dot_file}")
+                print("   Visualize with: dot -Tpng critical-path.dot -o critical-path.png")
+        
+        elif command == "report":
+            # Handle assessment report generation (FR-037)
+            if "--assessment" in sys.argv:
+                from assessment_reporter import AssessmentReporter
+                reporter = AssessmentReporter(tm.db_path)
+                
+                # Generate comprehensive assessment
+                assessment_data = reporter.generate_30_day_assessment()
+                
+                # Format and display report
+                formatted_report = reporter.format_assessment_report(assessment_data)
+                print(formatted_report)
+                
+                # Save report to file
+                report_file = Path(".task-orchestrator/reports/30_day_assessment.txt")
+                report_file.parent.mkdir(parents=True, exist_ok=True)
+                report_file.write_text(formatted_report)
+                print(f"\nReport saved to: {report_file}")
+                
+                # Also save raw JSON data
+                json_file = Path(".task-orchestrator/reports/30_day_assessment.json")
+                json_file.write_text(json.dumps(assessment_data, indent=2))
+                print(f"Raw data saved to: {json_file}")
+            else:
+                print("Usage: tm report [--assessment]")
         else:
             print(f"Command '{command}' not yet implemented in enhanced wrapper")
             print("Please use the production module directly for full functionality")

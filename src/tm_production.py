@@ -30,11 +30,15 @@ class TaskManager:
     """Simple task manager for multi-agent coordination"""
     
     def __init__(self):
-        # Use home directory for database by default, unless in test mode
-        if os.environ.get('TM_TEST_MODE'):
-            self.db_dir = Path.cwd() / ".task-orchestrator"
+        # Always use project-local database for isolation
+        # Check environment variable for custom location, otherwise use current directory
+        if os.environ.get('TM_DB_PATH'):
+            # Allow override via environment variable
+            self.db_dir = Path(os.environ.get('TM_DB_PATH'))
         else:
-            self.db_dir = Path.home() / ".task-orchestrator"
+            # Default to project-local database for isolation between projects
+            self.db_dir = Path.cwd() / ".task-orchestrator"
+        
         self.db_path = self.db_dir / "tasks.db"
         self.agent_id = os.environ.get('TM_AGENT_ID', self._generate_agent_id())
         self.repo_root = self._find_repo_root()
@@ -45,6 +49,14 @@ class TaskManager:
             self.error_handler = ErrorHandler(self.db_dir / "logs")
         except:
             self.error_handler = None
+        
+        # Initialize context manager
+        # @implements FR-041: Project Context Preservation
+        try:
+            from context_manager import ProjectContextManager
+            self.context_manager = ProjectContextManager(Path.cwd())
+        except:
+            self.context_manager = None
         
         # Initialize database with error handling
         try:
@@ -180,7 +192,17 @@ class TaskManager:
             priority: str = "medium", depends_on: List[str] = None,
             success_criteria: str = None, deadline: str = None,
             estimated_hours: float = None) -> str:
-        """Add a new task with optional Core Loop fields"""
+        """
+        Add a new task with optional Core Loop fields
+        
+        @implements FR-CORE-1: Task Creation System
+        @implements FR-001: Task Title and Description
+        @implements FR-002: Task Priority Management
+        @implements FR-003: Task Dependency System
+        @implements FR-004: Success Criteria Definition
+        @implements FR-005: Deadline Management
+        @implements FR-006: Time Estimation
+        """
         # Validate title
         if not title or not title.strip():
             if self.error_handler:
@@ -433,7 +455,16 @@ class TaskManager:
     
     def complete(self, task_id: str, completion_summary: str = None, 
                 actual_hours: float = None, validate: bool = False) -> bool:
-        """Complete a task with optional Core Loop fields"""
+        """
+        Complete a task with optional Core Loop fields
+        
+        @implements FR-CORE-3: Task Completion System
+        @implements FR-010: Task Completion Status
+        @implements FR-011: Completion Summary Capture
+        @implements FR-012: Actual Time Tracking
+        @implements FR-013: Completion Validation
+        @implements FR-014: Dependency Resolution
+        """
         now = datetime.now().isoformat()
         
         with sqlite3.connect(str(self.db_path)) as conn:
@@ -590,7 +621,14 @@ class TaskManager:
             return "\n".join(output)
     
     def list(self, status: str = None, assignee: str = None, has_deps: bool = False) -> List[Dict]:
-        """List tasks with optional filters"""
+        """
+        List tasks with optional filters
+        
+        @implements FR-CORE-2: Task Listing and Query System
+        @implements FR-007: Task Status Filtering
+        @implements FR-008: Task Assignment Filtering
+        @implements FR-009: Dependency Filtering
+        """
         if has_deps:
             # Query for tasks that have dependencies
             query = """
@@ -711,7 +749,14 @@ class TaskManager:
     
     def feedback(self, task_id: str, quality: int = None, 
                 timeliness: int = None, notes: str = None) -> bool:
-        """Provide feedback on a completed task"""
+        """
+        Provide feedback on a completed task
+        
+        @implements FR-029: Quality Feedback System
+        @implements FR-030: Timeliness Feedback System  
+        @implements FR-031: Feedback Notes Collection
+        @implements FR-032: Feedback Data Persistence
+        """
         # Validate scores
         if quality is not None and not (1 <= quality <= 5):
             raise ValueError("Quality score must be between 1 and 5")
@@ -742,7 +787,13 @@ class TaskManager:
             return False
     
     def progress(self, task_id: str, update: str) -> bool:
-        """Add a progress update to a task"""
+        """
+        Add a progress update to a task
+        
+        @implements FR-027: Progress Tracking System
+        @implements FR-028: Progress Update Storage
+        @implements COLLAB-002: Shared progress visibility
+        """
         try:
             # Store progress as shared context with type 'progress'
             progress_data = {

@@ -12,7 +12,13 @@ import hashlib
 
 
 class TelemetryCapture:
-    """Capture and store telemetry events."""
+    """
+    Capture and store telemetry events.
+    
+    @implements FR-038: Performance Analytics System
+    @implements FR-037: Metrics Collection Framework
+    @implements PERF-001: System Performance Monitoring
+    """
     
     def __init__(self, telemetry_dir: Path = None):
         """Initialize telemetry capture."""

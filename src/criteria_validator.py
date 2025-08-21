@@ -10,7 +10,13 @@ from datetime import datetime
 
 
 class CriteriaValidator:
-    """Validate task completion against success criteria."""
+    """
+    Validate task completion against success criteria.
+    
+    @implements FR-004: Success Criteria Definition
+    @implements FR-013: Completion Validation
+    @implements CORE-VALIDATION: Success criteria enforcement
+    """
     
     def __init__(self):
         """Initialize criteria validator."""

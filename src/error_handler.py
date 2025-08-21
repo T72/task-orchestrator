@@ -37,7 +37,13 @@ class TelemetryError(TaskOrchestratorError):
 
 
 class ErrorHandler:
-    """Centralized error handling and recovery."""
+    """
+    Centralized error handling and recovery.
+    
+    @implements SYS-001: System Error Handling
+    @implements SYS-002: Error Recovery Mechanisms  
+    @implements SYS-003: Error Logging and Reporting
+    """
     
     def __init__(self, log_dir: Path = None):
         """Initialize error handler."""

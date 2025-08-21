@@ -13,7 +13,16 @@ from datetime import datetime
 from typing import Optional, List, Dict, Any
 
 class CollaborationManager:
-    """Manages multi-agent collaboration features"""
+    """
+    Manages multi-agent collaboration features
+    
+    @implements COLLAB-001: Multi-Agent Context Sharing
+    @implements COLLAB-002: Shared Progress Visibility  
+    @implements COLLAB-003: Private Notes System
+    @implements COLLAB-004: Agent Discovery
+    @implements COLLAB-005: Sync Points
+    @implements COLLAB-006: Context Aggregation
+    """
     
     def __init__(self, repo_root: Path):
         self.repo_root = repo_root

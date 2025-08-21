@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Tests](https://img.shields.io/badge/tests-passing-green.svg)](#testing)
-[![Version](https://img.shields.io/badge/version-2.3.0-blue.svg)](https://github.com/T72/task-orchestrator/releases)
+[![Version](https://img.shields.io/badge/version-2.5.0-blue.svg)](https://github.com/T72/task-orchestrator/releases)
 
 ## Stop Fighting Task Dependencies
 
@@ -46,6 +46,19 @@ SETUP=$(./tm add "Setup environment" | grep -o '[a-f0-9]\{8\}')
 
 That's it! You're ready to start organizing your tasks more effectively.
 
+### 📁 Project Isolation (NEW in v2.4)
+
+**Important**: Task Orchestrator now uses **project-local databases** by default. Each project maintains its own `.task-orchestrator/` directory with isolated tasks. This prevents task contamination between projects.
+
+```bash
+# Each project has its own database
+project-a/.task-orchestrator/tasks.db  # Tasks for Project A only
+project-b/.task-orchestrator/tasks.db  # Tasks for Project B only
+
+# To use the old global database (for backward compatibility):
+export TM_DB_PATH=~/.task-orchestrator
+```
+
 ## 💡 Real-World Usage
 
 ### Reduce Dependency Blocking
@@ -65,9 +78,9 @@ TEST=$(./tm add "Integration tests" --depends-on $UI | grep -o '[a-f0-9]\{8\}')
 # Link tasks to specific code locations
 ./tm add "Fix memory leak" --file src/cache.py:234 --priority critical
 
-# See all tasks affecting specific files
-./tm list --has-files
-# Shows: "Fix memory leak - src/cache.py:234" with direct line reference
+# See all tasks with dependencies
+./tm list --has-deps
+# Shows tasks that depend on or are dependencies of other tasks
 ```
 
 ### Multiple Developers, Zero Conflicts
@@ -236,18 +249,18 @@ All existing tasks remain unchanged - Core Loop features are optional enhancemen
 ## 📚 Documentation & Resources
 
 ### Essential Guides
-- **[User Guide](guides/user-guide.md)** - Complete manual with best practices
-- **[Developer Guide](guides/developer-guide.md)** - Architecture and contribution guide
-- **[API Reference](reference/api-reference.md)** - Complete technical documentation
-- **[Troubleshooting](guides/troubleshooting.md)** - Solutions to common issues
-- **[Claude Code Integration](guides/quickstart-claude-code.md)** - **REQUIRED** for Claude Code users
+- **[User Guide](docs/guides/user-guide.md)** - Complete manual with best practices
+- **[Developer Guide](docs/guides/developer-guide.md)** - Architecture and contribution guide
+- **[API Reference](docs/reference/api-reference.md)** - Complete technical documentation
+- **[Troubleshooting](docs/guides/troubleshooting.md)** - Solutions to common issues
+- **[Claude Code Integration](deploy/CLAUDE_CODE_WHITELIST.md)** - **REQUIRED** for Claude Code users
 
 ### Working Examples
 Run these directly to learn by doing:
 ```bash
-python3 examples/basic_usage.py          # Core concepts
-python3 examples/dependency_management.py # Complex workflows
-python3 examples/multi_agent_workflow.py  # Team coordination
+python3 docs/examples/basic_usage.py          # Core concepts
+python3 docs/examples/dependency_management.py # Complex workflows
+python3 docs/examples/multi_agent_workflow.py  # Team coordination
 ```
 
 ## 🧪 Testing & Quality
@@ -269,10 +282,17 @@ python3 examples/multi_agent_workflow.py  # Team coordination
 - 10MB disk space
 - Linux, macOS, or Windows
 
-### Advanced Setup
+### Database Location (v2.4+)
+
+By default, Task Orchestrator creates a **project-local** database in `./.task-orchestrator/` for complete isolation between projects.
+
 ```bash
-# Custom database location
-export TM_DB_PATH="/path/to/tasks.db"
+# Default: Project-local database (NEW in v2.4)
+./tm init  # Creates ./.task-orchestrator/tasks.db in current directory
+
+# Override with environment variable if needed
+export TM_DB_PATH="/custom/path"  # Use custom location
+export TM_DB_PATH="~/.task-orchestrator"  # Use old global behavior
 
 # Adjust for slow systems
 export TM_LOCK_TIMEOUT=30
@@ -310,4 +330,4 @@ If you find it helpful, consider starring us on [GitHub](https://github.com/T72/
 
 ---
 
-**Task Orchestrator v2.3.0** - Core Loop enhancement for quality tracking and team efficiency.
+**Task Orchestrator v2.5.0** - Simplified architecture with enhanced project isolation and Core Loop features.

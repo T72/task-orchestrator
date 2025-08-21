@@ -10,7 +10,14 @@ from typing import Dict, Any, Optional
 
 
 class ConfigManager:
-    """Manages Core Loop configuration and feature toggles."""
+    """
+    Manages Core Loop configuration and feature toggles.
+    
+    @implements FR-033: Configuration Management System
+    @implements FR-034: Feature Toggle Framework
+    @implements FR-035: Configuration Persistence
+    @implements FR-036: Minimal Mode Configuration
+    """
     
     # Default configuration
     DEFAULT_CONFIG = {
@@ -85,7 +92,11 @@ class ConfigManager:
             print(f"Warning: Failed to save config: {e}")
     
     def enable_feature(self, feature: str) -> bool:
-        """Enable a specific Core Loop feature."""
+        """
+        Enable a specific Core Loop feature.
+        
+        @implements FR-034: Feature Toggle Framework
+        """
         if feature not in self.VALID_FEATURES:
             raise ValueError(f"Unknown feature: {feature}. Valid features: {', '.join(self.VALID_FEATURES)}")
         
@@ -95,7 +106,11 @@ class ConfigManager:
         return True
     
     def disable_feature(self, feature: str) -> bool:
-        """Disable a specific Core Loop feature."""
+        """
+        Disable a specific Core Loop feature.
+        
+        @implements FR-034: Feature Toggle Framework
+        """
         if feature not in self.VALID_FEATURES:
             raise ValueError(f"Unknown feature: {feature}. Valid features: {', '.join(self.VALID_FEATURES)}")
         

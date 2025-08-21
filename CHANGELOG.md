@@ -5,6 +5,36 @@ All notable changes to the Task Orchestrator project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2025-08-21
+
+### 🔒 Project Isolation Release
+
+This release fixes a critical design flaw by implementing project-local databases, preventing task contamination between projects.
+
+### Added
+- **FR-040: Project-Local Database Isolation** - Each project now has its own `.task-orchestrator/` directory
+- **NFR-006: Multi-Project Workspace Support** - Work on multiple projects without task bleeding
+- **Backward Compatibility** - Use `TM_DB_PATH` environment variable for old behavior
+- **Migration Guide** - Comprehensive guide for transitioning existing projects
+
+### Changed
+- **BREAKING**: Default database location changed from `~/.task-orchestrator` to `./.task-orchestrator`
+- Database initialization now creates project-local directory by default
+- Added environment variable override for flexible database location
+
+### Fixed
+- Task contamination between unrelated projects
+- Inability to work on multiple projects simultaneously
+- Context switching confusion with shared global database
+
+### Migration
+```bash
+# For existing projects that need global database:
+export TM_DB_PATH=~/.task-orchestrator
+
+# New projects automatically use project-local database
+```
+
 ## [2.3.0] - 2025-08-20
 
 ### 🚀 Core Loop Enhancement Release
@@ -177,7 +207,7 @@ This release represents a complete transformation from alpha to production-ready
 
 #### Developer Documentation
 - DEVELOPER_GUIDE.md with architecture overview
-- api-reference.md with complete method documentation
+- API_REFERENCE.md with complete method documentation
 - Contributing guidelines with coding standards
 - Test writing guide with examples
 

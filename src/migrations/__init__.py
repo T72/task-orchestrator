@@ -1,6 +1,10 @@
 """
 Migration system for Task Orchestrator database schema changes.
 Provides safe, reversible schema migrations with backup capabilities.
+
+@implements NFR-001: Performance requirements through efficient database operations
+@implements NFR-002: Scalability support through schema migration system
+@implements FR-032: Database persistence with migration capabilities
 """
 
 import os

@@ -2,6 +2,11 @@
 """
 Task Orchestrator - Worker Interface
 For specialized agents to receive and complete assigned work
+
+@implements FR-029: Specialist agent interface for work assignment
+@implements FR-031: Task handoff and completion tracking
+@implements FR-035: Agent workspace management and isolation
+@implements COLLAB-004: Worker agent coordination protocols
 """
 
 import json

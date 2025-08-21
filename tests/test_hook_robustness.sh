@@ -61,16 +61,7 @@ for hook in checkpoint-manager.py event-flows.py task-dependencies.py; do
     fi
 done
 
-# Test PRD parser separately (different input format)
-if [ -f "$HOOKS_DIR/prd-to-tasks.py" ]; then
-    echo "Testing: prd-to-tasks.py"
-    echo "----------------------------------------"
-    
-    PRD_INPUT='{"tool_name":"TodoWrite","tool_input":{"todos":[{"content":"PRD: Test System\nPhase 1: Design\n- Task 1","status":"pending"}]}}'
-    
-    test_hook "$HOOKS_DIR/prd-to-tasks.py" "PRD parsing" "$PRD_INPUT" || true
-    echo
-fi
+# PRD parser removed in v2.5 - feature deprecated for simplification
 
 # Performance test - ensure hooks complete within 100ms
 echo "Performance Testing"
