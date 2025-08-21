@@ -139,62 +139,32 @@ class Orchestrator:
         # Coordinates task distribution
 ```
 
-### Database Schema & Storage Architecture
+### Database Schema
 
-Task Orchestrator uses a **hybrid storage model** combining SQLite for structured data and file-based storage for flexible content like shared context and private notes.
+**📚 Single Source of Truth: [Database Schema Reference](../reference/core-loop-schema.md)**
 
-#### SQLite Database Tables
+The complete and authoritative database schema documentation is maintained in `reference/core-loop-schema.md`. This single source of truth includes:
+- Complete SQLite table definitions with Core Loop v2.3 features
+- File-based storage structure for collaboration features  
+- Migration instructions from previous versions
+- API usage examples and validation rules
+- Field specifications and format examples
 
-```sql
--- Main tasks table with Core Loop v2.3 features
-CREATE TABLE tasks (
-    id TEXT PRIMARY KEY,                    -- 8-character unique ID
-    title TEXT NOT NULL,                    -- Task title
-    description TEXT,                       -- Task description
-    status TEXT DEFAULT 'pending',         -- pending, in_progress, completed, blocked
-    priority TEXT DEFAULT 'medium',        -- low, medium, high, critical
-    assignee TEXT,                          -- Agent ID assigned to task
-    created_at TEXT NOT NULL,              -- ISO 8601 timestamp
-    updated_at TEXT NOT NULL,              -- ISO 8601 timestamp
-    completed_at TEXT,                     -- ISO 8601 timestamp when completed
-    
-    -- Core Loop v2.3 Features
-    success_criteria TEXT,                 -- JSON array of success criteria
-    feedback_quality INTEGER,             -- Quality rating 1-5
-    feedback_timeliness INTEGER,           -- Timeliness rating 1-5
-    feedback_notes TEXT,                   -- Feedback comments
-    completion_summary TEXT,               -- Summary provided on completion
-    deadline TEXT,                         -- ISO 8601 deadline
-    estimated_hours REAL,                 -- Estimated effort in hours
-    actual_hours REAL                      -- Actual effort spent in hours
-);
+#### Quick Overview
 
--- Task dependencies
-CREATE TABLE dependencies (
-    task_id TEXT NOT NULL,                 -- Task that has dependency
-    depends_on TEXT NOT NULL,              -- Task it depends on
-    PRIMARY KEY (task_id, depends_on)      -- Composite key
-);
+Task Orchestrator uses a **hybrid storage model**:
+- **SQLite Database**: Structured data (tasks, dependencies, notifications, participants)
+- **File-Based Storage**: Flexible content (shared context in YAML, private notes in Markdown, progress logs in JSONL)
 
--- Agent notifications
-CREATE TABLE notifications (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,  -- Auto-incrementing ID
-    agent_id TEXT,                         -- Target agent (NULL = broadcast)
-    task_id TEXT,                          -- Related task
-    type TEXT NOT NULL,                    -- notification, discovery, sync
-    message TEXT NOT NULL,                 -- Notification content
-    created_at TEXT NOT NULL,              -- ISO 8601 timestamp
-    read BOOLEAN DEFAULT 0                 -- Read status
-);
+#### Current Schema Highlights
 
--- Task participants (for collaboration)
-CREATE TABLE participants (
-    task_id TEXT NOT NULL,                 -- Task being collaborated on
-    agent_id TEXT NOT NULL,                -- Agent participating
-    joined_at TEXT NOT NULL,               -- ISO 8601 timestamp when joined
-    PRIMARY KEY (task_id, agent_id)        -- Composite key
-);
-```
+Key tables in v2.3.0:
+- **`tasks`** - Core task data with success criteria, feedback, and time tracking
+- **`dependencies`** - Task dependency graph for automatic unblocking
+- **`notifications`** - Event system for the watch command
+- **`participants`** - Multi-agent collaboration tracking
+
+**See [Database Schema Reference](../reference/core-loop-schema.md) for complete table definitions and indexes.**
 
 #### File-Based Storage Structure
 
