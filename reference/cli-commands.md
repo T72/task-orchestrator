@@ -1,8 +1,15 @@
 # CLI Command Reference
 
+## Status: Implemented
+- **Implemented**: All commands documented here are fully functional in v2.3.0
+- **Implementation**: Available through `tm` wrapper script
+
+## Last Verified: 2025-08-21
+Against version: 2.3.0
+
 ## Overview
 
-Task Orchestrator provides a comprehensive command-line interface through the `tm` command. This reference covers all commands, options, and parameters available in v2.3.
+Task Orchestrator provides a comprehensive command-line interface through the `tm` command. This reference covers all commands, options, and parameters available in v2.3.0.
 
 ## Basic Syntax
 
@@ -38,13 +45,13 @@ tm add <title> [options]
 - `title` (required): Task description
 
 **Options**:
-- `--depends-on <task-id>`: Set task dependencies (can use multiple times)
-- `--file <path:line>`: Attach file reference (e.g., `src/auth.py:42`)
+- `--depends-on <task-id>`: Set task dependencies (comma-separated for multiple)
 - `--priority <level>`: Set priority (low, medium, high, critical)
 - `--assignee <agent>`: Assign to specific agent
 - `--criteria <json>`: Success criteria array (v2.3)
 - `--deadline <iso8601>`: Task deadline (v2.3)
 - `--estimated-hours <n>`: Time estimate (v2.3)
+- `--description <text>`: Detailed description
 
 **Examples**:
 
@@ -53,18 +60,18 @@ tm add <title> [options]
 tm add "Fix login bug"
 # Output: Task created with ID: a1b2c3d4
 
-# Task with dependencies
-tm add "Deploy to production" --depends-on a1b2c3d4
+# Task with dependencies (use actual task IDs)
+tm add "Deploy to production" --depends-on a1b2c3d4,b2c3d4e5
 
 # Task with Core Loop features
 tm add "Implement OAuth" \
-  --criteria '[{"criterion":"All tests pass","measurable":"true"},
-               {"criterion":"Documentation complete","measurable":"docs_written == true"}]' \
+  --criteria '[{"criterion":"All tests pass","measurable":"true"}]' \
   --deadline "2025-12-31T23:59:59Z" \
   --estimated-hours 20 \
-  --priority high \
-  --file src/auth.py:100:200
+  --priority high
 ```
+
+**Note**: The command returns ONLY the task ID (8 characters), not the full message shown above.
 
 ---
 
@@ -80,7 +87,8 @@ tm list [options]
 - `--status <status>`: Filter by status (pending, in_progress, completed, blocked)
 - `--assignee <agent>`: Show tasks for specific agent
 - `--has-deps`: Show only tasks with dependencies
-- `--has-files`: Show only tasks with file references
+- `--limit <n>`: Limit number of results
+- `--format <type>`: Output format (table, json, markdown)
 
 **Examples**:
 
@@ -94,11 +102,11 @@ tm list --status pending
 # List tasks assigned to backend-agent
 tm list --assignee backend-agent
 
-# Combine filters
-tm list --status in_progress --has-files
+# Export as JSON
+tm list --format json
 ```
 
-**Output Format**:
+**Output Format** (default):
 ```
 a1b2c3d4 [pending] Fix login bug (Priority: high)
 b2c3d4e5 [in_progress] → Implement OAuth (Assigned: backend-agent)
@@ -124,19 +132,42 @@ tm show a1b2c3d4
 ```
 
 **Output**:
-```
+```yaml
 Task: a1b2c3d4
 Title: Fix login bug
 Status: in_progress
 Priority: high
 Assignee: backend-agent
 Created: 2025-08-20T10:30:00
-Files: src/auth.py:42
 Dependencies: None
 Success Criteria: 2 defined
 Deadline: 2025-12-31T23:59:59Z
 Estimated: 4.0 hours
-Progress: 50% - Found root cause
+Progress Updates: 3
+```
+
+---
+
+### tm update
+
+Update task properties.
+
+```bash
+tm update <task-id> [options]
+```
+
+**Arguments**:
+- `task-id` (required): Task identifier
+
+**Options**:
+- `--status <status>`: Update status (pending, in_progress, completed, blocked)
+- `--priority <level>`: Update priority (low, medium, high, critical)
+- `--assignee <agent>`: Update assignment
+
+**Example**:
+
+```bash
+tm update a1b2c3d4 --status in_progress --priority critical
 ```
 
 ---
@@ -156,7 +187,6 @@ tm complete <task-id> [options]
 - `--validate`: Run success criteria validation
 - `--actual-hours <n>`: Record actual time spent
 - `--summary <text>`: Add completion summary
-- `--impact-review`: Review impact of completion
 
 **Examples**:
 
@@ -168,232 +198,7 @@ tm complete a1b2c3d4
 tm complete a1b2c3d4 \
   --validate \
   --actual-hours 3.5 \
-  --summary "Fixed race condition in session handling, all tests passing"
-```
-
-**Validation Output**:
-```
-=== Success Criteria Validation Report ===
-Overall: 2/2 criteria passed
-
-✓ Criterion 1: All tests pass
-  Result: Automatically validated as true
-
-✓ Criterion 2: Documentation complete
-  Result: Manual validation required
-
-Task a1b2c3d4 completed
-```
-
----
-
-### tm progress
-
-Add progress update to a task (v2.3).
-
-```bash
-tm progress <task-id> <message>
-```
-
-**Arguments**:
-- `task-id` (required): Task identifier
-- `message` (required): Progress update text
-
-**Examples**:
-
-```bash
-tm progress a1b2c3d4 "Reproduced bug, investigating cause"
-tm progress a1b2c3d4 "50% - Found race condition in auth flow"
-tm progress a1b2c3d4 "90% - Fix implemented, running tests"
-```
-
-**Output**: `Progress update added to task a1b2c3d4`
-
----
-
-### tm feedback
-
-Add feedback scores to a completed task (v2.3).
-
-```bash
-tm feedback <task-id> [options]
-```
-
-**Arguments**:
-- `task-id` (required): Task identifier
-
-**Options**:
-- `--quality <1-5>`: Quality score
-- `--timeliness <1-5>`: Timeliness score
-- `--note <text>`: Additional feedback notes
-
-**Example**:
-
-```bash
-tm feedback a1b2c3d4 \
-  --quality 5 \
-  --timeliness 4 \
-  --note "Excellent fix, delivered ahead of schedule"
-```
-
-**Output**: `Feedback recorded for task a1b2c3d4`
-
----
-
-### tm metrics
-
-View aggregated metrics and analytics (v2.3).
-
-```bash
-tm metrics [options]
-```
-
-**Options**:
-- `--feedback`: Show feedback metrics
-
-**Example**:
-
-```bash
-tm metrics --feedback
-```
-
-**Output**:
-```
-Feedback metrics:
-  Average quality: 4.8/5
-  Average timeliness: 4.2/5
-  Tasks with feedback: 15
-  Total tasks: 20
-  Feedback coverage: 75.0%
-```
-
----
-
-### tm config
-
-Manage Core Loop configuration (v2.3).
-
-```bash
-tm config [options]
-```
-
-**Options**:
-- `--show`: Display current configuration
-- `--enable <feature>`: Enable a feature
-- `--disable <feature>`: Disable a feature
-- `--minimal-mode`: Enable minimal mode (disables all Core Loop features)
-- `--reset`: Reset to default configuration
-
-**Valid Features**:
-- `success-criteria`
-- `feedback`
-- `telemetry`
-- `completion-summaries`
-- `time-tracking`
-- `deadlines`
-
-**Examples**:
-
-```bash
-# View configuration
-tm config --show
-
-# Enable specific features
-tm config --enable feedback
-tm config --enable success-criteria
-
-# Disable telemetry
-tm config --disable telemetry
-
-# Minimal mode for lightweight operation
-tm config --minimal-mode
-
-# Reset to defaults
-tm config --reset
-```
-
----
-
-### tm migrate
-
-Manage database schema migrations (v2.3).
-
-```bash
-tm migrate [options]
-```
-
-**Options**:
-- `--status`: Check migration status
-- `--apply`: Apply pending migrations
-- `--rollback`: Rollback last migration
-
-**Examples**:
-
-```bash
-# Check status
-tm migrate --status
-# Output:
-# Applied migrations: 001
-# Pending migrations: None
-# Up to date: Yes
-
-# Apply migrations
-tm migrate --apply
-# Output:
-# Backup created: ~/.task-orchestrator/backups/tasks_backup_[timestamp].db
-# Applying migration 001: Add Core Loop fields...
-# ✓ Migration 001 applied
-
-# Rollback if needed
-tm migrate --rollback
-# Output:
-# Restoring from backup...
-# Database restored
-```
-
----
-
-### tm assign
-
-Assign a task to an agent.
-
-```bash
-tm assign <task-id> <agent-name>
-```
-
-**Arguments**:
-- `task-id` (required): Task identifier
-- `agent-name` (required): Agent identifier
-
-**Example**:
-
-```bash
-tm assign a1b2c3d4 backend-agent
-```
-
-**Output**: `Task a1b2c3d4 assigned to backend-agent`
-
----
-
-### tm update
-
-Update task properties.
-
-```bash
-tm update <task-id> [options]
-```
-
-**Arguments**:
-- `task-id` (required): Task identifier
-
-**Options**:
-- `--status <status>`: Update status (pending, in_progress, completed)
-- `--priority <level>`: Update priority (low, medium, high, critical)
-
-**Example**:
-
-```bash
-tm update a1b2c3d4 --status in_progress --priority critical
+  --summary "Fixed race condition in session handling"
 ```
 
 ---
@@ -419,48 +224,175 @@ tm delete a1b2c3d4
 
 ---
 
-### tm watch
+### tm assign
 
-Monitor for notifications and unblocked tasks.
+Assign a task to an agent.
 
 ```bash
-tm watch
+tm assign <task-id> <agent-name>
 ```
 
-**Output** (when notifications exist):
-```
-=== 2 New Notification(s) ===
-[UNBLOCKED] Task 'Frontend UI' now unblocked (dependency completed)
-[DISCOVERY] Critical finding in task a1b2c3d4: Security vulnerability found
+**Arguments**:
+- `task-id` (required): Task identifier
+- `agent-name` (required): Agent identifier
+
+**Example**:
+
+```bash
+tm assign a1b2c3d4 backend-agent
 ```
 
-**Output** (when no notifications):
-```
-No new notifications
-```
+**Output**: `Task a1b2c3d4 assigned to backend-agent`
 
 ---
 
-### tm export
+## Core Loop v2.3 Commands
 
-Export tasks in various formats.
+### tm progress
+
+Add progress update to a task.
 
 ```bash
-tm export [options]
+tm progress <task-id> <message>
 ```
 
-**Options**:
-- `--format <format>`: Export format (json, markdown)
-- `--output <file>`: Output file path
+**Arguments**:
+- `task-id` (required): Task identifier
+- `message` (required): Progress update text
 
 **Examples**:
 
 ```bash
-# Export as JSON
-tm export --format json --output tasks.json
+tm progress a1b2c3d4 "Reproduced bug, investigating cause"
+tm progress a1b2c3d4 "50% - Found race condition"
+tm progress a1b2c3d4 "90% - Fix implemented, running tests"
+```
 
-# Export as Markdown
-tm export --format markdown --output tasks.md
+**Output**: Progress update added
+
+---
+
+### tm feedback
+
+Add feedback scores to a completed task.
+
+```bash
+tm feedback <task-id> [options]
+```
+
+**Arguments**:
+- `task-id` (required): Task identifier
+
+**Options**:
+- `--quality <1-5>`: Quality score
+- `--timeliness <1-5>`: Timeliness score
+- `--notes <text>`: Additional feedback notes
+
+**Example**:
+
+```bash
+tm feedback a1b2c3d4 \
+  --quality 5 \
+  --timeliness 4 \
+  --notes "Excellent fix, ahead of schedule"
+```
+
+**Output**: `Feedback recorded`
+
+---
+
+### tm metrics
+
+View aggregated metrics and analytics.
+
+```bash
+tm metrics [options]
+```
+
+**Options**:
+- `--period <time>`: Time period (week, month, quarter)
+- `--agent <name>`: Filter by agent
+
+**Example**:
+
+```bash
+tm metrics
+```
+
+**Output**:
+```
+=== Task Metrics ===
+Total Tasks: 42
+Completed: 35
+In Progress: 5
+Success Rate: 95%
+Avg Completion Time: 6.5 hours
+```
+
+---
+
+### tm config
+
+Manage Core Loop configuration.
+
+```bash
+tm config [options]
+```
+
+**Options**:
+- `--show`: Display current configuration
+- `--enable <feature>`: Enable a feature
+- `--disable <feature>`: Disable a feature
+- `--minimal-mode`: Enable minimal mode
+- `--reset`: Reset to default configuration
+
+**Valid Features**:
+- `success_criteria`
+- `feedback`
+- `telemetry`
+- `completion_summaries`
+- `time_tracking`
+- `deadlines`
+
+**Examples**:
+
+```bash
+# View configuration
+tm config --show
+
+# Enable features
+tm config --enable feedback
+
+# Minimal mode
+tm config --minimal-mode
+
+# Reset
+tm config --reset
+```
+
+---
+
+### tm migrate
+
+Manage database schema migrations.
+
+```bash
+tm migrate [options]
+```
+
+**Options**:
+- `--status`: Check migration status
+- `--apply`: Apply pending migrations
+- `--rollback`: Rollback last migration
+
+**Examples**:
+
+```bash
+# Check status
+tm migrate --status
+
+# Apply migrations
+tm migrate --apply
 ```
 
 ---
@@ -472,16 +404,16 @@ tm export --format markdown --output tasks.md
 Join a task's collaboration context.
 
 ```bash
-tm join <task-id>
+tm join <task-id> [--role <description>]
 ```
 
 **Example**:
 
 ```bash
-tm join a1b2c3d4
+tm join a1b2c3d4 --role "Frontend implementation"
 ```
 
-**Output**: `Joined task a1b2c3d4 collaboration`
+**Output**: `Joined task a1b2c3d4`
 
 ---
 
@@ -490,16 +422,18 @@ tm join a1b2c3d4
 Share an update with all agents on a task.
 
 ```bash
-tm share <task-id> <message>
+tm share <task-id> <message> [--type <type>]
 ```
+
+**Types**: update, discovery, decision
 
 **Example**:
 
 ```bash
-tm share a1b2c3d4 "Database schema updated, ready for backend work"
+tm share a1b2c3d4 "Database schema updated" --type update
 ```
 
-**Output**: `Shared update for task a1b2c3d4`
+**Output**: Update shared
 
 ---
 
@@ -514,79 +448,117 @@ tm note <task-id> <message>
 **Example**:
 
 ```bash
-tm note a1b2c3d4 "Consider using JWT instead of sessions for stateless auth"
+tm note a1b2c3d4 "Consider JWT for stateless auth"
 ```
 
-**Output**: `Added private note for task a1b2c3d4`
+**Output**: Note added
 
 ---
 
-### tm discover
+### tm context
 
-Share a critical discovery with all agents.
+View all shared context for a task.
 
 ```bash
-tm discover <task-id> <message>
+tm context <task-id>
 ```
 
 **Example**:
 
 ```bash
-tm discover a1b2c3d4 "Found SQL injection vulnerability in login endpoint!"
+tm context a1b2c3d4
 ```
 
-**Output**: `Discovery shared for task a1b2c3d4`
+**Output**: YAML-formatted shared context
 
 ---
 
 ### tm sync
 
-Create a synchronization point for coordination.
+Create a synchronization checkpoint.
 
 ```bash
-tm sync <task-id> <message>
+tm sync <task-id> <checkpoint-name>
 ```
 
 **Example**:
 
 ```bash
-tm sync a1b2c3d4 "All agents must review before proceeding"
+tm sync a1b2c3d4 "backend_complete"
 ```
 
-**Output**: `Created sync point for task a1b2c3d4`
+---
+
+### tm watch
+
+Monitor for notifications and unblocked tasks.
+
+```bash
+tm watch [--limit <n>]
+```
+
+**Output** (when notifications exist):
+```
+=== 2 New Notification(s) ===
+[UNBLOCKED] Task 'Frontend UI' now unblocked
+[SHARED] Update on task a1b2c3d4
+```
+
+---
+
+### tm export
+
+Export tasks in various formats.
+
+```bash
+tm export [options]
+```
+
+**Options**:
+- `--format <format>`: Export format (json, markdown, csv)
+- `--status <status>`: Filter by status
+- `--output <file>`: Output file path
+
+**Examples**:
+
+```bash
+# Export as JSON
+tm export --format json --output tasks.json
+
+# Export completed tasks as Markdown
+tm export --format markdown --status completed
+```
 
 ---
 
 ## Environment Variables
 
-Configure Task Orchestrator behavior through environment variables:
+Configure Task Orchestrator behavior:
 
 - `TM_DB_PATH`: Custom database location (default: `~/.task-orchestrator/tasks.db`)
 - `TM_AGENT_ID`: Set agent identifier for collaboration
-- `TM_LOCK_TIMEOUT`: Database lock timeout in seconds (default: 10)
-- `TM_VERBOSE`: Enable verbose output (0 or 1)
+- `TM_DEBUG`: Enable debug output (1/0)
 - `TM_TEST_MODE`: Enable test mode for isolated testing
 
 **Example**:
 
 ```bash
 export TM_AGENT_ID="backend-specialist"
-export TM_VERBOSE=1
 tm add "Backend task"
 ```
 
 ---
 
-## Return Codes
+## Exit Codes
 
-Task Orchestrator uses standard Unix return codes:
+Task Orchestrator uses standard Unix exit codes:
 
 - `0`: Success
 - `1`: General error
-- `2`: Command syntax error
-- `3`: Task not found
-- `4`: Database error
-- `5`: Validation failure
+- `2`: Validation error
+- `3`: Database error
+- `4`: Dependency error
+- `5`: Permission error
 
 ---
 
@@ -595,10 +567,11 @@ Task Orchestrator uses standard Unix return codes:
 ### Complete Feature Development
 
 ```bash
-# 1. Create feature task with criteria
-FEATURE=$(tm add "Implement user authentication" \
-  --criteria '[{"criterion":"All tests pass","measurable":"true"}]' \
-  --estimated-hours 20 | grep -o '[a-f0-9]\{8\}')
+# 1. Create feature task
+FEATURE=$(tm add "Implement authentication" \
+  --criteria '[{"criterion":"All tests pass"}]' \
+  --estimated-hours 20)
+echo "Created task: $FEATURE"
 
 # 2. Track progress
 tm progress $FEATURE "10% - Designed schema"
@@ -607,46 +580,49 @@ tm progress $FEATURE "80% - Frontend integrated"
 
 # 3. Complete with validation
 tm complete $FEATURE --validate --actual-hours 18 \
-  --summary "Implemented OAuth2 with Google and GitHub providers"
+  --summary "OAuth2 with Google and GitHub"
 
 # 4. Add feedback
-tm feedback $FEATURE --quality 5 --timeliness 5 \
-  --note "Excellent implementation, well documented"
+tm feedback $FEATURE --quality 5 --timeliness 5
 ```
 
-### Bug Fix Workflow
+### Multi-Agent Collaboration
 
 ```bash
-# 1. Create bug task
-BUG=$(tm add "Fix memory leak in cache" \
-  --priority critical \
-  --file src/cache.py:234 | grep -o '[a-f0-9]\{8\}')
+# Agent 1: Database specialist
+tm join $TASK --role "Database design"
+tm share $TASK "Schema ready" --type update
 
-# 2. Investigate and update
-tm update $BUG --status in_progress
-tm progress $BUG "Reproduced issue, memory grows 10MB/hour"
-tm progress $BUG "Found leak in event listener cleanup"
+# Agent 2: Backend developer
+tm join $TASK --role "API implementation"
+tm note $TASK "Consider caching strategy"
+tm share $TASK "Endpoints complete" --type update
 
-# 3. Complete with summary
-tm complete $BUG --summary "Fixed event listener cleanup in cache destructor"
+# Agent 3: Frontend developer
+tm join $TASK --role "UI implementation"
+tm context $TASK  # View all shared updates
 ```
 
 ---
 
 ## Tips and Best Practices
 
-1. **Use meaningful task IDs**: The first 8 characters are usually sufficient
-2. **Always backup before migrations**: `cp -r ~/.task-orchestrator ~/.task-orchestrator.backup`
-3. **Use criteria for important tasks**: Makes success measurable
-4. **Add progress updates regularly**: Improves coordination
-5. **Collect feedback consistently**: Enables continuous improvement
-6. **Configure features to match workflow**: Disable what you don't need
+1. **Task IDs**: First 8 characters are usually sufficient
+2. **Backup before migrations**: `cp -r ~/.task-orchestrator ~/.task-orchestrator.backup`
+3. **Use progress updates**: Improves multi-agent coordination
+4. **Private vs Shared**: Use `note` for thinking, `share` for coordination
+5. **Watch regularly**: Monitor for unblocked tasks and updates
 
 ---
 
 ## See Also
 
+- [API Reference](./api-reference.md) - Python API documentation
+- [Database Schema](./database-schema.md) - Storage architecture
+- [Claude Integration Guide](./claude-integration-guide.md) - AI agent workflows
 - [User Guide](../guides/USER_GUIDE.md) - Detailed usage guide
-- [Migration Guide](../migration/v2.3-migration-guide.md) - Upgrading to v2.3
-- [Configuration Guide](../configuration/config-guide.md) - Configuration details
-- [API Reference](../reference/api-reference.md) - Python API documentation
+
+---
+
+*Last Updated: 2025-08-21*
+*Version: 2.3.0*
