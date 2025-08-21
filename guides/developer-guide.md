@@ -698,7 +698,7 @@ def test_estimated_hours():
 ./tm add "Implement feature X" --estimated-hours 8
 ```
 
-# Update API_REFERENCE.md
+# Update api-reference.md
 ### add_task()
 - estimated_hours (int, optional): Estimated hours to complete
 ```

@@ -177,7 +177,7 @@ This release represents a complete transformation from alpha to production-ready
 
 #### Developer Documentation
 - DEVELOPER_GUIDE.md with architecture overview
-- API_REFERENCE.md with complete method documentation
+- api-reference.md with complete method documentation
 - Contributing guidelines with coding standards
 - Test writing guide with examples
 

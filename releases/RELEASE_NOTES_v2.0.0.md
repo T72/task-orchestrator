@@ -417,7 +417,7 @@ export TM_AGENT_ID="charlie"
 
 ### Developer Documentation
 - `docs/guides/DEVELOPER_GUIDE.md` - Architecture and contributing
-- `docs/reference/API_REFERENCE.md` - Complete API documentation
+- `docs/reference/api-reference.md` - Complete API documentation
 - `REQUIREMENTS_TRACEABILITY.md` - Requirements mapping
 
 ### Examples

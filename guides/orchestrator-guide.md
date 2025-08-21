@@ -448,8 +448,8 @@ sync: Checkpoint for all
 
 - [Multi-Agent Workflow Examples](../examples/multi_agent_workflow.py)
 - [Dependency Management](../examples/dependency_management.py)
-- [API Reference](../reference/API_REFERENCE.md)
-- [Troubleshooting Guide](TROUBLESHOOTING.md)
+- [API Reference](../reference/api-reference.md)
+- [Troubleshooting Guide](troubleshooting.md)
 
 ---
 

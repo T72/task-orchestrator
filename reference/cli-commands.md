@@ -649,4 +649,4 @@ tm complete $BUG --summary "Fixed event listener cleanup in cache destructor"
 - [User Guide](../guides/USER_GUIDE.md) - Detailed usage guide
 - [Migration Guide](../migration/v2.3-migration-guide.md) - Upgrading to v2.3
 - [Configuration Guide](../configuration/config-guide.md) - Configuration details
-- [API Reference](API_REFERENCE.md) - Python API documentation
+- [API Reference](../reference/api-reference.md) - Python API documentation

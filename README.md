@@ -236,18 +236,18 @@ All existing tasks remain unchanged - Core Loop features are optional enhancemen
 ## 📚 Documentation & Resources
 
 ### Essential Guides
-- **[User Guide](docs/guides/user-guide.md)** - Complete manual with best practices
-- **[Developer Guide](docs/guides/developer-guide.md)** - Architecture and contribution guide
-- **[API Reference](docs/reference/api-reference.md)** - Complete technical documentation
-- **[Troubleshooting](docs/guides/troubleshooting.md)** - Solutions to common issues
-- **[Claude Code Integration](deploy/claude-code-whitelist.md)** - **REQUIRED** for Claude Code users
+- **[User Guide](guides/user-guide.md)** - Complete manual with best practices
+- **[Developer Guide](guides/developer-guide.md)** - Architecture and contribution guide
+- **[API Reference](reference/api-reference.md)** - Complete technical documentation
+- **[Troubleshooting](guides/troubleshooting.md)** - Solutions to common issues
+- **[Claude Code Integration](guides/quickstart-claude-code.md)** - **REQUIRED** for Claude Code users
 
 ### Working Examples
 Run these directly to learn by doing:
 ```bash
-python3 docs/examples/basic_usage.py          # Core concepts
-python3 docs/examples/dependency_management.py # Complex workflows
-python3 docs/examples/multi_agent_workflow.py  # Team coordination
+python3 examples/basic_usage.py          # Core concepts
+python3 examples/dependency_management.py # Complex workflows
+python3 examples/multi_agent_workflow.py  # Team coordination
 ```
 
 ## 🧪 Testing & Quality

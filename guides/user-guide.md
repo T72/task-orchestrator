@@ -1103,9 +1103,9 @@ tail -f .task-orchestrator/debug.log
 - **GitHub Issues**: Report bugs and request features
 - **Discussions**: Ask questions and share workflows
 - **Documentation**: Check the full documentation suite
-- **Examples**: Browse the `docs/examples/` directory
+- **Examples**: Browse the `examples/` directory
 
 For more advanced topics, see:
-- [Developer Guide](DEVELOPER_GUIDE.md) - Contributing and extending
-- [API Reference](API_REFERENCE.md) - Complete API documentation
-- [Troubleshooting Guide](TROUBLESHOOTING.md) - Detailed problem resolution
+- [Developer Guide](developer-guide.md) - Contributing and extending
+- [API Reference](../reference/api-reference.md) - Complete API documentation
+- [Troubleshooting Guide](troubleshooting.md) - Detailed problem resolution

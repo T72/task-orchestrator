@@ -337,10 +337,10 @@ export TM_LOCK_TIMEOUT=30
 
 ## 📚 Next Steps
 
-- Read the [User Guide](USER_GUIDE.md) for complete documentation
+- Read the [User Guide](user-guide.md) for complete documentation
 - Check [Examples](../examples/) for real-world usage patterns
-- See [Troubleshooting](TROUBLESHOOTING.md) for common issues
-- Review [API Reference](../reference/API_REFERENCE.md) for all commands
+- See [Troubleshooting](troubleshooting.md) for common issues
+- Review [API Reference](../reference/api-reference.md) for all commands
 
 ## 🎉 You're Ready!
 
