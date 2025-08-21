@@ -139,88 +139,170 @@ class Orchestrator:
         # Coordinates task distribution
 ```
 
-### Database Schema
+### Database Schema & Storage Architecture
 
-#### Core Tables
+Task Orchestrator uses a **hybrid storage model** combining SQLite for structured data and file-based storage for flexible content like shared context and private notes.
+
+#### SQLite Database Tables
 
 ```sql
--- Main tasks table
+-- Main tasks table with Core Loop v2.3 features
 CREATE TABLE tasks (
-    id TEXT PRIMARY KEY CHECK(length(id) = 8),
-    title TEXT NOT NULL CHECK(length(title) > 0 AND length(title) <= 500),
-    description TEXT CHECK(length(description) <= 5000),
-    status TEXT NOT NULL CHECK(status IN ('pending', 'in_progress', 'completed', 'blocked', 'cancelled')),
-    priority TEXT NOT NULL CHECK(priority IN ('low', 'medium', 'high', 'critical')),
-    assignee TEXT,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    completed_at TIMESTAMP,
-    created_by TEXT NOT NULL,
-    impact_notes TEXT,
-    tags TEXT,
-    version INTEGER DEFAULT 1
+    id TEXT PRIMARY KEY,                    -- 8-character unique ID
+    title TEXT NOT NULL,                    -- Task title
+    description TEXT,                       -- Task description
+    status TEXT DEFAULT 'pending',         -- pending, in_progress, completed, blocked
+    priority TEXT DEFAULT 'medium',        -- low, medium, high, critical
+    assignee TEXT,                          -- Agent ID assigned to task
+    created_at TEXT NOT NULL,              -- ISO 8601 timestamp
+    updated_at TEXT NOT NULL,              -- ISO 8601 timestamp
+    completed_at TEXT,                     -- ISO 8601 timestamp when completed
+    
+    -- Core Loop v2.3 Features
+    success_criteria TEXT,                 -- JSON array of success criteria
+    feedback_quality INTEGER,             -- Quality rating 1-5
+    feedback_timeliness INTEGER,           -- Timeliness rating 1-5
+    feedback_notes TEXT,                   -- Feedback comments
+    completion_summary TEXT,               -- Summary provided on completion
+    deadline TEXT,                         -- ISO 8601 deadline
+    estimated_hours REAL,                 -- Estimated effort in hours
+    actual_hours REAL                      -- Actual effort spent in hours
 );
 
 -- Task dependencies
 CREATE TABLE dependencies (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    task_id TEXT NOT NULL,
-    depends_on TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
-    FOREIGN KEY (depends_on) REFERENCES tasks(id) ON DELETE CASCADE,
-    UNIQUE(task_id, depends_on),
-    CHECK(task_id != depends_on)
+    task_id TEXT NOT NULL,                 -- Task that has dependency
+    depends_on TEXT NOT NULL,              -- Task it depends on
+    PRIMARY KEY (task_id, depends_on)      -- Composite key
 );
 
--- File references
-CREATE TABLE file_refs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    task_id TEXT NOT NULL,
-    file_path TEXT NOT NULL CHECK(length(file_path) > 0),
-    line_start INTEGER CHECK(line_start > 0),
-    line_end INTEGER CHECK(line_end >= line_start),
-    context TEXT,
-    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
-);
-
--- Notifications
+-- Agent notifications
 CREATE TABLE notifications (
-    id TEXT PRIMARY KEY,
-    task_id TEXT NOT NULL,
-    type TEXT NOT NULL,
-    target_agent TEXT,
-    message TEXT NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    acknowledged BOOLEAN DEFAULT 0,
-    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
+    id INTEGER PRIMARY KEY AUTOINCREMENT,  -- Auto-incrementing ID
+    agent_id TEXT,                         -- Target agent (NULL = broadcast)
+    task_id TEXT,                          -- Related task
+    type TEXT NOT NULL,                    -- notification, discovery, sync
+    message TEXT NOT NULL,                 -- Notification content
+    created_at TEXT NOT NULL,              -- ISO 8601 timestamp
+    read BOOLEAN DEFAULT 0                 -- Read status
 );
 
--- Audit log
-CREATE TABLE audit_log (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    task_id TEXT NOT NULL,
-    action TEXT NOT NULL,
-    old_value TEXT,
-    new_value TEXT,
-    changed_by TEXT NOT NULL,
-    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- Task participants (for collaboration)
+CREATE TABLE participants (
+    task_id TEXT NOT NULL,                 -- Task being collaborated on
+    agent_id TEXT NOT NULL,                -- Agent participating
+    joined_at TEXT NOT NULL,               -- ISO 8601 timestamp when joined
+    PRIMARY KEY (task_id, agent_id)        -- Composite key
 );
 ```
 
-#### Key Indexes
+#### File-Based Storage Structure
 
-```sql
-CREATE INDEX idx_task_status ON tasks(status);
-CREATE INDEX idx_task_assignee ON tasks(assignee);
-CREATE INDEX idx_task_priority ON tasks(priority);
-CREATE INDEX idx_deps_task ON dependencies(task_id);
-CREATE INDEX idx_deps_depends ON dependencies(depends_on);
-CREATE INDEX idx_notif_target ON notifications(target_agent, acknowledged);
-CREATE INDEX idx_file_refs_task ON file_refs(task_id);
-CREATE INDEX idx_audit_task ON audit_log(task_id);
+```
+~/.task-orchestrator/
+├── tasks.db                           -- SQLite database
+├── contexts/                          -- Shared context files
+│   ├── {task_id}.yaml                -- Shared context per task
+│   └── {task_id}_progress.jsonl      -- Progress updates per task
+├── notes/                             -- Private agent notes
+│   └── {task_id}_{agent_id}.md       -- Private notes per task/agent
+└── archives/                          -- Completed task archives
+    └── task_{task_id}_{timestamp}.tar.gz
 ```
 
+#### Shared Context Format (YAML)
+
+```yaml
+# contexts/{task_id}.yaml
+task_id: "abc123de"
+title: "Task Title"
+created: "2025-08-21T10:30:00Z"
+contributions:
+  - agent: "agent_001"
+    timestamp: "2025-08-21T10:35:00Z" 
+    type: "update"
+    content: "Started working on authentication module"
+  - agent: "agent_002"
+    timestamp: "2025-08-21T11:00:00Z"
+    type: "discovery"
+    content: "Found existing OAuth implementation we can reuse"
+```
+
+#### Progress Updates Format (JSONL)
+
+```json
+{"timestamp": "2025-08-21T10:35:00Z", "update": "Database schema designed", "agent": "db_specialist"}
+{"timestamp": "2025-08-21T11:00:00Z", "update": "50% complete - tables created", "agent": "db_specialist"}
+{"timestamp": "2025-08-21T11:30:00Z", "update": "Schema validation complete", "agent": "db_specialist"}
+```
+
+#### Private Notes Format (Markdown)
+
+```markdown
+<!-- notes/{task_id}_{agent_id}.md -->
+Initial analysis shows we need OAuth2 integration.
+
+---
+2025-08-21T10:45:00Z
+Researching existing implementations. Found auth-lib might work.
+
+---
+2025-08-21T11:15:00Z
+Decision: Using auth-lib with custom session handling.
+```
+
+#### API Usage Examples
+
+**Core Loop Features Usage:**
+
+```python
+# Add task with success criteria and time estimation
+task_id = tm.add(
+    "Implement OAuth2",
+    success_criteria='[{"criterion":"Tests pass","measurable":"coverage > 80%"}]',
+    estimated_hours=8.0,
+    deadline="2025-08-25T17:00:00Z"
+)
+
+# Track progress throughout development
+tm.progress(task_id, "OAuth2 library selected")
+tm.progress(task_id, "50% - Authentication flow implemented")
+
+# Complete with validation and feedback
+tm.complete(
+    task_id, 
+    validate=True,
+    actual_hours=6.5,
+    summary="OAuth2 implemented with Google & GitHub providers"
+)
+
+# Add quality feedback
+tm.feedback(task_id, quality=5, timeliness=4, note="Excellent implementation")
+```
+
+**Collaboration Features Usage:**
+
+```python
+# Join collaborative task
+tm.join(task_id)
+
+# Share updates with team
+tm.share(task_id, "Database schema completed, ready for API development")
+
+# Add private analysis notes
+tm.note(task_id, "Considering Redis for session storage vs PostgreSQL")
+
+# Share critical discoveries
+tm.discover(task_id, "Found security vulnerability in auth flow - needs immediate fix")
+
+# Create sync checkpoints
+tm.sync(task_id, "Phase 1 complete - ready for code review")
+
+# View complete context
+context = tm.context(task_id)
+print(context['shared'])  # Shared contributions
+print(context['notes'])   # Private notes
+```
 ## Development Setup
 
 ### Prerequisites
