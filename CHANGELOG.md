@@ -5,6 +5,59 @@ All notable changes to the Task Orchestrator project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2025-08-20
+
+### 🚀 Core Loop Enhancement Release
+
+This release adds powerful Core Loop capabilities for tracking task quality, success metrics, and team efficiency. All features are optional and backward-compatible.
+
+### Added
+
+#### Core Loop Features
+- **Success Criteria & Validation** - Define measurable criteria and validate on completion
+- **Feedback Mechanism** - Collect quality (1-5) and timeliness (1-5) scores with notes
+- **Progress Tracking** - Add detailed progress updates throughout task lifecycle
+- **Completion Summaries** - Document context and learnings when completing tasks
+- **Time Tracking** - Compare estimated vs actual hours for better planning
+- **Deadline Management** - Set and track task deadlines in ISO 8601 format
+- **Metrics Aggregation** - View team performance metrics and insights
+- **Configuration System** - Enable/disable features with granular control
+- **Database Migration System** - Safe schema updates with backup/rollback
+- **Telemetry & Event Capture** - Optional usage analytics for continuous improvement
+- **Comprehensive Error Handling** - Robust error recovery and logging
+
+#### New Commands & Options
+- `tm add --criteria JSON --deadline ISO8601 --estimated-hours N`
+- `tm complete --validate --actual-hours N --summary TEXT`
+- `tm progress <id> <message>` - Track progress updates
+- `tm feedback <id> --quality N --timeliness N --note TEXT`
+- `tm metrics --feedback` - View aggregated metrics
+- `tm config --enable/disable <feature> --minimal-mode --show --reset`
+- `tm migrate --apply --status --rollback` - Manage schema updates
+
+#### Testing
+- Added 75+ edge case tests across 3 comprehensive test suites
+- Test coverage for boundaries, errors, concurrent access, and performance limits
+
+### Changed
+- Database path standardized to `~/.task-orchestrator` for consistency
+- Enhanced `tm` wrapper script with Core Loop command integration
+- Improved error messages with actionable solutions
+
+### Technical Details
+- **New Modules**: `migrations`, `config_manager`, `telemetry`, `metrics_calculator`, `criteria_validator`, `error_handler`
+- **Database Schema**: Added 8 new optional fields for Core Loop features
+- **Test Coverage**: 3 new test suites with comprehensive edge case coverage
+- **Dependencies**: None - still Python standard library only
+
+### Migration Required
+After updating to v2.3.0, run `tm migrate --apply` to update your database schema. Always backup first with `cp -r ~/.task-orchestrator ~/.task-orchestrator.backup`.
+
+### Compatibility
+- Fully backward compatible - existing tasks and workflows continue unchanged
+- Core Loop features are opt-in - enable only what you need
+- Minimal mode available for lightweight operation
+
 ## [2.0.0] - 2025-08-19
 
 ### 🎯 Major Release: Production-Ready Multi-Agent Orchestration

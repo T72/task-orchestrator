@@ -30,11 +30,40 @@ class TaskManager:
     """Simple task manager for multi-agent coordination"""
     
     def __init__(self):
-        self.repo_root = self._find_repo_root()
-        self.db_dir = self.repo_root / ".task-orchestrator"
+        # Use home directory for database by default, unless in test mode
+        if os.environ.get('TM_TEST_MODE'):
+            self.db_dir = Path.cwd() / ".task-orchestrator"
+        else:
+            self.db_dir = Path.home() / ".task-orchestrator"
         self.db_path = self.db_dir / "tasks.db"
         self.agent_id = os.environ.get('TM_AGENT_ID', self._generate_agent_id())
-        self._init_db()
+        self.repo_root = self._find_repo_root()
+        
+        # Initialize error handler
+        try:
+            from error_handler import ErrorHandler
+            self.error_handler = ErrorHandler(self.db_dir / "logs")
+        except:
+            self.error_handler = None
+        
+        # Initialize database with error handling
+        try:
+            self._init_db()
+        except Exception as e:
+            if self.error_handler:
+                self.error_handler.handle_error(e, "Database initialization", critical=True)
+            else:
+                raise
+        
+        # Initialize telemetry if available
+        try:
+            from telemetry import TelemetryCapture
+            self.telemetry = TelemetryCapture(self.db_dir / "telemetry")
+        except Exception as e:
+            # Telemetry is non-critical
+            if self.error_handler:
+                self.error_handler.handle_error(e, "Telemetry initialization")
+            self.telemetry = None
     
     def _find_repo_root(self) -> Path:
         """Find git repository root"""
@@ -87,50 +116,53 @@ class TaskManager:
                     
                     conn.execute("""
                         CREATE TABLE IF NOT EXISTS tasks (
-                            id TEXT PRIMARY KEY,           -- @doc: 8-character unique identifier, auto-generated
-                            title TEXT NOT NULL,            -- @doc: Task title/description (required, max 500 chars recommended)
-                            description TEXT,               -- @doc: Extended task details (optional)
-                            status TEXT DEFAULT 'pending',  -- @doc: Task status - Values: pending|in_progress|completed|blocked|cancelled
-                            priority TEXT DEFAULT 'medium', -- @doc: Task priority - Values: low|medium|high|critical
-                            assignee TEXT,                  -- @doc: Agent ID or username assigned to task (optional)
-                            created_at TEXT NOT NULL,       -- @doc: ISO 8601 timestamp when task was created
-                            updated_at TEXT NOT NULL,       -- @doc: ISO 8601 timestamp of last modification
-                            completed_at TEXT               -- @doc: ISO 8601 timestamp when task was completed (NULL if not completed)
+                            id TEXT PRIMARY KEY,
+                            title TEXT NOT NULL,
+                            description TEXT,
+                            status TEXT DEFAULT 'pending',
+                            priority TEXT DEFAULT 'medium',
+                            assignee TEXT,
+                            created_at TEXT NOT NULL,
+                            updated_at TEXT NOT NULL,
+                            completed_at TEXT,
+                            success_criteria TEXT,
+                            feedback_quality INTEGER,
+                            feedback_timeliness INTEGER,
+                            feedback_notes TEXT,
+                            completion_summary TEXT,
+                            deadline TEXT,
+                            estimated_hours REAL,
+                            actual_hours REAL
                         )
-                        -- @table-doc: Core task storage table. Tracks all tasks with status, priority, and assignment.
                     """)
                     
                     conn.execute("""
                         CREATE TABLE IF NOT EXISTS dependencies (
-                            task_id TEXT NOT NULL,     -- @doc: Task that has the dependency (must exist in tasks table)
-                            depends_on TEXT NOT NULL,   -- @doc: Task that must complete first (must exist in tasks table)
+                            task_id TEXT NOT NULL,
+                            depends_on TEXT NOT NULL,
                             PRIMARY KEY (task_id, depends_on)
                         )
-                        -- @table-doc: Defines task dependencies for workflow management. Tasks block until dependencies complete.
-                        -- @constraint: No circular dependencies allowed (enforced in application logic)
                     """)
                     
                     conn.execute("""
                         CREATE TABLE IF NOT EXISTS notifications (
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,  -- @doc: Unique notification ID, auto-incremented
-                            agent_id TEXT,              -- @doc: Target agent for notification (NULL for broadcast to all)
-                            task_id TEXT,               -- @doc: Related task ID (references tasks.id)
-                            type TEXT NOT NULL,         -- @doc: Notification type - Values: task_completed|task_unblocked|task_assigned|discovery|critical
-                            message TEXT NOT NULL,      -- @doc: Human-readable notification message
-                            created_at TEXT NOT NULL,   -- @doc: ISO 8601 timestamp when notification was created
-                            read BOOLEAN DEFAULT 0      -- @doc: Read status - 0=unread, 1=read
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            agent_id TEXT,
+                            task_id TEXT,
+                            type TEXT NOT NULL,
+                            message TEXT NOT NULL,
+                            created_at TEXT NOT NULL,
+                            read BOOLEAN DEFAULT 0
                         )
-                        -- @table-doc: Stores notifications for agents about task state changes and important events.
                     """)
                     
                     conn.execute("""
                         CREATE TABLE IF NOT EXISTS participants (
-                            task_id TEXT NOT NULL,     -- @doc: Task ID that agent is participating in (references tasks.id)
-                            agent_id TEXT NOT NULL,     -- @doc: Agent identifier (from TM_AGENT_ID env var or auto-generated)
-                            joined_at TEXT NOT NULL,    -- @doc: ISO 8601 timestamp when agent joined the task
+                            task_id TEXT NOT NULL,
+                            agent_id TEXT NOT NULL,
+                            joined_at TEXT NOT NULL,
                             PRIMARY KEY (task_id, agent_id)
                         )
-                        -- @table-doc: Tracks which agents are actively participating in each task for coordination.
                     """)
                     
                     conn.commit()
@@ -145,11 +177,43 @@ class TaskManager:
     # ========== SIMPLE PUBLIC INTERFACE ==========
     
     def add(self, title: str, description: str = None, 
-            priority: str = "medium", depends_on: List[str] = None) -> str:
-        """Add a new task"""
+            priority: str = "medium", depends_on: List[str] = None,
+            success_criteria: str = None, deadline: str = None,
+            estimated_hours: float = None) -> str:
+        """Add a new task with optional Core Loop fields"""
         # Validate title
         if not title or not title.strip():
-            raise ValueError("Task title cannot be empty")
+            if self.error_handler:
+                from error_handler import ValidationError
+                raise ValidationError("Task title cannot be empty")
+            else:
+                raise ValueError("Task title cannot be empty")
+        
+        # Validate success criteria if provided
+        if success_criteria:
+            try:
+                import json
+                parsed = json.loads(success_criteria)
+                # Additional validation
+                if not isinstance(parsed, list):
+                    raise ValueError("Success criteria must be a JSON array")
+                for criterion in parsed:
+                    if not isinstance(criterion, dict):
+                        raise ValueError("Each criterion must be a JSON object")
+                    if 'criterion' not in criterion:
+                        raise ValueError("Each criterion must have a 'criterion' field")
+            except json.JSONDecodeError as e:
+                if self.error_handler:
+                    from error_handler import ValidationError
+                    raise ValidationError(f"Invalid JSON in success criteria: {e}")
+                else:
+                    raise ValueError("Success criteria must be valid JSON")
+            except ValueError as e:
+                if self.error_handler:
+                    from error_handler import ValidationError
+                    raise ValidationError(str(e))
+                else:
+                    raise
         
         task_id = uuid.uuid4().hex[:8]
         now = datetime.now().isoformat()
@@ -170,10 +234,24 @@ class TaskManager:
                 # Determine status based on dependencies
                 status = "blocked" if depends_on else "pending"
                 
-                conn.execute("""
-                    INSERT INTO tasks (id, title, description, status, priority, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (task_id, title, description, status, priority, now, now))
+                # Check if table has Core Loop columns (for backward compatibility)
+                cursor = conn.execute("PRAGMA table_info(tasks)")
+                columns = {row[1] for row in cursor.fetchall()}
+                
+                if 'success_criteria' in columns:
+                    # New schema with Core Loop fields
+                    conn.execute("""
+                        INSERT INTO tasks (id, title, description, status, priority, created_at, updated_at,
+                                         success_criteria, deadline, estimated_hours)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (task_id, title, description, status, priority, now, now,
+                          success_criteria, deadline, estimated_hours))
+                else:
+                    # Legacy schema without Core Loop fields
+                    conn.execute("""
+                        INSERT INTO tasks (id, title, description, status, priority, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """, (task_id, title, description, status, priority, now, now))
                 
                 # Add dependencies
                 if depends_on:
@@ -188,6 +266,15 @@ class TaskManager:
             raise ValueError(f"Database integrity error: {e}")
         except Exception as e:
             raise ValueError(f"Failed to add task: {e}")
+        
+        # Capture telemetry
+        if self.telemetry:
+            self.telemetry.capture_task_created(
+                task_id,
+                has_criteria=bool(success_criteria),
+                has_deadline=bool(deadline),
+                has_estimate=bool(estimated_hours)
+            )
         
         # Auto-initialize context for collaboration
         self._init_context(task_id, title)
@@ -344,16 +431,64 @@ class TaskManager:
             VALUES (?, ?, ?, ?, ?)
         """, (agent_id, task_id, type, message, now))
     
-    def complete(self, task_id: str) -> bool:
-        """Complete a task and trigger auto-cleanup"""
+    def complete(self, task_id: str, completion_summary: str = None, 
+                actual_hours: float = None, validate: bool = False) -> bool:
+        """Complete a task with optional Core Loop fields"""
         now = datetime.now().isoformat()
         
         with sqlite3.connect(str(self.db_path)) as conn:
-            conn.execute("""
-                UPDATE tasks 
-                SET status = 'completed', completed_at = ?
-                WHERE id = ?
-            """, (now, task_id))
+            # Check if validation is requested
+            if validate:
+                cursor = conn.execute("""
+                    SELECT success_criteria FROM tasks WHERE id = ?
+                """, (task_id,))
+                row = cursor.fetchone()
+                if row and row[0]:
+                    # Validate success criteria
+                    try:
+                        from criteria_validator import CriteriaValidator
+                        validator = CriteriaValidator()
+                        
+                        # Get task context for validation
+                        context = self.context(task_id)
+                        
+                        # Validate criteria
+                        all_passed, results = validator.validate_criteria(row[0], context)
+                        
+                        # Print validation report
+                        print(validator.format_validation_report(results))
+                        
+                        # Capture telemetry for validation
+                        if self.telemetry:
+                            passed_count = sum(1 for r in results if r['passed'])
+                            self.telemetry.capture_criteria_validation(
+                                task_id, passed_count, len(results)
+                            )
+                        
+                        if not all_passed:
+                            print("Warning: Not all success criteria met")
+                    except Exception as e:
+                        print(f"Error validating criteria: {e}")
+            
+            # Check if table has Core Loop columns
+            cursor = conn.execute("PRAGMA table_info(tasks)")
+            columns = {row[1] for row in cursor.fetchall()}
+            
+            if 'completion_summary' in columns:
+                # Update with Core Loop fields
+                conn.execute("""
+                    UPDATE tasks 
+                    SET status = 'completed', completed_at = ?,
+                        completion_summary = ?, actual_hours = ?
+                    WHERE id = ?
+                """, (now, completion_summary, actual_hours, task_id))
+            else:
+                # Legacy update
+                conn.execute("""
+                    UPDATE tasks 
+                    SET status = 'completed', completed_at = ?
+                    WHERE id = ?
+                """, (now, task_id))
             
             # Find tasks that will be unblocked
             cursor = conn.execute("""
@@ -398,6 +533,15 @@ class TaskManager:
                                          assignee)
             
             conn.commit()
+        
+        # Capture telemetry
+        if self.telemetry:
+            self.telemetry.capture_task_completed(
+                task_id,
+                validated=validate,
+                has_summary=bool(completion_summary),
+                actual_hours=actual_hours
+            )
         
         # Auto archive and cleanup
         if _AUTO_CLEANUP:
@@ -565,6 +709,82 @@ class TaskManager:
         
         return result
     
+    def feedback(self, task_id: str, quality: int = None, 
+                timeliness: int = None, notes: str = None) -> bool:
+        """Provide feedback on a completed task"""
+        # Validate scores
+        if quality is not None and not (1 <= quality <= 5):
+            raise ValueError("Quality score must be between 1 and 5")
+        if timeliness is not None and not (1 <= timeliness <= 5):
+            raise ValueError("Timeliness score must be between 1 and 5")
+        
+        try:
+            with sqlite3.connect(str(self.db_path), timeout=10.0) as conn:
+                # Check if table has feedback columns
+                cursor = conn.execute("PRAGMA table_info(tasks)")
+                columns = {row[1] for row in cursor.fetchall()}
+                
+                if 'feedback_quality' in columns:
+                    # Update feedback fields
+                    conn.execute("""
+                        UPDATE tasks 
+                        SET feedback_quality = ?, feedback_timeliness = ?, feedback_notes = ?
+                        WHERE id = ?
+                    """, (quality, timeliness, notes, task_id))
+                    conn.commit()
+                    return True
+                else:
+                    # Legacy schema - cannot store feedback
+                    print("Warning: Feedback not supported in legacy schema. Run migrations.")
+                    return False
+        except Exception as e:
+            print(f"Failed to record feedback: {e}")
+            return False
+    
+    def progress(self, task_id: str, update: str) -> bool:
+        """Add a progress update to a task"""
+        try:
+            # Store progress as shared context with type 'progress'
+            progress_data = {
+                'timestamp': datetime.now().isoformat(),
+                'update': update,
+                'agent': self.agent_id
+            }
+            
+            # Add to shared context
+            context_file = self.db_dir / "contexts" / f"{task_id}_progress.jsonl"
+            context_file.parent.mkdir(parents=True, exist_ok=True)
+            
+            with open(context_file, 'a') as f:
+                f.write(json.dumps(progress_data) + '\n')
+            
+            # Also update the task's updated_at timestamp
+            with sqlite3.connect(str(self.db_path), timeout=10.0) as conn:
+                conn.execute("""
+                    UPDATE tasks 
+                    SET updated_at = ?
+                    WHERE id = ?
+                """, (datetime.now().isoformat(), task_id))
+                conn.commit()
+            
+            return True
+        except Exception as e:
+            print(f"Failed to record progress: {e}")
+            return False
+    
+    def get_progress(self, task_id: str) -> List[Dict]:
+        """Get all progress updates for a task"""
+        progress_file = self.db_dir / "contexts" / f"{task_id}_progress.jsonl"
+        updates = []
+        
+        if progress_file.exists():
+            with open(progress_file, 'r') as f:
+                for line in f:
+                    if line.strip():
+                        updates.append(json.loads(line))
+        
+        return updates
+    
     def context(self, task_id: str) -> Dict:
         """Get task context (both shared and private)"""
         result = {"task_id": task_id}
@@ -726,7 +946,7 @@ Examples:
     
     if args.command == "add":
         task_id = tm.add(args.title, args.description, args.priority, args.depends_on)
-        print(task_id)  # Output only the ID for script compatibility
+        print(f"Created task: {task_id}")
     
     elif args.command == "list":
         tasks = tm.list(args.status, args.assignee)

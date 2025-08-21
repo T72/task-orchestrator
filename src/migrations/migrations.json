@@ -1,0 +1,8 @@
+[
+  {
+    "version": "001",
+    "description": "Add Core Loop fields for success criteria, feedback, and completion summaries",
+    "up_sql": "ALTER TABLE tasks ADD COLUMN success_criteria TEXT;\nALTER TABLE tasks ADD COLUMN feedback_quality INTEGER;\nALTER TABLE tasks ADD COLUMN feedback_timeliness INTEGER;\nALTER TABLE tasks ADD COLUMN feedback_notes TEXT;\nALTER TABLE tasks ADD COLUMN completion_summary TEXT;\nALTER TABLE tasks ADD COLUMN deadline TEXT;\nALTER TABLE tasks ADD COLUMN estimated_hours REAL;\nALTER TABLE tasks ADD COLUMN actual_hours REAL;",
+    "down_sql": "-- SQLite doesn't support DROP COLUMN directly, would need to recreate table\n-- This is handled by restore from backup"
+  }
+]

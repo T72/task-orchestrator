@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Tests](https://img.shields.io/badge/tests-passing-green.svg)](#testing)
-[![Version](https://img.shields.io/badge/version-2.0.1--demo-blue.svg)](https://github.com/T72/task-orchestrator/releases)
+[![Version](https://img.shields.io/badge/version-2.3.0-blue.svg)](https://github.com/T72/task-orchestrator/releases)
 
 ## Stop Fighting Task Dependencies
 
@@ -29,13 +29,13 @@ Task Orchestrator helps by automatically managing dependencies, unblocking work 
 # 1. Clone and setup (30 seconds)
 git clone https://github.com/T72/task-orchestrator.git
 cd task-orchestrator
-chmod +x tm  # Make executable (Linux/Mac) or use: python3 tm
+chmod +x tm
 
 # 2. Initialize (instant)
-./tm init  # Or: python3 tm init
+./tm init
 
 # 3. Your first orchestrated workflow (90 seconds)
-SETUP=$(./tm add "Setup environment")  # Returns task ID: abc12345
+SETUP=$(./tm add "Setup environment" | grep -o '[a-f0-9]\{8\}')
 ./tm add "Run tests" --depends-on $SETUP
 ./tm add "Deploy" --depends-on $SETUP --file deploy.sh:15
 
@@ -73,7 +73,7 @@ TEST=$(./tm add "Integration tests" --depends-on $UI | grep -o '[a-f0-9]\{8\}')
 ### Multiple Developers, Zero Conflicts
 ```bash
 # Developer 1 creates the main feature
-FEATURE=$(./tm add "Payment system")
+FEATURE=$(./tm add "Payment system" | grep -o '[a-f0-9]\{8\}')
 
 # Developer 2 claims and starts work
 ./tm assign $FEATURE dev2
@@ -144,26 +144,103 @@ Agents share progress updates, enabling smooth handoffs:
 
 This enables true parallel development where specialized agents (database, backend, frontend, testing) work simultaneously without stepping on each other's toes.
 
+## 🚀 Core Loop Features (NEW in v2.3)
+
+Task Orchestrator now includes powerful Core Loop capabilities that help you track not just task completion, but also quality, efficiency, and success metrics.
+
+### Success Criteria & Validation
+
+Define measurable success criteria for tasks and validate them on completion:
+
+```bash
+# Create task with success criteria
+./tm add "Fix login bug" \
+  --criteria '[{"criterion":"Bug no longer reproduces","measurable":"true"},
+               {"criterion":"No regression in auth tests","measurable":"test_pass_rate >= 100"}]' \
+  --estimated-hours 4
+
+# Complete with automatic validation
+./tm complete $TASK_ID --validate --actual-hours 3.5 \
+  --summary "Fixed race condition in session handling, all tests passing"
+# Output: ✓ 2/2 criteria passed - task completed successfully
+```
+
+### Feedback & Quality Metrics
+
+Collect feedback on completed tasks and view aggregated metrics:
+
+```bash
+# Add feedback on completed task
+./tm feedback $TASK_ID --quality 5 --timeliness 4 \
+  --note "Excellent fix, delivered ahead of schedule"
+
+# View team metrics
+./tm metrics --feedback
+# Output:
+#   Average quality: 4.8/5 (15 tasks)
+#   Average timeliness: 4.2/5
+#   Success rate: 93%
+#   Feedback coverage: 78%
+```
+
+### Progress Tracking & Time Management
+
+Track detailed progress and compare estimates to actuals:
+
+```bash
+# Add progress updates throughout task lifecycle
+./tm progress $TASK_ID "Reproduced bug, analyzing root cause"
+./tm progress $TASK_ID "50% - Found race condition in auth flow"
+./tm progress $TASK_ID "90% - Fix implemented, running tests"
+
+# Set deadlines and track time
+./tm add "Implement feature X" --deadline "2025-12-31T23:59:59Z" --estimated-hours 20
+./tm complete $TASK_ID --actual-hours 18.5  # Track accuracy for future estimates
+```
+
+### Configuration & Feature Management
+
+Customize Core Loop features to match your workflow:
+
+```bash
+# Enable/disable specific features
+./tm config --enable feedback
+./tm config --enable success-criteria
+./tm config --disable telemetry
+
+# Use minimal mode for lightweight operation
+./tm config --minimal-mode  # Disables all Core Loop features
+
+# View current configuration
+./tm config --show
+```
+
+### Migration from v2.2
+
+Upgrading to v2.3 requires a simple database migration:
+
+```bash
+# Backup your data first (always recommended)
+cp -r ~/.task-orchestrator ~/.task-orchestrator.backup
+
+# Apply Core Loop schema updates
+./tm migrate --apply
+
+# Verify migration
+./tm migrate --status
+# Output: Applied migrations: 001 | Up to date: Yes
+```
+
+All existing tasks remain unchanged - Core Loop features are optional enhancements that you can adopt gradually.
+
 ## 📚 Documentation & Resources
 
 ### Essential Guides
-- **[User Guide](docs/user-guide.md)** - Complete manual with best practices
-- **[Developer Guide](docs/developer-guide.md)** - Architecture and contribution guide
+- **[User Guide](docs/guides/user-guide.md)** - Complete manual with best practices
+- **[Developer Guide](docs/guides/developer-guide.md)** - Architecture and contribution guide
 - **[API Reference](docs/reference/api-reference.md)** - Complete technical documentation
-- **[Troubleshooting](docs/troubleshooting.md)** - Solutions to common issues
-- **[Claude Code Quick Start](docs/quickstart-claude-code.md)** - Quick setup for Claude Code users
-
-### Claude Code Integration
-
-To enable optimal Task Orchestrator usage with Claude Code in your projects:
-
-1. **Configure AI Assistant**: Include Task Orchestrator instructions in your AI assistant configuration
-2. **Choose a template**:
-   - **[Full Template](docs/examples/claude-md-template.md)** - Comprehensive instructions with all features
-   - **[Minimal Template](docs/examples/claude-md-minimal.md)** - Just the essentials for quick setup
-3. **Whitelist commands**: Add `./tm *` to your whitelisted commands
-
-This ensures Claude Code knows exactly how to leverage Task Orchestrator for your specific needs.
+- **[Troubleshooting](docs/guides/troubleshooting.md)** - Solutions to common issues
+- **[Claude Code Integration](deploy/claude-code-whitelist.md)** - **REQUIRED** for Claude Code users
 
 ### Working Examples
 Run these directly to learn by doing:
