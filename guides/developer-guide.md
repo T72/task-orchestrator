@@ -141,9 +141,9 @@ class Orchestrator:
 
 ### Database Schema
 
-**📚 Single Source of Truth: [Database Schema Reference](../reference/core-loop-schema.md)**
+**📚 Single Source of Truth: [Database Schema Reference](../reference/database-schema.md)**
 
-The complete and authoritative database schema documentation is maintained in `reference/core-loop-schema.md`. This single source of truth includes:
+The complete and authoritative database schema documentation is maintained in `reference/database-schema.md`. This single source of truth includes:
 - Complete SQLite table definitions with Core Loop v2.3 features
 - File-based storage structure for collaboration features  
 - Migration instructions from previous versions
@@ -164,7 +164,7 @@ Key tables in v2.3.0:
 - **`notifications`** - Event system for the watch command
 - **`participants`** - Multi-agent collaboration tracking
 
-**See [Database Schema Reference](../reference/core-loop-schema.md) for complete table definitions and indexes.**
+**See [Database Schema Reference](../reference/database-schema.md) for complete table definitions and indexes.**
 
 #### File-Based Storage Structure
 

@@ -163,7 +163,7 @@ Core Loop features extend the database schema. If your contribution modifies the
 ```
 
 #### Schema Documentation
-- Update `docs/developer/database/core-loop-schema.md`
+- Update `reference/database-schema.md`
 - Include ER diagrams for complex relationships
 - Document all new fields and their purposes
 - Provide query examples for new capabilities
@@ -346,7 +346,7 @@ Releases follow semantic versioning (MAJOR.MINOR.PATCH):
 
 - **Core Loop Documentation**: 
   - API Reference: `docs/developer/api/core-loop-api-reference.md`
-  - Database Schema: `docs/developer/database/core-loop-schema.md`
+  - Database Schema: `reference/database-schema.md`
   - Architecture Guide: `docs/developer/architecture/core-loop-architecture.md`
   - Examples: `docs/examples/core-loop-examples.md`
   - Test Documentation: `tests/README-CORE-LOOP-TESTS.md`

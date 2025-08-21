@@ -1,7 +1,7 @@
-# Task Orchestrator Database Schema - Complete Reference v2.3.0
+# Task Orchestrator Database Schema
 
 ## Single Source of Truth
-This document is the authoritative reference for Task Orchestrator's database schema and storage architecture.
+This document is the permanent, authoritative reference for Task Orchestrator's database schema and storage architecture. It represents the current state of the database and is updated with each release.
 
 ## Storage Architecture
 
