@@ -310,4 +310,4 @@ If you find it helpful, consider starring us on [GitHub](https://github.com/T72/
 
 ---
 
-**Task Orchestrator v2.0.1** - A simple tool to help manage task dependencies.
+**Task Orchestrator v2.3.0** - Core Loop enhancement for quality tracking and team efficiency.
