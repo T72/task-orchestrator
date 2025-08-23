@@ -1,8 +1,8 @@
 # Git attributes for Task Orchestrator
 
-# CLAUDE.md should only exist in develop branch
-# This ensures it never gets merged to master
-CLAUDE.md merge=ours
+# AI integration files handling
+# Keep local customizations when merging
+ai-integration.md merge=ours
 
 # Ensure consistent line endings
 *.md text eol=lf

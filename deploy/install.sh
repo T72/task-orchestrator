@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Task Orchestrator Installation Script - Internal Use Only
+# Task Orchestrator Installation Script
 # Version: 2.0.0
 # Date: August 19, 2025
 
@@ -62,7 +62,7 @@ backup_existing() {
         [[ -f "$INSTALL_DIR/tm" ]] && cp "$INSTALL_DIR/tm" "$BACKUP_DIR/"
         [[ -d "$INSTALL_DIR/src" ]] && cp -r "$INSTALL_DIR/src" "$BACKUP_DIR/"
         [[ -d "$INSTALL_DIR/.task-orchestrator" ]] && cp -r "$INSTALL_DIR/.task-orchestrator" "$BACKUP_DIR/"
-        [[ -f "$INSTALL_DIR/CLAUDE.md" ]] && cp "$INSTALL_DIR/CLAUDE.md" "$BACKUP_DIR/"
+        [[ -f "$INSTALL_DIR/ai-integration.md" ]] && cp "$INSTALL_DIR/ai-integration.md" "$BACKUP_DIR/"
         
         log_info "✓ Backup created: $BACKUP_DIR"
     fi
@@ -90,15 +90,15 @@ install_files() {
         exit 1
     fi
     
-    # Copy CLAUDE.md example (only if doesn't exist)
-    if [[ -f "CLAUDE_INTEGRATION_EXAMPLE.md" ]]; then
-        if [[ ! -f "$INSTALL_DIR/CLAUDE.md" ]]; then
-            cp CLAUDE_INTEGRATION_EXAMPLE.md "$INSTALL_DIR/CLAUDE.md"
-            log_info "✓ CLAUDE.md template installed"
+    # Copy AI integration template (only if doesn't exist)
+    if [[ -f "ai-integration-template.md" ]]; then
+        if [[ ! -f "$INSTALL_DIR/ai-integration.md" ]]; then
+            cp ai-integration-template.md "$INSTALL_DIR/ai-integration.md"
+            log_info "✓ AI integration template installed"
         else
-            log_warn "CLAUDE.md already exists - not overwriting"
-            cp CLAUDE_INTEGRATION_EXAMPLE.md "$INSTALL_DIR/CLAUDE_TEMPLATE.md"
-            log_info "✓ Template saved as CLAUDE_TEMPLATE.md"
+            log_warn "AI integration file already exists - not overwriting"
+            cp ai-integration-template.md "$INSTALL_DIR/ai-integration-template.md"
+            log_info "✓ Template saved as ai-integration-template.md"
         fi
     fi
     
@@ -159,11 +159,11 @@ ${GREEN}✅ Task Orchestrator v2.0.0 Installation Complete!${NC}
    ./tm add "My first task"
    ./tm list
 
-🤖 Claude Integration:
-   Ensure CLAUDE.md is in your project root for automatic agent coordination
+🤖 AI Integration:
+   Use the ai-integration.md template for automatic agent coordination
 
 📚 Documentation:
-   - QUICKSTART_INTERNAL.md - Quick start guide
+   - QUICKSTART.md - Quick start guide
    - docs/guides/ - Complete user guides  
    - docs/reference/ - API documentation
 

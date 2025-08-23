@@ -1,10 +1,10 @@
-# CLAUDE.md - Task Orchestrator Integration Example
+# AI Integration Template - Task Orchestrator
 
-**INTERNAL TEMPLATE - Copy this as CLAUDE.md in your projects**
+**Template for AI agent coordination in your projects**
 
 ---
 
-# CLAUDE.md - Multi-Agent Orchestration Instructions
+# Multi-Agent Orchestration Instructions
 
 ## 🔒 PROTECTED SECTION - TASK ORCHESTRATOR INTEGRATION
 
@@ -12,7 +12,7 @@
 
 ### Task Orchestrator Integration Requirements
 
-All Claude Code agents working in this project MUST use Task Orchestrator for coordination:
+All AI agents working in this project MUST use Task Orchestrator for coordination:
 
 1. **Before starting any work** - Check for existing tasks:
    ```bash

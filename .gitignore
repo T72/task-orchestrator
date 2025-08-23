@@ -9,9 +9,9 @@
 .task-orchestrator/
 .task-manager/  # Legacy directory name, also contains private data
 
-# CLAUDE.md is for development branch only - contains personal workflow preferences
-# Note: This file is tracked in develop but must be manually excluded from master merges
-# CLAUDE.md should NOT be included in .gitignore on develop branch to allow tracking
+# AI integration customization files contain local workflow preferences
+# These should be customized per project and not shared
+ai-integration-local.md
 
 # ====================
 # Archive & Development Files
@@ -216,23 +216,22 @@ id_rsa*
 id_dsa*
 
 # ====================
-# CRITICAL: Claude Code Private Configuration
+# AI Agent Configuration
 # ====================
-# The entire .claude directory contains YOUR personal Claude Code setup
+# The .claude directory contains personal AI agent setup
 # This includes custom agents, commands, hooks, and settings
-# NEVER share this as it's your personal development environment
+# Keep this directory private to your development environment
 .claude/
 /.claude/
 
-# Specific Claude subdirectories (extra protection)
+# Specific AI agent subdirectories (extra protection)
 .claude/agents/        # Your custom AI agents and their configurations
 .claude/commands/      # Your custom slash commands
 .claude/hooks/         # Your custom hooks and automations
-.claude/settings.json  # Your personal Claude Code settings
-.claude/CLAUDE.md     # Your personal documentation
+.claude/settings.json  # Your personal settings
 .claude/checkpoints/   # Task execution state and context
 .claude/notifications/ # Notification channels
-.claude/*.log         # Claude execution logs
+.claude/*.log         # Execution logs
 
 # ====================
 # User-Specific Files
