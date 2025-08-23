@@ -7,9 +7,11 @@ A comprehensive guide to using Task Orchestrator for efficient task management a
 - [Quick Start (5 Minutes)](#quick-start-5-minutes)
 - [Installation](#installation)
 - [Basic Usage](#basic-usage)
+- [Task Templates (v2.6)](#task-templates-v26)
+- [Interactive Wizard (v2.6)](#interactive-wizard-v26)
+- [Project Isolation (v2.5)](#project-isolation-v25)
 - [Core Loop Features (v2.3)](#core-loop-features-v23)
 - [Advanced Features](#advanced-features)
-- [Claude Code Integration](#claude-code-integration)
 - [Best Practices](#best-practices)
 - [Common Workflows](#common-workflows)
 - [Configuration](#configuration)
@@ -185,6 +187,129 @@ pip install task-orchestrator
 | `medium` | | Standard work (default) | Feature development, routine maintenance |
 | `high` | ! | Important tasks | Bug fixes, security updates |
 | `critical` | !! | Urgent blockers | Production outages, security vulnerabilities |
+
+## Task Templates (v2.6)
+
+Save hours by defining reusable workflows that can be applied with different variables.
+
+### Creating Templates
+
+Templates are YAML files that define a workflow structure:
+
+```yaml
+# sprint-template.yaml
+name: sprint-template
+description: Standard sprint workflow
+tasks:
+  - title: "Sprint {{sprint_num}} Planning"
+    priority: high
+    
+  - title: "Development - {{feature_name}}"
+    depends_on: [0]
+    assignee: "{{dev_team}}"
+    
+  - title: "Testing - {{feature_name}}"
+    depends_on: [1]
+    
+  - title: "Sprint {{sprint_num}} Review"
+    depends_on: [2]
+```
+
+### Using Templates
+
+Apply templates with variable substitution:
+
+```bash
+# Apply template with variables
+./tm template apply sprint-template.yaml \
+  --var sprint_num=1 \
+  --var feature_name="User Authentication" \
+  --var dev_team="backend"
+
+# List available templates
+./tm template list
+
+# Show template details
+./tm template show sprint-template
+```
+
+### Time Savings
+
+- Manual task creation: 10-15 minutes per sprint
+- With templates: 30 seconds
+- Typical savings: 30+ minutes per sprint
+
+## Interactive Wizard (v2.6)
+
+The interactive wizard guides you through task creation step-by-step.
+
+### Basic Wizard Usage
+
+```bash
+# Start the interactive wizard
+./tm wizard
+
+# The wizard will prompt you for:
+# 1. Task title
+# 2. Priority level
+# 3. Dependencies (if any)
+# 4. Assignee (optional)
+# 5. Tags (optional)
+```
+
+### Quick Mode
+
+For experienced users, use quick mode to skip explanations:
+
+```bash
+./tm wizard --quick
+```
+
+### Wizard Benefits
+
+- No need to remember command syntax
+- Guided dependency setup
+- Automatic validation
+- Perfect for new team members
+
+## Project Isolation (v2.5)
+
+Each project maintains its own task database, preventing confusion between different projects.
+
+### How It Works
+
+Task Orchestrator creates a `.task-orchestrator/` directory in your current project:
+
+```bash
+# Project A
+cd ~/projects/client-a
+./tm init  # Creates client-a/.task-orchestrator/
+./tm add "Fix client A bug"
+
+# Project B (completely separate)
+cd ~/projects/client-b  
+./tm init  # Creates client-b/.task-orchestrator/
+./tm add "Client B feature"
+
+# Return to Project A - tasks are still there
+cd ~/projects/client-a
+./tm list  # Shows only client A tasks
+```
+
+### Benefits
+
+- No task contamination between projects
+- Work on multiple clients safely
+- Switch projects without cleanup
+- Each project's tasks stay isolated
+
+### Global Database (Legacy)
+
+If you need the old global database behavior:
+
+```bash
+export TM_DB_PATH=~/.task-orchestrator
+```
 
 ## Core Loop Features (v2.3)
 
@@ -651,9 +776,9 @@ cat tasks.json | jq '.[] | select(.status == "pending") | .title'
 # - Recent activity
 ```
 
-## Claude Code Integration
+## AI Agent Integration
 
-Task Orchestrator integrates seamlessly with Claude Code for AI-assisted development workflows.
+Task Orchestrator integrates seamlessly with AI agents for automated development workflows.
 
 ### Basic Integration
 
