@@ -5,15 +5,46 @@
 [![Tests](https://img.shields.io/badge/tests-passing-green.svg)](#testing)
 [![Version](https://img.shields.io/badge/version-2.6.0-blue.svg)](https://github.com/T72/task-orchestrator/releases)
 
-## 🚀 The Killer Feature: Complete Project Isolation
+> **🎉 What's New in v2.6.0**  
+> • **Task Templates** - Create reusable YAML/JSON workflows with variables  
+> • **Interactive Wizard** - Guided task creation with `tm wizard`  
+> • **Hook Monitoring** - Track performance with P50/P95/P99 metrics  
+> [See full changelog →](#version-history)
 
-**NEW: Each project gets its own isolated task database. No more task contamination between projects!**
+## 🎉 NEW in v2.6.0: Templates, Interactive Wizard & Hook Monitoring
 
+### 📝 Task Templates - Reusable Workflows
+Create and apply task templates for common workflows:
 ```bash
-# Work on multiple projects without interference
-project-a/.task-orchestrator/  # Project A's tasks stay here
-project-b/.task-orchestrator/  # Project B's tasks stay here
-client-work/.task-orchestrator/  # Client tasks never mix with internal work
+# Create a sprint template
+cat > sprint.yaml << 'END'
+name: sprint-template
+tasks:
+  - title: "Sprint Planning"
+    priority: high
+  - title: "Development - {{feature_name}}"
+    depends_on: [0]
+  - title: "Testing - {{feature_name}}"
+    depends_on: [1]
+END
+
+# Apply with variables
+./tm template apply sprint.yaml --var feature_name="Authentication"
+```
+
+### 🧙 Interactive Wizard - Guided Task Creation
+```bash
+# Step-by-step task creation
+./tm wizard
+
+# Quick mode for power users
+./tm wizard --quick
+```
+
+### 📊 Hook Performance Monitoring
+```bash
+# View hook execution metrics with P50/P95/P99 percentiles
+./tm hooks
 ```
 
 ## Stop Fighting Task Dependencies
@@ -26,7 +57,15 @@ Task Orchestrator helps by automatically managing dependencies, unblocking work 
 
 ## What You Get
 
-- **🔒 Project Isolation**: Each project maintains its own task database - no contamination
+### 🔒 Project Isolation (v2.5+)
+Each project gets its own isolated task database:
+```bash
+project-a/.task-orchestrator/  # Project A's tasks
+project-b/.task-orchestrator/  # Project B's tasks  
+client/.task-orchestrator/      # Client tasks separate
+```
+
+### Core Capabilities
 - **⚡ Reduced Blocking**: Dependencies resolve automatically - when task A completes, task B unblocks
 - **📋 Better Context**: Tasks carry shared context between agents, eliminating re-explanation
 - **🤖 AI Agent Collaboration**: Specialized agents share progress, maintain private notes, coordinate seamlessly
@@ -57,25 +96,6 @@ SETUP=$(./tm add "Setup environment" | grep -o '[a-f0-9]\{8\}')
 ```
 
 That's it! You're ready to start organizing your tasks more effectively.
-
-### 📁 Project Isolation Details
-
-Task Orchestrator **automatically** creates a `.task-orchestrator/` directory in your current project:
-
-```bash
-# Just run init in any project - it's isolated automatically!
-cd my-project
-./tm init  # Creates my-project/.task-orchestrator/
-
-# Switch projects? Tasks stay separate!
-cd ../other-project
-./tm init  # Creates other-project/.task-orchestrator/
-
-# Need the old global database? (backward compatibility)
-export TM_DB_PATH=~/.task-orchestrator
-```
-
-**Why This Matters**: Teams report 4-5x velocity improvement when projects don't interfere with each other!
 
 ## 💡 Real-World Usage
 
@@ -175,9 +195,10 @@ Agents share progress updates, enabling smooth handoffs:
 
 This enables true parallel development where specialized agents (database, backend, frontend, testing) work simultaneously without stepping on each other's toes.
 
-## 🚀 Core Loop Features (NEW in v2.3)
+## 📈 Advanced Features
 
-Task Orchestrator now includes powerful Core Loop capabilities that help you track not just task completion, but also quality, efficiency, and success metrics.
+### Core Loop Capabilities (v2.3+)
+Track not just task completion, but also quality, efficiency, and success metrics:
 
 ### Success Criteria & Validation
 
@@ -263,6 +284,26 @@ cp -r ~/.task-orchestrator ~/.task-orchestrator.backup
 ```
 
 All existing tasks remain unchanged - Core Loop features are optional enhancements that you can adopt gradually.
+
+## 📋 Version History
+
+### v2.6.0 (Latest) - Templates & Automation
+- **Task Templates**: YAML/JSON templates with variable substitution
+- **Interactive Wizard**: Guided task creation with `--quick` mode
+- **Hook Performance Monitoring**: P50/P95/P99 metrics tracking
+
+### v2.5.0 - Project Isolation
+- **Project-specific databases**: Each project gets `.task-orchestrator/`
+- **Multi-agent improvements**: Better coordination and context sharing
+- **Bug fixes**: Critical fixes for `created_by` field
+
+### v2.3.0 - Core Loop
+- **Success criteria**: Measurable task validation
+- **Feedback system**: Quality and timeliness tracking
+- **Progress tracking**: Detailed progress updates
+- **Time management**: Estimate vs actual tracking
+
+[Full changelog →](https://github.com/T72/task-orchestrator/blob/main/CHANGELOG.md)
 
 ## 📚 Documentation & Resources
 
