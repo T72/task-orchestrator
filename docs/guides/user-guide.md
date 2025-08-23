@@ -76,15 +76,10 @@ python tm init
 
 ```bash
 # Download latest release
-curl -L https://github.com/T72/task-orchestrator/releases/latest/download/tm -o tm
+wget https://github.com/T72/task-orchestrator/archive/refs/heads/main.zip
+unzip main.zip
+cd task-orchestrator-main
 chmod +x tm
-```
-
-#### Method 3: Pip Install (Future)
-
-```bash
-# Coming soon
-pip install task-orchestrator
 ```
 
 ### Verification
