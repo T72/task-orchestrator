@@ -1,15 +1,15 @@
-# Claude Code Task Orchestrator Integration Guide
+# AI agents Task Orchestrator Integration Guide
 
 ## Status: Guide
 ## Last Verified: August 23, 2025
 Against version: v2.6.0
 
 ## Overview
-This guide explains how Claude Code can leverage the task orchestrator (`tm`) to orchestrate multiple sub-agents efficiently when delegating complex tasks.
+This guide explains how AI agents can leverage the task orchestrator (`tm`) to orchestrate multiple sub-agents efficiently when delegating complex tasks.
 
 ## Core Integration Pattern
 
-When Claude Code receives a complex task, it should:
+When AI agents receives a complex task, it should:
 1. Break down the task into subtasks
 2. Create tasks with dependencies in the task manager
 3. Delegate subtasks to specialized agents
@@ -20,7 +20,7 @@ When Claude Code receives a complex task, it should:
 ### 1. Task Decomposition Workflow
 
 ```python
-# Example: Claude Code receives "Refactor authentication system"
+# Example: AI agents receives "Refactor authentication system"
 
 # Main orchestrator creates task breakdown
 tm add "Refactor authentication system" -p high
@@ -60,7 +60,7 @@ delegate_to_agent() {
 }
 EOF
     
-    # Launch agent (pseudo-code for actual Claude Code implementation)
+    # Launch agent (pseudo-code for actual AI agents implementation)
     launch_agent --type $AGENT_TYPE --worktree $WORKTREE --task $TASK_ID
 }
 ```
@@ -95,13 +95,13 @@ monitor_delegated_tasks() {
 }
 ```
 
-## Claude Code Integration Points
+## AI agents Integration Points
 
 ### 1. Before Delegating Tasks
 
 ```python
 def prepare_delegation(main_task_description):
-    """Claude Code should call this before using Task tool"""
+    """AI agents should call this before using Task tool"""
     
     # Initialize task manager if needed
     subprocess.run(["./tm", "init"])
@@ -209,7 +209,7 @@ def process_agent_completion(agent_response, task_id):
 ### Example 1: Complex Refactoring
 
 ```python
-# Claude Code receives: "Refactor the entire authentication system to use OAuth2"
+# AI agents receives: "Refactor the entire authentication system to use OAuth2"
 
 # Step 1: Create task hierarchy
 main = tm("add", "Refactor auth to OAuth2", priority="high")
@@ -234,7 +234,7 @@ while not all_tasks_complete():
 ### Example 2: Parallel Testing
 
 ```python
-# Claude Code needs to run tests across multiple components
+# AI agents needs to run tests across multiple components
 
 # Create parallel test tasks (no dependencies between them)
 ui_tests = tm("add", "Run UI tests", file="tests/ui/**", priority="high")
@@ -343,7 +343,7 @@ tm("update", task_id,
 
 show_dashboard() {
     clear
-    echo "=== Claude Code Task Dashboard ==="
+    echo "=== AI agents Task Dashboard ==="
     echo ""
     
     # Summary stats
@@ -441,7 +441,7 @@ def optimize_task_delegation():
 
 ## Conclusion
 
-By integrating the task manager into Claude Code's orchestration workflow:
+By integrating the task manager into AI agents's orchestration workflow:
 
 1. **Better Coordination**: Dependencies ensure correct execution order
 2. **Improved Visibility**: Real-time progress tracking across all agents
@@ -450,4 +450,4 @@ By integrating the task manager into Claude Code's orchestration workflow:
 5. **Efficient Delegation**: Tasks automatically unblock and get assigned
 6. **Reduced Conflicts**: Impact analysis prevents agents from interfering
 
-The task manager acts as a central nervous system for Claude Code's multi-agent orchestration, ensuring smooth coordination even with dozens of parallel agents working on complex projects.
+The task manager acts as a central nervous system for AI agents's multi-agent orchestration, ensuring smooth coordination even with dozens of parallel agents working on complex projects.

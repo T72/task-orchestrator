@@ -1,4 +1,4 @@
-# Task Orchestrator + Claude Code: QuickStart Guide
+# Task Orchestrator QuickStart Guide
 
 ## 🚀 30-Second Setup
 
@@ -15,13 +15,13 @@ chmod +x tm
 ./tm add "My first task"
 ```
 
-**That's it!** Task Orchestrator is now ready for use with Claude Code.
+**That's it!** Task Orchestrator is now ready for use.
 
-## 🤖 Claude Code Integration
+## 🤖 AI Agent Integration
 
 ### Basic Usage Pattern
 
-When working with Claude Code on any project:
+When working with AI agents on any project:
 
 ```bash
 # 1. Navigate to your project
@@ -38,7 +38,7 @@ chmod +x tm
 ./tm add "Implement user authentication"
 ```
 
-### Claude Code Workflow Examples
+### AI agents Workflow Examples
 
 #### Example 1: Breaking Down a Feature Request
 
@@ -96,7 +96,7 @@ export TM_AGENT_ID="api_specialist"
 ./tm complete task_123
 ```
 
-## 🎯 Key Commands for Claude Code
+## 🎯 Key Commands for AI agents
 
 ### Essential Commands
 
@@ -211,11 +211,11 @@ cp -r ~/.task-orchestrator ~/.task-orchestrator.backup
 # Output: Applied migrations: 001 | Up to date: Yes
 ```
 
-## 🔧 Configuration for Claude Code
+## 🔧 Configuration for AI agents
 
-### ⚠️ ESSENTIAL: Claude Code Whitelist Setup
+### ⚠️ ESSENTIAL: AI agents Whitelist Setup
 
-**BEFORE using Task Orchestrator with Claude Code, you MUST configure command whitelisting to avoid confirmation prompts on every command:**
+**BEFORE using Task Orchestrator with AI agents, you MUST configure command whitelisting to avoid confirmation prompts on every command:**
 
 ```json
 {
@@ -241,7 +241,7 @@ export TM_AGENT_ID="claude_main"
 export TM_DB_PATH=".task-orchestrator/tasks.db"
 ```
 
-### Best Practices with Claude Code
+### Best Practices with AI agents
 
 1. **Always initialize first**: Run `./tm init` in each new project
 2. **Use clear task titles**: "Fix login bug" not just "Bug"
@@ -249,7 +249,7 @@ export TM_DB_PATH=".task-orchestrator/tasks.db"
 4. **Use dependencies**: Ensures logical task flow
 5. **Share discoveries**: Use `tm discover` for important findings
 
-## 📋 Common Claude Code Scenarios
+## 📋 Common AI agents Scenarios
 
 ### Scenario 1: Bug Fixing Session
 
@@ -344,7 +344,7 @@ export TM_LOCK_TIMEOUT=30
 
 ## 🎉 You're Ready!
 
-Start using Task Orchestrator with Claude Code to manage complex projects efficiently. The system handles all the complexity while you focus on building great software!
+Start using Task Orchestrator with AI agents to manage complex projects efficiently. The system handles all the complexity while you focus on building great software!
 
 ---
 

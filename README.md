@@ -77,9 +77,9 @@ UI=$(./tm add "UI components" --depends-on $API | grep -o '[a-f0-9]\{8\}')
 - [API Reference](docs/reference/api-reference.md)
 - [Database Schema](docs/reference/database-schema.md)
 
-### Guides
+### Guides  
+- [Quick Start](docs/guides/quickstart.md)
 - [User Guide](docs/guides/user-guide.md)
-- [AI Integration](docs/guides/ai-integration-guide.md)
 - [Examples](docs/examples/)
 
 ## Installation
