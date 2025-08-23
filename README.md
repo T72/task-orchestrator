@@ -51,23 +51,22 @@ AI agents and developers work in parallel without conflicts.
 
 [See changelog →](CHANGELOG.md)
 
-## Examples
+## See It In Action
 
-### Basic Dependencies
-```bash
-API=$(./tm add "API endpoints" | grep -o '[a-f0-9]\{8\}')
-UI=$(./tm add "UI components" --depends-on $API | grep -o '[a-f0-9]\{8\}')
-./tm complete $API  # UI unblocks
-```
+Run these examples to experience the power:
 
-### Task Templates
 ```bash
-./tm template apply sprint.yaml --var feature="Auth"
-```
+# See multi-agent coordination
+bash docs/examples/multi-agent-workflow.sh
 
-### Interactive Creation
-```bash
-./tm wizard  # Guided task setup
+# See project isolation  
+bash docs/examples/project-isolation.sh
+
+# See template time savings
+bash docs/examples/template-workflow.sh
+
+# See real-time progress tracking
+bash docs/examples/real-time-updates.sh
 ```
 
 ## Documentation
