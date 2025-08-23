@@ -27,7 +27,16 @@ _COMPRESS_ARCHIVES = True
 _MAX_CONTEXT_SIZE_MB = 10
 
 class TaskManager:
-    """Simple task manager for multi-agent coordination"""
+    """
+    Simple task manager for multi-agent coordination
+    
+    @implements FR-040: Project-Local Database Isolation
+    @implements FR-CORE-1: Task Creation System
+    @implements FR-CORE-2: Task Query System  
+    @implements FR-CORE-3: Task Completion System
+    @implements TECH-001: Database Path Management
+    @implements UX-002: Directory Structure (.task-orchestrator/)
+    """
     
     def __init__(self):
         # Always use project-local database for isolation
@@ -90,9 +99,12 @@ class TaskManager:
             return Path.cwd()
     
     def _generate_agent_id(self) -> str:
-        """Generate unique agent ID"""
-        unique = f"{os.getpid()}:{os.environ.get('USER', 'agent')}"
-        return hashlib.md5(unique.encode()).hexdigest()[:8]
+        """Generate unique agent ID with better defaults"""
+        # Try to get a meaningful default
+        user = os.environ.get('USER', os.environ.get('USERNAME', 'user'))
+        unique = f"{user}_{os.getpid()}"
+        # Return a more readable agent ID
+        return f"{user}_{hashlib.md5(unique.encode()).hexdigest()[:4]}"
     
     def _init_db(self):
         """Initialize database if needed with WSL safety"""
@@ -134,6 +146,7 @@ class TaskManager:
                             status TEXT DEFAULT 'pending',
                             priority TEXT DEFAULT 'medium',
                             assignee TEXT,
+                            created_by TEXT NOT NULL DEFAULT 'user',
                             created_at TEXT NOT NULL,
                             updated_at TEXT NOT NULL,
                             completed_at TEXT,
@@ -176,6 +189,24 @@ class TaskManager:
                             PRIMARY KEY (task_id, agent_id)
                         )
                     """)
+                    
+                    # Migration: Add created_by column if it doesn't exist
+                    cursor = conn.execute("PRAGMA table_info(tasks)")
+                    columns = {row[1] for row in cursor.fetchall()}
+                    
+                    if 'created_by' not in columns:
+                        # Add the created_by column to existing tables
+                        try:
+                            conn.execute("""
+                                ALTER TABLE tasks ADD COLUMN created_by TEXT DEFAULT 'user'
+                            """)
+                            # Update existing rows with a default created_by value
+                            conn.execute("""
+                                UPDATE tasks SET created_by = 'user' WHERE created_by IS NULL
+                            """)
+                        except sqlite3.OperationalError:
+                            # Column might already exist, ignore the error
+                            pass
                     
                     conn.commit()
                     break  # Success, exit retry loop
@@ -260,8 +291,25 @@ class TaskManager:
                 cursor = conn.execute("PRAGMA table_info(tasks)")
                 columns = {row[1] for row in cursor.fetchall()}
                 
-                if 'success_criteria' in columns:
-                    # New schema with Core Loop fields
+                # Use agent_id for created_by field
+                created_by = self.agent_id
+                
+                if 'created_by' in columns and 'success_criteria' in columns:
+                    # New schema with created_by and Core Loop fields
+                    conn.execute("""
+                        INSERT INTO tasks (id, title, description, status, priority, created_by, created_at, updated_at,
+                                         success_criteria, deadline, estimated_hours)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (task_id, title, description, status, priority, created_by, now, now,
+                          success_criteria, deadline, estimated_hours))
+                elif 'created_by' in columns:
+                    # Schema with created_by but without Core Loop fields
+                    conn.execute("""
+                        INSERT INTO tasks (id, title, description, status, priority, created_by, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (task_id, title, description, status, priority, created_by, now, now))
+                elif 'success_criteria' in columns:
+                    # Legacy schema with Core Loop fields but no created_by
                     conn.execute("""
                         INSERT INTO tasks (id, title, description, status, priority, created_at, updated_at,
                                          success_criteria, deadline, estimated_hours)
@@ -269,7 +317,7 @@ class TaskManager:
                     """, (task_id, title, description, status, priority, now, now,
                           success_criteria, deadline, estimated_hours))
                 else:
-                    # Legacy schema without Core Loop fields
+                    # Legacy schema without created_by or Core Loop fields
                     conn.execute("""
                         INSERT INTO tasks (id, title, description, status, priority, created_at, updated_at)
                         VALUES (?, ?, ?, ?, ?, ?, ?)

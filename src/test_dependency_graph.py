@@ -5,7 +5,7 @@ Tests graph construction, cycle detection, and topological sorting.
 
 @implements FR-042: Circular dependency detection testing
 @implements FR-043: Critical path visualization testing  
-@implements FR-016: Dependency graph validation testing
+@implements FR-003: Dependency graph validation testing
 """
 import sys
 import os

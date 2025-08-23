@@ -1,8 +1,12 @@
 # CLI Command Reference
 
+## Status: Implemented
+## Last Verified: August 23, 2025
+Against version: v2.6.0
+
 ## Overview
 
-Task Orchestrator provides a comprehensive command-line interface through the `tm` command. This reference covers all commands, options, and parameters available in v2.3.
+Task Orchestrator provides a comprehensive command-line interface through the `tm` command. This reference covers all commands, options, and parameters available in v2.6.0.
 
 ## Basic Syntax
 
@@ -80,7 +84,6 @@ tm list [options]
 - `--status <status>`: Filter by status (pending, in_progress, completed, blocked)
 - `--assignee <agent>`: Show tasks for specific agent
 - `--has-deps`: Show only tasks with dependencies
-- `--has-files`: Show only tasks with file references
 
 **Examples**:
 
@@ -95,7 +98,7 @@ tm list --status pending
 tm list --assignee backend-agent
 
 # Combine filters
-tm list --status in_progress --has-files
+tm list --status in_progress --has-deps
 ```
 
 **Output Format**:
@@ -314,6 +317,103 @@ tm config --reset
 
 ---
 
+### tm critical-path
+
+Analyze and display the critical path of task dependencies.
+
+```bash
+tm critical-path [options]
+```
+
+**Options**:
+- `--verbose`: Show detailed dependency information
+- `--format <type>`: Output format (text, json, graphviz)
+
+**Description**:
+Identifies the longest sequence of dependent tasks that determines the minimum project completion time. Helps identify bottlenecks and optimize task scheduling.
+
+**Examples**:
+
+```bash
+# Show critical path
+tm critical-path
+# Output:
+# Critical Path Analysis
+# ======================
+# Path length: 3 tasks
+# Estimated duration: 45 hours
+# 
+# 1. a1b2c3d4: Setup infrastructure (10h)
+#    └─> 2. e5f6g7h8: Backend API (20h)
+#        └─> 3. i9j0k1l2: Integration tests (15h)
+
+# Verbose output with all paths
+tm critical-path --verbose
+
+# Export as Graphviz for visualization
+tm critical-path --format graphviz > critical-path.dot
+```
+
+---
+
+### tm report
+
+Generate various reports on task metrics and team performance.
+
+```bash
+tm report [options]
+```
+
+**Options**:
+- `--assessment`: Generate 30-day assessment report with recommendations
+- `--format <type>`: Output format (text, json, csv)
+- `--output <file>`: Save report to file
+- `--days <n>`: Number of days to analyze (default: 30)
+
+**Description**:
+Creates comprehensive reports analyzing task completion rates, feature adoption, feedback scores, and provides strategic recommendations for improvement.
+
+**Examples**:
+
+```bash
+# Generate assessment report
+tm report --assessment
+# Output:
+# ================================================================================
+# 30-DAY ASSESSMENT REPORT
+# ================================================================================
+# 
+# EXECUTIVE SUMMARY
+# --------------------
+# Tasks Created: 47
+# Tasks Completed: 38
+# Completion Rate: 80.9%
+# Feature Adoption Score: 72
+# Key Insight: Strong adoption of success criteria feature
+# 
+# FEATURE ADOPTION ANALYSIS
+# ------------------------------
+# Success Criteria: 85.1% (40 tasks)
+# Deadlines: 63.8% (30 tasks)
+# Time Estimation: 70.2% (33 tasks)
+# Most Adopted Feature: Success Criteria
+# 
+# STRATEGIC RECOMMENDATIONS
+# ------------------------------
+# 1. [HIGH] Increase deadline usage for better planning
+#    Action: Add deadline prompts to task creation
+# 
+# Report saved to: .task-orchestrator/reports/30_day_assessment.txt
+
+# Export as JSON for further analysis
+tm report --assessment --format json --output metrics.json
+
+# Custom time period
+tm report --days 7 --format csv
+```
+
+---
+
 ### tm migrate
 
 Manage database schema migrations (v2.3).
@@ -523,19 +623,205 @@ tm note a1b2c3d4 "Consider using JWT instead of sessions for stateless auth"
 
 ### tm discover
 
-Share a critical discovery with all agents.
+Share a critical discovery with all agents working on a task.
 
 ```bash
 tm discover <task-id> <message>
 ```
 
+**Arguments**:
+- `task-id`: The task where the discovery was made
+- `message`: The critical finding to share
+
+**Description**:
+Broadcasts an important discovery to all agents involved with a task. Creates a high-priority notification that ensures critical information (security issues, blockers, breakthroughs) reaches all team members immediately.
+
 **Example**:
 
 ```bash
 tm discover a1b2c3d4 "Found SQL injection vulnerability in login endpoint!"
+# Output: Discovery shared for task a1b2c3d4
 ```
 
-**Output**: `Discovery shared for task a1b2c3d4`
+**Note**: Discoveries are stored in shared context and trigger notifications to all agents.
+
+---
+
+### tm wizard
+
+Interactive task creation wizard with template support (v2.6.0).
+
+```bash
+tm wizard [options]
+```
+
+**Options**:
+- `--quick`: Quick mode with condensed prompts
+
+**Description**:
+Launches an interactive wizard that guides you through task creation. Supports three creation methods:
+1. Template-based creation with variable substitution
+2. Quick start with basic options
+3. Advanced creation with all features
+
+**Examples**:
+
+```bash
+# Launch interactive wizard
+tm wizard
+# Output:
+# === Task Creation Wizard ===
+# How would you like to create tasks?
+# 1. Use a template
+# 2. Quick start (basic task)
+# 3. Advanced (all options)
+
+# Quick mode for rapid task creation
+tm wizard --quick
+# Output: Streamlined creation with fewer prompts
+```
+
+---
+
+### tm template
+
+Manage and apply task templates (v2.6.0).
+
+```bash
+tm template <subcommand> [arguments]
+```
+
+**Subcommands**:
+
+#### tm template list
+List all available templates.
+
+```bash
+tm template list
+```
+
+**Output**:
+```
+Available templates:
+- bug-fix: Bug Fix Template
+- feature: Feature Development Template
+- spike: Research Spike Template
+- refactor: Code Refactoring Template
+- docs: Documentation Task Template
+```
+
+#### tm template show
+Display template details.
+
+```bash
+tm template show <template-name>
+```
+
+**Example**:
+```bash
+tm template show bug-fix
+# Output: Shows template structure with variables and defaults
+```
+
+#### tm template apply
+Apply a template with variable substitution.
+
+```bash
+tm template apply <template-name> [key=value ...]
+```
+
+**Example**:
+```bash
+tm template apply bug-fix severity=critical component=auth issue_id=BUG-123
+# Output: Task created with ID: a1b2c3d4
+```
+
+---
+
+### tm hooks
+
+Monitor and manage hook performance (v2.6.0).
+
+```bash
+tm hooks <subcommand> [arguments]
+```
+
+**Subcommands**:
+
+#### tm hooks report
+Generate performance report for hooks.
+
+```bash
+tm hooks report [hook_name] [days]
+```
+
+**Arguments**:
+- `hook_name` (optional): Specific hook to report on
+- `days` (optional): Number of days to analyze (default: 7)
+
+**Example**:
+```bash
+tm hooks report
+# Output:
+# Hook Performance Report (Last 7 days)
+# =====================================
+# pre_add: 15 executions, avg: 45.2ms, P95: 89ms
+# post_complete: 8 executions, avg: 123.5ms, P95: 234ms
+
+tm hooks report pre_add 30
+# Output: Detailed report for pre_add hook over 30 days
+```
+
+#### tm hooks alerts
+View performance alerts.
+
+```bash
+tm hooks alerts [severity] [hours]
+```
+
+**Arguments**:
+- `severity` (optional): Filter by severity (warning, critical)
+- `hours` (optional): Hours to look back (default: 24)
+
+**Example**:
+```bash
+tm hooks alerts critical 48
+# Output: Shows critical alerts from last 48 hours
+```
+
+#### tm hooks thresholds
+Configure performance thresholds.
+
+```bash
+tm hooks thresholds [warning_ms] [critical_ms] [timeout_ms]
+```
+
+**Arguments**:
+- `warning_ms`: Warning threshold in milliseconds (default: 500)
+- `critical_ms`: Critical threshold in milliseconds (default: 2000)
+- `timeout_ms`: Timeout threshold in milliseconds (default: 10000)
+
+**Example**:
+```bash
+tm hooks thresholds 300 1500 5000
+# Output: Thresholds updated - Warning: 300ms, Critical: 1500ms, Timeout: 5000ms
+```
+
+#### tm hooks cleanup
+Clean up old performance data.
+
+```bash
+tm hooks cleanup [days]
+```
+
+**Arguments**:
+- `days`: Keep data for this many days (default: 30)
+
+**Example**:
+```bash
+tm hooks cleanup 7
+# Output: Cleaned up 1,234 records older than 7 days
+```
 
 ---
 

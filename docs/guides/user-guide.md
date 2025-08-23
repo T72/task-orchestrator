@@ -899,7 +899,7 @@ done
 
 ```bash
 # 1. Create release task
-RELEASE=$(./tm add "Prepare v2.1.0 release" --priority critical | grep -o '[a-f0-9]\{8\}')
+RELEASE=$(./tm add "Prepare v2.6.0 release" --priority critical | grep -o '[a-f0-9]\{8\}')
 
 # 2. Create release checklist
 ./tm add "Update changelog" --depends-on $RELEASE

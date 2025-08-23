@@ -1,6 +1,11 @@
 """
 Metrics Calculator for Task Orchestrator Core Loop.
 Provides real-time metrics aggregation and analysis.
+
+@implements FR-037: Metrics Collection Framework
+@implements FR-038: Performance Analytics System
+@implements FR-039: Feedback Analytics
+@implements NFR-001: Performance monitoring and metrics
 """
 
 import sqlite3

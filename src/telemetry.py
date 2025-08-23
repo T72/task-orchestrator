@@ -1,6 +1,11 @@
 """
 Telemetry system for Task Orchestrator Core Loop.
 Captures events for data-driven decision making and 30-day assessment.
+
+@implements FR-037: Metrics Collection Framework
+@implements FR-038: Performance Analytics System
+@implements PERF-001: System Performance Monitoring
+@implements NFR-001: Performance requirements through telemetry
 """
 
 import json

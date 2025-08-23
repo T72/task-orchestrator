@@ -325,11 +325,11 @@ def demonstrate_release_workflow():
     
     tm = TaskManager()
     
-    print("Creating release preparation workflow for v2.0.0...")
+    print("Creating release preparation workflow for v2.6.0...")
     
     # Release planning
     release_planning_id = tm.add_task(
-        "Plan v2.0.0 release scope",
+        "Plan v2.6.0 release scope",
         priority="critical",
         tags=["release", "planning"]
     )

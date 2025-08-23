@@ -596,6 +596,286 @@ def main():
                 print(f"Raw data saved to: {json_file}")
             else:
                 print("Usage: tm report [--assessment]")
+        elif command == "template":
+            # Template management commands
+            from template_parser import TemplateParser
+            from template_instantiator import TemplateInstantiator
+            
+            parser = TemplateParser()
+            instantiator = TemplateInstantiator()
+            
+            if len(sys.argv) < 3:
+                print("Usage: tm template <subcommand> [options]")
+                print("Subcommands:")
+                print("  list                    List available templates")
+                print("  show <name>            Show template details")
+                print("  apply <name> [vars]    Apply template with variables")
+                print("  create                 Interactive template builder")
+                sys.exit(1)
+            
+            subcommand = sys.argv[2]
+            
+            if subcommand == "list":
+                # List all available templates
+                templates = parser.list_templates()
+                if not templates:
+                    print("No templates found in .task-orchestrator/templates/")
+                else:
+                    print("Available Templates:")
+                    print("=" * 50)
+                    for tmpl in templates:
+                        print(f"\n{tmpl['name']} (v{tmpl['version']})")
+                        print(f"  {tmpl['description']}")
+                        if tmpl['tags']:
+                            print(f"  Tags: {', '.join(tmpl['tags'])}")
+                            
+            elif subcommand == "show":
+                # Show template details
+                if len(sys.argv) < 4:
+                    print("Usage: tm template show <name>")
+                    sys.exit(1)
+                    
+                template_name = sys.argv[3]
+                try:
+                    template = parser.get_template(template_name)
+                    print(f"Template: {template['name']} (v{template['version']})")
+                    print(f"Description: {template['description']}")
+                    print("\nVariables:")
+                    for var_name, var_def in template.get('variables', {}).items():
+                        required = " (required)" if var_def.get('required', False) else ""
+                        default = f" [default: {var_def.get('default')}]" if 'default' in var_def else ""
+                        print(f"  {var_name}: {var_def['type']}{required}{default}")
+                        print(f"    {var_def['description']}")
+                    print(f"\nTasks: {len(template['tasks'])} tasks will be created")
+                    for i, task in enumerate(template['tasks']):
+                        print(f"  {i+1}. {task['title']}")
+                except Exception as e:
+                    print(f"Error: {e}")
+                    sys.exit(1)
+                    
+            elif subcommand == "apply":
+                # Apply a template
+                if len(sys.argv) < 4:
+                    print("Usage: tm template apply <name> [--var name=value ...]")
+                    sys.exit(1)
+                    
+                template_name = sys.argv[3]
+                variables = {}
+                
+                # Parse variable arguments
+                i = 4
+                while i < len(sys.argv):
+                    if sys.argv[i] == "--var" and i + 1 < len(sys.argv):
+                        var_assignment = sys.argv[i + 1]
+                        if '=' in var_assignment:
+                            var_name, var_value = var_assignment.split('=', 1)
+                            # Try to parse as number or boolean
+                            if var_value.lower() in ['true', 'false']:
+                                variables[var_name] = var_value.lower() == 'true'
+                            elif var_value.isdigit():
+                                variables[var_name] = int(var_value)
+                            elif '.' in var_value and var_value.replace('.', '').isdigit():
+                                variables[var_name] = float(var_value)
+                            else:
+                                variables[var_name] = var_value
+                        i += 2
+                    else:
+                        i += 1
+                
+                try:
+                    # Load and instantiate template
+                    template = parser.get_template(template_name)
+                    tasks = instantiator.instantiate(template, variables)
+                    
+                    # Create tasks in Task Orchestrator
+                    created_ids = []
+                    for task in tasks:
+                        # Build add command arguments
+                        title = task['title']
+                        
+                        # Create the task
+                        task_id = tm.add(title, 
+                                       priority=task.get('priority'),
+                                       assignee=task.get('assignee'),
+                                       tags=None,
+                                       depends_on=None,  # We'll handle dependencies separately
+                                       file_refs=task.get('file_references'),
+                                       estimated_hours=task.get('estimated_hours'))
+                        
+                        if task_id:
+                            created_ids.append(task_id)
+                            print(f"Created task {task_id}: {title}")
+                            
+                            # Update with dependencies if present
+                            if 'depends_on' in task and task['depends_on']:
+                                # Dependencies already have the correct IDs from instantiator
+                                for dep_id in task['depends_on']:
+                                    # Find the actual created ID that corresponds to this template ID
+                                    actual_dep_id = None
+                                    for orig_idx, template_task_id in instantiator.task_id_map.items():
+                                        if template_task_id == dep_id:
+                                            # This is the index, get the created ID
+                                            if orig_idx < len(created_ids):
+                                                actual_dep_id = created_ids[orig_idx]
+                                                break
+                                    
+                                    if actual_dep_id:
+                                        # Update task to add dependency
+                                        # Note: This would need to be implemented in tm_production
+                                        pass
+                        else:
+                            print(f"Failed to create task: {title}")
+                    
+                    print(f"\nSuccessfully created {len(created_ids)} tasks from template '{template_name}'")
+                    
+                except Exception as e:
+                    print(f"Error applying template: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    sys.exit(1)
+                    
+            elif subcommand == "create":
+                # Interactive template builder
+                print("Interactive template builder - Coming soon!")
+                print("For now, create templates manually in .task-orchestrator/templates/")
+                
+            else:
+                print(f"Unknown template subcommand: {subcommand}")
+                sys.exit(1)
+        elif command == "wizard":
+            # Interactive wizard for guided task creation
+            from interactive_wizard import InteractiveWizard
+            from template_parser import TemplateParser
+            from template_instantiator import TemplateInstantiator
+            
+            parser = TemplateParser()
+            instantiator = TemplateInstantiator()
+            wizard = InteractiveWizard(parser, instantiator, tm)
+            
+            # Check for quick mode
+            if len(sys.argv) > 2 and sys.argv[2] == "--quick":
+                success = wizard.quick_start()
+            else:
+                success = wizard.run()
+            
+            if not success:
+                sys.exit(1)
+        elif command == "hooks":
+            # Hook performance monitoring commands
+            from hook_performance_monitor import HookPerformanceMonitor
+            
+            monitor = HookPerformanceMonitor()
+            
+            if len(sys.argv) < 3:
+                print("Usage: tm hooks <subcommand> [options]")
+                print("Subcommands:")
+                print("  report [hook_name]     Show performance report")
+                print("  alerts [severity]      Show recent alerts")
+                print("  thresholds             Configure performance thresholds")
+                print("  cleanup [days]         Clean up old metrics")
+                sys.exit(1)
+            
+            subcommand = sys.argv[2]
+            
+            if subcommand == "report":
+                # Generate performance report
+                hook_name = sys.argv[3] if len(sys.argv) > 3 else None
+                days = int(sys.argv[4]) if len(sys.argv) > 4 else 7
+                
+                report = monitor.get_performance_report(hook_name, days)
+                
+                if hook_name:
+                    # Specific hook report
+                    print(f"\n=== Performance Report: {hook_name} ===")
+                    print(f"Period: Last {days} days\n")
+                    
+                    summary = report.get('summary', {})
+                    print("Summary Statistics:")
+                    print(f"  Total Executions: {summary.get('total_executions', 0)}")
+                    print(f"  Success Rate: {summary.get('success_rate', 0):.1f}%")
+                    print(f"  Avg Duration: {summary.get('avg_duration_ms', 0):.1f}ms")
+                    print(f"  P50 Duration: {summary.get('p50_duration_ms', 0):.1f}ms")
+                    print(f"  P95 Duration: {summary.get('p95_duration_ms', 0):.1f}ms")
+                    print(f"  P99 Duration: {summary.get('p99_duration_ms', 0):.1f}ms")
+                    
+                    if report.get('alerts'):
+                        print(f"\nRecent Alerts ({len(report['alerts'])}):")
+                        for alert in report['alerts'][:5]:
+                            print(f"  [{alert['severity'].upper()}] {alert['message']}")
+                else:
+                    # Overall report
+                    print(f"\n=== Hook Performance Report ===")
+                    print(f"Period: Last {days} days\n")
+                    
+                    overall = report.get('overall', {})
+                    print("Overall Statistics:")
+                    print(f"  Total Executions: {overall.get('total_executions', 0)}")
+                    print(f"  Success Rate: {overall.get('success_rate', 0):.1f}%")
+                    print(f"  Avg Duration: {overall.get('avg_duration_ms', 0):.1f}ms")
+                    
+                    if report.get('hooks'):
+                        print("\nTop Hooks by Executions:")
+                        for hook in report['hooks'][:10]:
+                            print(f"  {hook['name']}:")
+                            print(f"    Executions: {hook['total']}")
+                            print(f"    Success Rate: {hook['success_rate']:.1f}%")
+                            print(f"    Avg Duration: {hook['avg_duration_ms']:.1f}ms")
+                            print(f"    P95 Duration: {hook['p95_duration_ms']:.1f}ms")
+                    
+                    if report.get('slow_hooks'):
+                        print("\nSlow Hooks (>" + str(monitor.thresholds['warning_ms']) + "ms):")
+                        for hook in report['slow_hooks']:
+                            print(f"  {hook['name']}: {hook['slow_executions']} slow executions")
+                            
+            elif subcommand == "alerts":
+                # Show recent alerts
+                severity = sys.argv[3] if len(sys.argv) > 3 else None
+                hours = int(sys.argv[4]) if len(sys.argv) > 4 else 24
+                
+                alerts = monitor.get_alerts(severity, hours)
+                
+                if alerts:
+                    print(f"\n=== Hook Performance Alerts ===")
+                    print(f"Last {hours} hours")
+                    if severity:
+                        print(f"Severity: {severity}\n")
+                    
+                    for alert in alerts:
+                        timestamp = alert['timestamp'].split('.')[0] if alert['timestamp'] else 'Unknown'
+                        print(f"[{timestamp}] {alert['severity'].upper()}: {alert['hook_name']}")
+                        print(f"  {alert['message']}")
+                        if alert['duration_ms']:
+                            print(f"  Duration: {alert['duration_ms']:.0f}ms")
+                        print()
+                else:
+                    print(f"No alerts in the last {hours} hours")
+                    
+            elif subcommand == "thresholds":
+                # Configure thresholds
+                if len(sys.argv) > 3:
+                    # Set thresholds
+                    warning = int(sys.argv[3]) if len(sys.argv) > 3 else None
+                    critical = int(sys.argv[4]) if len(sys.argv) > 4 else None
+                    timeout = int(sys.argv[5]) if len(sys.argv) > 5 else None
+                    
+                    monitor.configure_thresholds(warning, critical, timeout)
+                    print("Thresholds updated successfully")
+                
+                # Show current thresholds
+                print("\nCurrent Performance Thresholds:")
+                print(f"  Warning: {monitor.thresholds['warning_ms']}ms")
+                print(f"  Critical: {monitor.thresholds['critical_ms']}ms")
+                print(f"  Timeout: {monitor.thresholds['timeout_ms']}ms")
+                
+            elif subcommand == "cleanup":
+                # Clean up old metrics
+                days = int(sys.argv[3]) if len(sys.argv) > 3 else 30
+                deleted = monitor.cleanup_old_metrics(days)
+                print(f"Cleaned up {deleted} old metric records (older than {days} days)")
+                
+            else:
+                print(f"Unknown hooks subcommand: {subcommand}")
+                sys.exit(1)
         else:
             print(f"Command '{command}' not yet implemented in enhanced wrapper")
             print("Please use the production module directly for full functionality")
@@ -635,6 +915,22 @@ Collaboration Commands:
   discover <id> <msg> Share critical finding (alerts all)
   sync <id> <msg>     Create synchronization point
   context <id>        View all shared context
+
+Template Commands:
+  template list       List available templates
+  template show <name> Show template details
+  template apply <name> Apply template with variables
+  template create     Interactive template builder
+
+Interactive Mode:
+  wizard              Interactive guided task creation
+  wizard --quick      Quick task creation mode
+
+Hook Performance:
+  hooks report        Show hook performance metrics
+  hooks alerts        View performance alerts
+  hooks thresholds    Configure alert thresholds
+  hooks cleanup       Clean up old metrics
 
 Environment Variables:
   TM_AGENT_ID         Set your agent identifier

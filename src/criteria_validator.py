@@ -15,7 +15,7 @@ class CriteriaValidator:
     
     @implements FR-004: Success Criteria Definition
     @implements FR-013: Completion Validation
-    @implements CORE-VALIDATION: Success criteria enforcement
+    @implements FR-004: Success criteria enforcement
     """
     
     def __init__(self):

@@ -1,6 +1,11 @@
 """
 Error handling utilities for Task Orchestrator Core Loop.
 Provides consistent error handling and recovery strategies.
+
+@implements SYS-001: System Error Handling
+@implements SYS-002: Error Recovery Mechanisms
+@implements SYS-003: Error Logging and Reporting
+@implements NFR-004: Maintainability through consistent error handling
 """
 
 import sys

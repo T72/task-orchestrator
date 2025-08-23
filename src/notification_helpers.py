@@ -2,9 +2,9 @@
 """
 Helper functions for broadcasting specific notification types.
 
-@implements FR4.2: Retry notifications via broadcast
-@implements FR4.3: Help requests in notification file
-@implements FR4.4: Complexity alerts broadcast
+@implements FR-045: Retry notifications via broadcast
+@implements COLLAB-004: Help requests in notification file
+@implements FR-043: Complexity alerts broadcast
 """
 from event_broadcaster import EventBroadcaster, EventType, EventPriority
 

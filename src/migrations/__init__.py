@@ -17,7 +17,13 @@ import json
 
 
 class MigrationManager:
-    """Manages database schema migrations for Task Orchestrator."""
+    """
+    Manages database schema migrations for Task Orchestrator.
+    
+    @implements NFR-007: Migration Safety with automatic backup
+    @implements TECH-001: Database Path management and schema evolution
+    @implements SYS-002: Error Recovery through rollback capabilities
+    """
     
     def __init__(self, db_path: str):
         self.db_path = db_path

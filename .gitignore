@@ -17,9 +17,8 @@
 # Archive & Development Files
 # ====================
 # These contain outdated documentation, development notes, and analysis
-# Not relevant for public users and may contain internal decision-making info
-archive/
-/archive/
+# Keep our organized archive but ignore any future unorganized archives
+# archive/ is now tracked for historical reference
 development-docs/
 analysis-reports/
 legacy-implementations/

@@ -1,5 +1,9 @@
 # Migration Guide: v2.3 to v2.4 - Project Isolation
 
+## Status: Guide
+## Last Verified: August 23, 2025
+Against version: v2.6.0
+
 ## Overview
 Version 2.4 changes the default database location from global (`~/.task-orchestrator`) to project-local (`./.task-orchestrator`). This guide ensures smooth migration without disrupting existing work.
 

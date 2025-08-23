@@ -1,5 +1,9 @@
 # Task Orchestrator API Reference
 
+## Status: Implemented
+## Last Verified: August 23, 2025
+Against version: v2.6.0
+
 Complete reference documentation for all public APIs, classes, and functions in Task Orchestrator.
 
 ## Table of Contents
@@ -719,6 +723,189 @@ for task in tasks:
 }
 ```
 
+## v2.6.0 Feature Classes
+
+### TemplateParser Class
+
+Parses and validates task templates in YAML or JSON format.
+
+**Location**: `src/template_parser.py`  
+**Purpose**: Parse task templates with variable definitions and validation  
+**Dependencies**: Python 3.8+ standard library, YAML support
+
+#### Methods
+
+##### parse_template()
+
+```python
+def parse_template(self, template_path: str) -> Dict[str, Any]
+```
+
+**Description**: Parse a template file and validate its structure.
+
+**Parameters**:
+- `template_path` (str): Path to template file (YAML or JSON)
+
+**Returns**:
+- `Dict[str, Any]`: Parsed template structure with metadata, variables, and tasks
+
+**Example**:
+```python
+parser = TemplateParser()
+template = parser.parse_template(".task-orchestrator/templates/bug-fix.yaml")
+print(f"Template: {template['metadata']['name']}")
+```
+
+### TemplateInstantiator Class
+
+Instantiates templates with variable substitution and expression evaluation.
+
+**Location**: `src/template_instantiator.py`  
+**Purpose**: Create tasks from templates with variable replacement  
+**Dependencies**: Python 3.8+ standard library
+
+#### Methods
+
+##### instantiate()
+
+```python
+def instantiate(self, template: Dict[str, Any], variables: Dict[str, Any]) -> List[Dict[str, Any]]
+```
+
+**Description**: Instantiate a template with provided variables.
+
+**Parameters**:
+- `template` (Dict): Parsed template structure
+- `variables` (Dict): Variable values for substitution
+
+**Returns**:
+- `List[Dict]`: List of task definitions ready for creation
+
+**Example**:
+```python
+instantiator = TemplateInstantiator()
+tasks = instantiator.instantiate(template, {
+    "severity": "critical",
+    "component": "auth",
+    "issue_id": "BUG-123"
+})
+```
+
+### InteractiveWizard Class
+
+Interactive wizard for guided task creation with multiple modes.
+
+**Location**: `src/interactive_wizard.py`  
+**Purpose**: Provide interactive task creation experience  
+**Dependencies**: Python 3.8+ standard library
+
+#### Methods
+
+##### run()
+
+```python
+def run(self) -> bool
+```
+
+**Description**: Launch interactive wizard with full menu options.
+
+**Returns**:
+- `bool`: True if tasks created successfully, False otherwise
+
+##### quick_start()
+
+```python
+def quick_start(self) -> bool
+```
+
+**Description**: Quick mode with streamlined prompts for rapid task creation.
+
+**Returns**:
+- `bool`: True if tasks created successfully, False otherwise
+
+**Example**:
+```python
+wizard = InteractiveWizard(parser, instantiator, tm)
+# Full interactive mode
+success = wizard.run()
+# Quick mode
+success = wizard.quick_start()
+```
+
+### HookPerformanceMonitor Class
+
+Monitors and tracks hook execution performance with alerts and reporting.
+
+**Location**: `src/hook_performance_monitor.py`  
+**Purpose**: Track hook performance metrics and generate alerts  
+**Dependencies**: Python 3.8+ standard library, SQLite
+
+#### Methods
+
+##### execute_hook_with_monitoring()
+
+```python
+def execute_hook_with_monitoring(self, hook_path: str, hook_type: str, 
+                                context: Dict[str, Any]) -> Tuple[bool, float]
+```
+
+**Description**: Execute a hook while tracking performance metrics.
+
+**Parameters**:
+- `hook_path` (str): Path to hook script
+- `hook_type` (str): Type of hook (pre_add, post_complete, etc.)
+- `context` (Dict): Context data for hook execution
+
+**Returns**:
+- `Tuple[bool, float]`: (Success status, Execution time in milliseconds)
+
+##### generate_report()
+
+```python
+def generate_report(self, hook_name: Optional[str] = None, 
+                   days: int = 7) -> str
+```
+
+**Description**: Generate performance report for hooks.
+
+**Parameters**:
+- `hook_name` (str, optional): Specific hook to report on
+- `days` (int): Number of days to analyze
+
+**Returns**:
+- `str`: Formatted performance report with statistics
+
+##### check_alerts()
+
+```python
+def check_alerts(self, severity: Optional[str] = None, 
+                hours: int = 24) -> List[Dict[str, Any]]
+```
+
+**Description**: Check for performance alerts.
+
+**Parameters**:
+- `severity` (str, optional): Filter by severity (warning, critical)
+- `hours` (int): Hours to look back
+
+**Returns**:
+- `List[Dict]`: List of alerts with details
+
+**Example**:
+```python
+monitor = HookPerformanceMonitor()
+success, exec_time = monitor.execute_hook_with_monitoring(
+    ".task-orchestrator/hooks/pre_add.sh",
+    "pre_add",
+    {"task_title": "Fix bug"}
+)
+print(f"Hook executed in {exec_time}ms")
+
+# Generate report
+report = monitor.generate_report(days=30)
+print(report)
+```
+
 ## Exceptions
 
 ### ValidationError
@@ -803,6 +990,46 @@ def _get_agent_id() -> str
 
 **Returns**:
 - `str`: 8-character agent ID based on process and user
+
+## Database Migration
+
+### Migration System (v2.6.0+)
+
+Task Orchestrator includes automatic database migration to handle schema changes between versions.
+
+#### Automatic Migration
+
+Migrations are applied automatically when:
+- Running any command with an older database schema
+- The system detects missing columns (e.g., `created_by` field)
+
+#### Manual Migration Commands
+
+```bash
+# Check migration status
+tm migrate --status
+
+# Apply pending migrations
+tm migrate --apply
+
+# Rollback last migration (if supported)
+tm migrate --rollback
+```
+
+#### Migration for v2.6.0
+
+The v2.6.0 migration adds multi-agent support:
+- Adds `created_by` field (TEXT NOT NULL DEFAULT 'user')
+- Tracks which agent created each task
+- Automatic backfill for existing tasks
+
+**Example Migration Output**:
+```
+Backup created: ~/.task-orchestrator/backups/tasks_backup_20250822.db
+Applying migration: Add created_by field for multi-agent support...
+✓ Migration applied successfully
+Database schema updated to v2.6.0
+```
 
 ## CLI Reference
 

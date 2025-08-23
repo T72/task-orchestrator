@@ -2,9 +2,9 @@
 """
 Team coordination through shared context and broadcasts.
 
-@implements FR5.2: Coordination via shared context
-@implements FR5.3: Private notes for agent state
-@implements FR5.4: Broadcast for team events
+@implements COLLAB-001: Coordination via shared context
+@implements COLLAB-003: Private notes for agent state
+@implements COLLAB-005: Broadcast for team events
 """
 from pathlib import Path
 from typing import Dict, List, Optional

@@ -1,5 +1,9 @@
 # Core Loop Requirements Summary
 
+## Status: Guide
+## Last Verified: August 23, 2025
+Against version: v2.6.0
+
 ## What We're Building (39 Requirements)
 
 ### Critical Requirements (Must Have)

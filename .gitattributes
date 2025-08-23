@@ -1,0 +1,22 @@
+# Git attributes for Task Orchestrator
+
+# CLAUDE.md should only exist in develop branch
+# This ensures it never gets merged to master
+CLAUDE.md merge=ours
+
+# Ensure consistent line endings
+*.md text eol=lf
+*.py text eol=lf
+*.sh text eol=lf
+*.json text eol=lf
+
+# Binary files
+*.db binary
+*.sqlite binary
+*.sqlite3 binary
+*.tar.gz binary
+*.zip binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary

@@ -3,7 +3,7 @@
 Project Context Manager for Task Orchestrator
 @implements FR-041: Project Context Preservation
 @implements FR-CORE-1: Read-Only Shared Context File
-@implements FR5.2: Coordination via shared context
+@implements COLLAB-001: Coordination via shared context
 
 Manages project-specific context, notes, and archives locally.
 Ensures context travels with the project when moved or cloned.
@@ -73,6 +73,7 @@ class ProjectContextManager:
         """
         Save project-specific note.
         @implements FR-041: Notes remain with project when moving/cloning
+        @implements FR-CORE-2: Private Note-Taking Files
         """
         note_file = self.notes_dir / f"{note_id}.md"
         

@@ -1,5 +1,9 @@
 # PRD v2.3 Summary: Core Loop Enhancement
 
+## Status: Historical
+## Last Verified: August 23, 2025
+Against version: v2.6.0
+
 ## What Changed from v2.2 to v2.3
 
 ### Preserved (100% of v2.2)

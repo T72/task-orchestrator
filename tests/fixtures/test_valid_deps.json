@@ -1,0 +1,29 @@
+{
+  "tool_name": "TodoWrite",
+  "tool_input": {
+    "todos": [
+      {
+        "id": "task_A",
+        "content": "Task A",
+        "status": "pending",
+        "metadata": {}
+      },
+      {
+        "id": "task_B",
+        "content": "Task B",
+        "status": "pending",
+        "metadata": {
+          "depends_on": ["task_A"]
+        }
+      },
+      {
+        "id": "task_C",
+        "content": "Task C",
+        "status": "pending",
+        "metadata": {
+          "depends_on": ["task_A", "task_B"]
+        }
+      }
+    ]
+  }
+}

@@ -2,7 +2,7 @@
 """
 Event broadcasting system for team coordination.
 
-@implements FR-048: Event broadcasting for team events
+@implements FR-CORE-3: Event broadcasting for task completion and team coordination
 """
 import json
 from pathlib import Path
