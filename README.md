@@ -7,17 +7,6 @@
 [![Tests](https://img.shields.io/badge/tests-passing-green.svg)](#testing)
 [![Version](https://img.shields.io/badge/version-2.6.1-blue.svg)](https://github.com/T72/task-orchestrator/releases)
 
-## 🚀 The Killer Feature: Complete Project Isolation
-
-**NEW: Each project gets its own isolated task database. No more task contamination between projects!**
-
-```bash
-# Work on multiple projects without interference
-project-a/.task-orchestrator/  # Project A's tasks stay here
-project-b/.task-orchestrator/  # Project B's tasks stay here
-client-work/.task-orchestrator/  # Client tasks never mix with internal work
-```
-
 ## Stop Fighting Task Dependencies
 
 **Many teams report spending up to 30% of development time on coordination. Task Orchestrator can help significantly reduce this overhead.**
