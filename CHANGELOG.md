@@ -5,6 +5,29 @@ All notable changes to the Task Orchestrator project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.6.0.html).
 
+## [2.6.1] - 2025-08-30
+
+### 🐛 Critical Bug Fix: Assignee Field Support
+
+This patch release fixes a critical bug that prevented templates and wizard from working with the assignee field.
+
+### Fixed
+- **TaskManager.add() Missing Assignee Parameter**
+  - Added `assignee` parameter to TaskManager.add() method signature
+  - Fixed all database INSERT statements to include assignee field
+  - Updated wrapper script to parse --assignee argument
+  - Templates can now properly use assignee field
+  - Wizard quick mode supports @assignee notation
+  
+- **Interactive Wizard Parameter Bug**
+  - Removed invalid `tags` parameter from wizard's add() calls
+  - Fixed parameter passing to match actual method signature
+
+### Impact
+- All 5 bundled templates now work correctly with assignee field
+- Wizard quick mode fully functional with assignee notation
+- No database migration required (schema already supported assignee)
+
 ## [2.6.0] - 2025-08-23
 
 ### 🚀 Major Feature Release: Templates, Wizard, and Performance Monitoring

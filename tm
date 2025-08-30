@@ -101,7 +101,7 @@ def main():
         elif command == "add":
             if len(sys.argv) < 3:
                 print("Usage: tm add <title> [-d description] [-p priority] [--depends-on task_id] [--file path:line]")
-                print("       [--criteria JSON] [--deadline ISO8601] [--estimated-hours N]")
+                print("       [--criteria JSON] [--deadline ISO8601] [--estimated-hours N] [--assignee name]")
                 sys.exit(1)
             # Simple argument parsing for add command
             title = sys.argv[2]
@@ -112,6 +112,7 @@ def main():
             success_criteria = None
             deadline = None
             estimated_hours = None
+            assignee = None
             
             # Parse additional arguments
             i = 3
@@ -137,6 +138,9 @@ def main():
                 elif sys.argv[i] == "--estimated-hours" and i + 1 < len(sys.argv):
                     estimated_hours = float(sys.argv[i + 1])
                     i += 2
+                elif sys.argv[i] == "--assignee" and i + 1 < len(sys.argv):
+                    assignee = sys.argv[i + 1]
+                    i += 2
                 else:
                     i += 1
             
@@ -152,7 +156,7 @@ def main():
                 task_id = tm.add(title, description=description, priority=priority, 
                                depends_on=depends_on if depends_on else None,
                                success_criteria=success_criteria, deadline=deadline,
-                               estimated_hours=estimated_hours)
+                               estimated_hours=estimated_hours, assignee=assignee)
                 print(f"Task created with ID: {task_id}")
             except ValueError as e:
                 print(f"Error: {e}")
@@ -695,11 +699,10 @@ def main():
                         
                         # Create the task
                         task_id = tm.add(title, 
+                                       description=task.get('description'),
                                        priority=task.get('priority'),
                                        assignee=task.get('assignee'),
-                                       tags=None,
                                        depends_on=None,  # We'll handle dependencies separately
-                                       file_refs=task.get('file_references'),
                                        estimated_hours=task.get('estimated_hours'))
                         
                         if task_id:

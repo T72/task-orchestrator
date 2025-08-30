@@ -216,8 +216,7 @@ class InteractiveWizard:
                     title=title,
                     description=description,
                     priority=priority,
-                    assignee=assignee,
-                    tags=tags
+                    assignee=assignee
                 )
                 
                 if task_id:
@@ -342,7 +341,6 @@ class InteractiveWizard:
                 description=full_description,
                 priority=priority,
                 assignee=assignee,
-                tags=tags,
                 depends_on=dependencies
             )
             
@@ -405,9 +403,9 @@ class InteractiveWizard:
             if self.task_manager:
                 task_id = self.task_manager.add(
                     title=task['title'],
+                    description=task.get('description'),
                     priority=task.get('priority', 'medium'),
-                    assignee=task.get('assignee'),
-                    tags=task.get('tags', [])
+                    assignee=task.get('assignee')
                 )
                 if task_id:
                     created += 1
@@ -484,8 +482,7 @@ class InteractiveWizard:
                 title=task_data['title'],
                 description=task_data.get('description', ''),
                 priority=task_data.get('priority', 'medium'),
-                assignee=task_data.get('assignee'),
-                tags=task_data.get('tags', [])
+                assignee=task_data.get('assignee')
             )
             
             if task_id:
