@@ -9,9 +9,9 @@
 
 ## 🤖 Built for AI Agent Orchestration
 
-**Task Orchestrator was born from a simple frustration: When using Claude Code, GitHub Copilot, or custom AI agents, coordination between specialized agents was painful.**
+**Task Orchestrator emerged from a real need: Making specialized AI agents work together seamlessly.**
 
-You'd have a database specialist agent, a frontend agent, a testing agent - but they couldn't effectively hand off work. Context got lost. Tasks blocked each other. The orchestrating agent spent more time coordinating than doing actual work.
+Picture this: You're using AI development tools with specialized agents - a database expert, a frontend specialist, a testing agent. Each is excellent at their domain. But coordinating their work? That's where things get complex. Context needs to flow between them. Dependencies must be managed. Progress needs tracking. The orchestrating agent needs real-time visibility.
 
 Task Orchestrator solves this by providing:
 - **Shared Context**: No more copy-pasting requirements between agents
@@ -19,11 +19,11 @@ Task Orchestrator solves this by providing:
 - **Watch Command**: Orchestrating agents monitor and react instantly to unblocks
 - **Automatic Handoffs**: When backend completes, frontend automatically unblocks
 
-## Stop Losing 30% of Your Time to Coordination
+## Transform Coordination from Overhead to Advantage
 
-When multiple AI agents or developers work on the same codebase, coordination becomes the bottleneck. Tasks block each other. Context gets lost between handoffs. Simple changes cascade into delays.
+Research shows teams can spend up to 30% of their time on coordination. With AI agents joining our development workflows, this coordination becomes even more critical - and when done right, even more powerful.
 
-Task Orchestrator eliminates this friction through intelligent dependency management and real-time coordination.
+Task Orchestrator turns coordination into a competitive advantage through intelligent dependency management, context preservation, and real-time orchestration.
 
 ## What You Get
 
