@@ -7,24 +7,39 @@
 [![Tests](https://img.shields.io/badge/tests-passing-green.svg)](#testing)
 [![Version](https://img.shields.io/badge/version-2.6.1-blue.svg)](https://github.com/T72/task-orchestrator/releases)
 
-## Stop Fighting Task Dependencies
+## 🤖 Built for AI Agent Orchestration
 
-**Many teams report spending up to 30% of development time on coordination. Task Orchestrator can help significantly reduce this overhead.**
+**Task Orchestrator was born from a simple frustration: When using Claude Code, GitHub Copilot, or custom AI agents, coordination between specialized agents was painful.**
 
-When multiple developers and AI agents work on the same codebase, coordination becomes challenging. Tasks often block each other. Context can get lost. Simple changes sometimes cascade into larger delays.
+You'd have a database specialist agent, a frontend agent, a testing agent - but they couldn't effectively hand off work. Context got lost. Tasks blocked each other. The orchestrating agent spent more time coordinating than doing actual work.
 
-Task Orchestrator helps by automatically managing dependencies, unblocking work when prerequisites complete, and maintaining context across your team.
+Task Orchestrator solves this by providing:
+- **Shared Context**: No more copy-pasting requirements between agents
+- **Private Notes**: Agents can reason without cluttering communication
+- **Watch Command**: Orchestrating agents monitor and react instantly to unblocks
+- **Automatic Handoffs**: When backend completes, frontend automatically unblocks
+
+## Stop Losing 30% of Your Time to Coordination
+
+When multiple AI agents or developers work on the same codebase, coordination becomes the bottleneck. Tasks block each other. Context gets lost between handoffs. Simple changes cascade into delays.
+
+Task Orchestrator eliminates this friction through intelligent dependency management and real-time coordination.
 
 ## What You Get
 
-- **🔒 Project Isolation**: Each project maintains its own task database - no contamination
-- **⚡ Reduced Blocking**: Dependencies resolve automatically - when task A completes, task B unblocks
-- **📋 Better Context**: Tasks carry shared context between agents, eliminating re-explanation
-- **🤖 AI Agent Collaboration**: Specialized agents share progress, maintain private notes, coordinate seamlessly
-- **🔄 Improved Parallel Work**: Multiple developers and AI agents work together without conflicts
-- **👁️ Real-Time Orchestration**: Watch command enables instant coordination when tasks unblock
-- **🎯 Minimal Setup**: Simple configuration, Python standard library only
-- **💻 Cross-Platform**: Works on Linux, macOS, and Windows with Python 3.8+
+### For AI Agent Development
+- **🤖 Multi-Agent Coordination**: Orchestrate specialized agents (database, frontend, testing, etc.)
+- **📋 Shared Context**: Requirements and decisions travel WITH tasks - no copy-paste
+- **🔒 Private Notes**: Agents reason privately without cluttering shared communication
+- **👁️ Watch Command**: Orchestrating agents monitor and react instantly to state changes
+- **🔄 Automatic Unblocking**: When dependencies complete, waiting agents are notified immediately
+
+### For Human-AI Collaboration
+- **⚡ Reduced Blocking**: Dependencies resolve automatically across your entire team
+- **🎯 Clear Handoffs**: Tasks carry all context needed for the next agent or developer
+- **📊 Progress Visibility**: Real-time updates on what each agent is working on
+- **🛠️ Tool Agnostic**: Works with Claude Code, GitHub Copilot, Cursor, or any AI tool
+- **💻 Cross-Platform**: Python standard library only - runs anywhere Python runs
 
 ## ⚡ Quick Start (2 Minutes)
 
@@ -37,17 +52,24 @@ chmod +x tm
 # 2. Initialize (instant)
 ./tm init
 
-# 3. Your first orchestrated workflow (90 seconds)
-SETUP=$(./tm add "Setup environment" | grep -o '[a-f0-9]\{8\}')
-./tm add "Run tests" --depends-on $SETUP
-./tm add "Deploy" --depends-on $SETUP --file deploy.sh:15
+# 3. Create an AI agent workflow (90 seconds)
+# Orchestrating agent creates tasks for specialists
+BACKEND=$(./tm add "Create API endpoints" --assignee backend_agent | grep -o '[a-f0-9]\{8\}')
+FRONTEND=$(./tm add "Build UI components" --assignee frontend_agent --depends-on $BACKEND)
+TESTS=$(./tm add "Write integration tests" --assignee test_agent --depends-on $BACKEND)
 
-# Watch the magic happen
-./tm list
-./tm complete $SETUP  # Automatically unblocks dependent tasks!
+# Backend agent adds context that others will need
+./tm share $BACKEND "API endpoints: /api/users, /api/products"
+./tm note $BACKEND "Using FastAPI with PostgreSQL backend"  # Private reasoning
+
+# Watch command lets orchestrator monitor progress
+./tm watch  # Orchestrator sees all updates in real-time!
+
+# When backend completes, frontend and test agents auto-unblock
+./tm complete $BACKEND  # Frontend and test agents notified instantly!
 ```
 
-That's it! You're ready to start organizing your tasks more effectively.
+That's the power of AI agent orchestration - specialized agents working in parallel, sharing context, never blocking.
 
 ### 📁 Project Isolation Details
 
