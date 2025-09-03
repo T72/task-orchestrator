@@ -1,8 +1,8 @@
 # Task Orchestrator API Reference
 
 ## Status: Implemented
-## Last Verified: August 23, 2025
-Against version: v2.6.0
+## Last Verified: September 3, 2025
+Against version: v2.7.1
 
 Complete reference documentation for all public APIs, classes, and functions in Task Orchestrator.
 
