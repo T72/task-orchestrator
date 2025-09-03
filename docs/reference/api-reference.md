@@ -723,7 +723,7 @@ for task in tasks:
 }
 ```
 
-## v2.6.0 Feature Classes
+## v2.7.1 Feature Classes
 
 ### TemplateParser Class
 
@@ -993,7 +993,7 @@ def _get_agent_id() -> str
 
 ## Database Migration
 
-### Migration System (v2.6.0+)
+### Migration System (v2.7.1+)
 
 Task Orchestrator includes automatic database migration to handle schema changes between versions.
 
@@ -1016,9 +1016,9 @@ tm migrate --apply
 tm migrate --rollback
 ```
 
-#### Migration for v2.6.0
+#### Migration for v2.7.1
 
-The v2.6.0 migration adds multi-agent support:
+The v2.7.1 migration adds multi-agent support:
 - Adds `created_by` field (TEXT NOT NULL DEFAULT 'user')
 - Tracks which agent created each task
 - Automatic backfill for existing tasks
@@ -1028,7 +1028,7 @@ The v2.6.0 migration adds multi-agent support:
 Backup created: ~/.task-orchestrator/backups/tasks_backup_20250822.db
 Applying migration: Add created_by field for multi-agent support...
 ✓ Migration applied successfully
-Database schema updated to v2.6.0
+Database schema updated to v2.7.1
 ```
 
 ## CLI Reference

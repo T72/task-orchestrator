@@ -1,9 +1,9 @@
 #!/bin/bash
-# Comprehensive Test Suite for Task Orchestrator v2.6.0
+# Comprehensive Test Suite for Task Orchestrator v2.7.1
 # Tests all major features and error handling
 
 echo "==================================="
-echo "  COMPREHENSIVE TEST SUITE v2.6.0  "
+echo "  COMPREHENSIVE TEST SUITE v2.7.1  "
 echo "==================================="
 echo ""
 
@@ -152,7 +152,7 @@ fi
 echo ""
 if [ $PASSED -eq $TOTAL ]; then
     echo -e "${GREEN}🎉 ALL TESTS PASSED!${NC}"
-    echo "Task Orchestrator v2.6.0 is fully operational"
+    echo "Task Orchestrator v2.7.1 is fully operational"
     exit 0
 else
     echo -e "${RED}⚠️  Some tests failed${NC}"

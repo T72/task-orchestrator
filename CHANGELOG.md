@@ -3,7 +3,7 @@
 All notable changes to the Task Orchestrator project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.7.1.html).
 
 ## [2.7.1] - 2025-09-03
 
@@ -285,7 +285,7 @@ This release adds powerful Core Loop capabilities for tracking task quality, suc
 - **Dependencies**: None - still Python standard library only
 
 ### Migration Required
-After updating to v2.6.0, run `tm migrate --apply` to update your database schema. Always backup first with `cp -r ~/.task-orchestrator ~/.task-orchestrator.backup`.
+After updating to v2.7.1, run `tm migrate --apply` to update your database schema. Always backup first with `cp -r ~/.task-orchestrator ~/.task-orchestrator.backup`.
 
 ### Compatibility
 - Fully backward compatible - existing tasks and workflows continue unchanged

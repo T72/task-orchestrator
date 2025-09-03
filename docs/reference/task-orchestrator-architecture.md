@@ -2,7 +2,7 @@
 
 ## Status: Implemented
 ## Last Verified: August 23, 2025
-Against version: v2.6.0
+Against version: v2.7.1
 
 ## The Complete Architecture
 
