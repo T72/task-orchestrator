@@ -6,7 +6,7 @@
 
 ## 🎯 Transform Your Meta-Agent Into An Orchestration Engine
 
-**Task Orchestrator is the ONLY tool that empowers meta-agents to orchestrate AI teams with 95%+ completion rates, 4-5x speed, and <5% rework.**
+**The idea behind Task Orchestrator is to systematically and efficiently empower meta-agents to orchestrate AI teams through structured coordination.**
 
 ### The Problem We Solve
 When meta-agents delegate to specialized sub-agents, they lose 30% productivity to coordination overhead. Context gets lost. Agents wait unnecessarily. Work gets redone.
@@ -16,13 +16,13 @@ When meta-agents delegate to specialized sub-agents, they lose 30% productivity 
 2. **Private Reasoning** - Sub-agents think deeply without noise
 3. **Automatic Unblocking** - Dependencies resolve instantly
 
-### Your Results With Task Orchestrator
-- **95%+ Task Completion** (vs 60-70% baseline)
-- **4-5x Faster Delivery** (parallel vs sequential)
-- **<5% Rework Rate** (vs 25% baseline)
-- **90%+ Agent Utilization** (no idle waiting)
+### Potential Benefits With Task Orchestrator
+- **Higher Task Completion** (designed to improve over typical baselines)
+- **Faster Delivery** (through parallel coordination vs sequential)
+- **Reduced Rework** (via better context sharing and planning)
+- **Better Agent Utilization** (by reducing idle waiting)
 
-## 🚀 Commander's Intent: The Secret to 95% Completion
+## 🚀 Commander's Intent: Clear Task Delegation
 
 Every task delegation includes THREE elements:
 
