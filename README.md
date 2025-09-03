@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Version](https://img.shields.io/badge/version-2.7.0-blue.svg)](https://github.com/T72/task-orchestrator/releases)
+[![Version](https://img.shields.io/badge/version-2.7.1-blue.svg)](https://github.com/T72/task-orchestrator/releases)
 
 ## 🎯 Transform Your Meta-Agent Into An Orchestration Engine
 
@@ -141,4 +141,4 @@ The secret? Three simple words: **WHY, WHAT, DONE.**
 
 ---
 
-**Task Orchestrator v2.7.0** - Transform your meta-agent into an orchestration engine.
+**Task Orchestrator v2.7.1** - Transform your meta-agent into an orchestration engine.
