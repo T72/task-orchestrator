@@ -2,13 +2,6 @@
 """
 Task Orchestrator with Context Sharing - Production Version
 Simple interface for multi-agent task coordination with automatic cleanup
-
-@implements NFR-001: Performance - Hook overhead <10ms (achieved 5ms avg)
-@implements NFR-002: Scalability - Concurrent agents 100+ (tested 200+ agents)
-@implements NFR-003: Compatibility - Claude Code versions (all validated)
-@implements NFR-004: Maintainability - Code size <300 lines per module
-@implements NFR-006: Multi-Project Performance - 10+ concurrent projects
-@implements NFR-007: Migration Safety - Zero data loss during migrations
 """
 
 import sys
@@ -17,10 +10,7 @@ import json
 import sqlite3
 import argparse
 import uuid
-try:
-    import fcntl  # Unix/Linux file locking
-except ImportError:
-    fcntl = None  # Windows doesn't have fcntl
+import fcntl
 import shutil
 import tarfile
 from datetime import datetime, timedelta
@@ -37,70 +27,14 @@ _COMPRESS_ARCHIVES = True
 _MAX_CONTEXT_SIZE_MB = 10
 
 class TaskManager:
-    """
-    Simple task manager for multi-agent coordination
-    
-    @implements FR-040: Project-Local Database Isolation
-    @implements FR-CORE-1: Task Creation System
-    @implements FR-CORE-2: Task Query System  
-    @implements FR-CORE-3: Task Completion System
-    @implements TECH-001: Database Path Management
-    @implements UX-002: Directory Structure (.task-orchestrator/)
-    """
+    """Simple task manager for multi-agent coordination"""
     
     def __init__(self):
-        """
-        Initialize Task Orchestrator with agent tracking
-        
-        @implements FR-015: Agent Type Tracking
-        @implements FR-018: Agent Status Tracking
-        """
-        # Always use project-local database for isolation
-        # Check environment variable for custom location, otherwise use current directory
-        if os.environ.get('TM_DB_PATH'):
-            # Allow override via environment variable
-            self.db_dir = Path(os.environ.get('TM_DB_PATH'))
-        else:
-            # Default to project-local database for isolation between projects
-            self.db_dir = Path.cwd() / ".task-orchestrator"
-        
+        self.repo_root = self._find_repo_root()
+        self.db_dir = self.repo_root / ".task-orchestrator"
         self.db_path = self.db_dir / "tasks.db"
         self.agent_id = os.environ.get('TM_AGENT_ID', self._generate_agent_id())
-        self.repo_root = self._find_repo_root()
-        
-        # Initialize error handler
-        try:
-            from error_handler import ErrorHandler
-            self.error_handler = ErrorHandler(self.db_dir / "logs")
-        except:
-            self.error_handler = None
-        
-        # Initialize context manager
-        # @implements FR-041: Project Context Preservation
-        try:
-            from context_manager import ProjectContextManager
-            self.context_manager = ProjectContextManager(Path.cwd())
-        except:
-            self.context_manager = None
-        
-        # Initialize database with error handling
-        try:
-            self._init_db()
-        except Exception as e:
-            if self.error_handler:
-                self.error_handler.handle_error(e, "Database initialization", critical=True)
-            else:
-                raise
-        
-        # Initialize telemetry if available
-        try:
-            from telemetry import TelemetryCapture
-            self.telemetry = TelemetryCapture(self.db_dir / "telemetry")
-        except Exception as e:
-            # Telemetry is non-critical
-            if self.error_handler:
-                self.error_handler.handle_error(e, "Telemetry initialization")
-            self.telemetry = None
+        self._init_db()
     
     def _find_repo_root(self) -> Path:
         """Find git repository root"""
@@ -115,12 +49,9 @@ class TaskManager:
             return Path.cwd()
     
     def _generate_agent_id(self) -> str:
-        """Generate unique agent ID with better defaults"""
-        # Try to get a meaningful default
-        user = os.environ.get('USER', os.environ.get('USERNAME', 'user'))
-        unique = f"{user}_{os.getpid()}"
-        # Return a more readable agent ID
-        return f"{user}_{hashlib.md5(unique.encode()).hexdigest()[:4]}"
+        """Generate unique agent ID"""
+        unique = f"{os.getpid()}:{os.environ.get('USER', 'agent')}"
+        return hashlib.md5(unique.encode()).hexdigest()[:8]
     
     def _init_db(self):
         """Initialize database if needed with WSL safety"""
@@ -162,18 +93,9 @@ class TaskManager:
                             status TEXT DEFAULT 'pending',
                             priority TEXT DEFAULT 'medium',
                             assignee TEXT,
-                            created_by TEXT NOT NULL DEFAULT 'user',
                             created_at TEXT NOT NULL,
                             updated_at TEXT NOT NULL,
-                            completed_at TEXT,
-                            success_criteria TEXT,
-                            feedback_quality INTEGER,
-                            feedback_timeliness INTEGER,
-                            feedback_notes TEXT,
-                            completion_summary TEXT,
-                            deadline TEXT,
-                            estimated_hours REAL,
-                            actual_hours REAL
+                            completed_at TEXT
                         )
                     """)
                     
@@ -206,24 +128,6 @@ class TaskManager:
                         )
                     """)
                     
-                    # Migration: Add created_by column if it doesn't exist
-                    cursor = conn.execute("PRAGMA table_info(tasks)")
-                    columns = {row[1] for row in cursor.fetchall()}
-                    
-                    if 'created_by' not in columns:
-                        # Add the created_by column to existing tables
-                        try:
-                            conn.execute("""
-                                ALTER TABLE tasks ADD COLUMN created_by TEXT DEFAULT 'user'
-                            """)
-                            # Update existing rows with a default created_by value
-                            conn.execute("""
-                                UPDATE tasks SET created_by = 'user' WHERE created_by IS NULL
-                            """)
-                        except sqlite3.OperationalError:
-                            # Column might already exist, ignore the error
-                            pass
-                    
                     conn.commit()
                     break  # Success, exit retry loop
                     
@@ -236,55 +140,11 @@ class TaskManager:
     # ========== SIMPLE PUBLIC INTERFACE ==========
     
     def add(self, title: str, description: str = None, 
-            priority: str = "medium", depends_on: List[str] = None,
-            success_criteria: str = None, deadline: str = None,
-            estimated_hours: float = None, assignee: str = None) -> str:
-        """
-        Add a new task with optional Core Loop fields
-        
-        @implements FR-CORE-1: Task Creation System
-        @implements FR-001: Task Title and Description
-        @implements FR-002: Task Priority Management
-        @implements FR-003: Task Dependency System
-        @implements FR-004: Success Criteria Definition
-        @implements FR-005: Deadline Management
-        @implements FR-006: Time Estimation
-        @implements FR-016: Agent Task Assignment
-        @implements COLLAB-003: Task Assignment System
-        """
+            priority: str = "medium", depends_on: List[str] = None) -> str:
+        """Add a new task"""
         # Validate title
         if not title or not title.strip():
-            if self.error_handler:
-                from error_handler import ValidationError
-                raise ValidationError("Task title cannot be empty")
-            else:
-                raise ValueError("Task title cannot be empty")
-        
-        # Validate success criteria if provided
-        if success_criteria:
-            try:
-                import json
-                parsed = json.loads(success_criteria)
-                # Additional validation
-                if not isinstance(parsed, list):
-                    raise ValueError("Success criteria must be a JSON array")
-                for criterion in parsed:
-                    if not isinstance(criterion, dict):
-                        raise ValueError("Each criterion must be a JSON object")
-                    if 'criterion' not in criterion:
-                        raise ValueError("Each criterion must have a 'criterion' field")
-            except json.JSONDecodeError as e:
-                if self.error_handler:
-                    from error_handler import ValidationError
-                    raise ValidationError(f"Invalid JSON in success criteria: {e}")
-                else:
-                    raise ValueError("Success criteria must be valid JSON")
-            except ValueError as e:
-                if self.error_handler:
-                    from error_handler import ValidationError
-                    raise ValidationError(str(e))
-                else:
-                    raise
+            raise ValueError("Task title cannot be empty")
         
         task_id = uuid.uuid4().hex[:8]
         now = datetime.now().isoformat()
@@ -305,41 +165,10 @@ class TaskManager:
                 # Determine status based on dependencies
                 status = "blocked" if depends_on else "pending"
                 
-                # Check if table has Core Loop columns (for backward compatibility)
-                cursor = conn.execute("PRAGMA table_info(tasks)")
-                columns = {row[1] for row in cursor.fetchall()}
-                
-                # Use agent_id for created_by field
-                created_by = self.agent_id
-                
-                if 'created_by' in columns and 'success_criteria' in columns:
-                    # New schema with created_by and Core Loop fields
-                    conn.execute("""
-                        INSERT INTO tasks (id, title, description, status, priority, assignee, created_by, created_at, updated_at,
-                                         success_criteria, deadline, estimated_hours)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (task_id, title, description, status, priority, assignee, created_by, now, now,
-                          success_criteria, deadline, estimated_hours))
-                elif 'created_by' in columns:
-                    # Schema with created_by but without Core Loop fields
-                    conn.execute("""
-                        INSERT INTO tasks (id, title, description, status, priority, assignee, created_by, created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (task_id, title, description, status, priority, assignee, created_by, now, now))
-                elif 'success_criteria' in columns:
-                    # Legacy schema with Core Loop fields but no created_by
-                    conn.execute("""
-                        INSERT INTO tasks (id, title, description, status, priority, assignee, created_at, updated_at,
-                                         success_criteria, deadline, estimated_hours)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (task_id, title, description, status, priority, assignee, now, now,
-                          success_criteria, deadline, estimated_hours))
-                else:
-                    # Legacy schema without created_by or Core Loop fields
-                    conn.execute("""
-                        INSERT INTO tasks (id, title, description, status, priority, assignee, created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (task_id, title, description, status, priority, assignee, now, now))
+                conn.execute("""
+                    INSERT INTO tasks (id, title, description, status, priority, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, (task_id, title, description, status, priority, now, now))
                 
                 # Add dependencies
                 if depends_on:
@@ -354,15 +183,6 @@ class TaskManager:
             raise ValueError(f"Database integrity error: {e}")
         except Exception as e:
             raise ValueError(f"Failed to add task: {e}")
-        
-        # Capture telemetry
-        if self.telemetry:
-            self.telemetry.capture_task_created(
-                task_id,
-                has_criteria=bool(success_criteria),
-                has_deadline=bool(deadline),
-                has_estimate=bool(estimated_hours)
-            )
         
         # Auto-initialize context for collaboration
         self._init_context(task_id, title)
@@ -398,11 +218,7 @@ class TaskManager:
             return None
     
     def update(self, task_id: str, status: str = None, assignee: str = None) -> bool:
-        """
-        Update task status or assignment
-        
-        @implements FR-016: Agent Task Assignment
-        """
+        """Update task status or assignment"""
         try:
             # Validate inputs
             if not task_id or not task_id.strip():
@@ -523,73 +339,16 @@ class TaskManager:
             VALUES (?, ?, ?, ?, ?)
         """, (agent_id, task_id, type, message, now))
     
-    def complete(self, task_id: str, completion_summary: str = None, 
-                actual_hours: float = None, validate: bool = False) -> bool:
-        """
-        Complete a task with optional Core Loop fields
-        
-        @implements FR-CORE-3: Task Completion System
-        @implements FR-010: Task Completion Status
-        @implements FR-011: Completion Summary Capture
-        @implements FR-012: Actual Time Tracking
-        @implements FR-013: Completion Validation
-        @implements FR-014: Dependency Resolution
-        """
+    def complete(self, task_id: str) -> bool:
+        """Complete a task and trigger auto-cleanup"""
         now = datetime.now().isoformat()
         
         with sqlite3.connect(str(self.db_path)) as conn:
-            # Check if validation is requested
-            if validate:
-                cursor = conn.execute("""
-                    SELECT success_criteria FROM tasks WHERE id = ?
-                """, (task_id,))
-                row = cursor.fetchone()
-                if row and row[0]:
-                    # Validate success criteria
-                    try:
-                        from criteria_validator import CriteriaValidator
-                        validator = CriteriaValidator()
-                        
-                        # Get task context for validation
-                        context = self.context(task_id)
-                        
-                        # Validate criteria
-                        all_passed, results = validator.validate_criteria(row[0], context)
-                        
-                        # Print validation report
-                        print(validator.format_validation_report(results))
-                        
-                        # Capture telemetry for validation
-                        if self.telemetry:
-                            passed_count = sum(1 for r in results if r['passed'])
-                            self.telemetry.capture_criteria_validation(
-                                task_id, passed_count, len(results)
-                            )
-                        
-                        if not all_passed:
-                            print("Warning: Not all success criteria met")
-                    except Exception as e:
-                        print(f"Error validating criteria: {e}")
-            
-            # Check if table has Core Loop columns
-            cursor = conn.execute("PRAGMA table_info(tasks)")
-            columns = {row[1] for row in cursor.fetchall()}
-            
-            if 'completion_summary' in columns:
-                # Update with Core Loop fields
-                conn.execute("""
-                    UPDATE tasks 
-                    SET status = 'completed', completed_at = ?,
-                        completion_summary = ?, actual_hours = ?
-                    WHERE id = ?
-                """, (now, completion_summary, actual_hours, task_id))
-            else:
-                # Legacy update
-                conn.execute("""
-                    UPDATE tasks 
-                    SET status = 'completed', completed_at = ?
-                    WHERE id = ?
-                """, (now, task_id))
+            conn.execute("""
+                UPDATE tasks 
+                SET status = 'completed', completed_at = ?
+                WHERE id = ?
+            """, (now, task_id))
             
             # Find tasks that will be unblocked
             cursor = conn.execute("""
@@ -634,15 +393,6 @@ class TaskManager:
                                          assignee)
             
             conn.commit()
-        
-        # Capture telemetry
-        if self.telemetry:
-            self.telemetry.capture_task_completed(
-                task_id,
-                validated=validate,
-                has_summary=bool(completion_summary),
-                actual_hours=actual_hours
-            )
         
         # Auto archive and cleanup
         if _AUTO_CLEANUP:
@@ -691,14 +441,7 @@ class TaskManager:
             return "\n".join(output)
     
     def list(self, status: str = None, assignee: str = None, has_deps: bool = False) -> List[Dict]:
-        """
-        List tasks with optional filters
-        
-        @implements FR-CORE-2: Task Listing and Query System
-        @implements FR-007: Task Status Filtering
-        @implements FR-008: Task Assignment Filtering
-        @implements FR-009: Dependency Filtering
-        """
+        """List tasks with optional filters"""
         if has_deps:
             # Query for tasks that have dependencies
             query = """
@@ -816,95 +559,6 @@ class TaskManager:
                 print(f"Error creating discovery notification: {e}")
         
         return result
-    
-    def feedback(self, task_id: str, quality: int = None, 
-                timeliness: int = None, notes: str = None) -> bool:
-        """
-        Provide feedback on a completed task
-        
-        @implements FR-029: Quality Feedback System
-        @implements FR-030: Timeliness Feedback System  
-        @implements FR-031: Feedback Notes Collection
-        @implements FR-032: Feedback Data Persistence
-        """
-        # Validate scores
-        if quality is not None and not (1 <= quality <= 5):
-            raise ValueError("Quality score must be between 1 and 5")
-        if timeliness is not None and not (1 <= timeliness <= 5):
-            raise ValueError("Timeliness score must be between 1 and 5")
-        
-        try:
-            with sqlite3.connect(str(self.db_path), timeout=10.0) as conn:
-                # Check if table has feedback columns
-                cursor = conn.execute("PRAGMA table_info(tasks)")
-                columns = {row[1] for row in cursor.fetchall()}
-                
-                if 'feedback_quality' in columns:
-                    # Update feedback fields
-                    conn.execute("""
-                        UPDATE tasks 
-                        SET feedback_quality = ?, feedback_timeliness = ?, feedback_notes = ?
-                        WHERE id = ?
-                    """, (quality, timeliness, notes, task_id))
-                    conn.commit()
-                    return True
-                else:
-                    # Legacy schema - cannot store feedback
-                    print("Warning: Feedback not supported in legacy schema. Run migrations.")
-                    return False
-        except Exception as e:
-            print(f"Failed to record feedback: {e}")
-            return False
-    
-    def progress(self, task_id: str, update: str) -> bool:
-        """
-        Add a progress update to a task
-        
-        @implements FR-027: Progress Tracking System
-        @implements FR-028: Progress Update Storage
-        @implements COLLAB-002: Shared progress visibility
-        """
-        try:
-            # Store progress as shared context with type 'progress'
-            progress_data = {
-                'timestamp': datetime.now().isoformat(),
-                'update': update,
-                'agent': self.agent_id
-            }
-            
-            # Add to shared context
-            context_file = self.db_dir / "contexts" / f"{task_id}_progress.jsonl"
-            context_file.parent.mkdir(parents=True, exist_ok=True)
-            
-            with open(context_file, 'a') as f:
-                f.write(json.dumps(progress_data) + '\n')
-            
-            # Also update the task's updated_at timestamp
-            with sqlite3.connect(str(self.db_path), timeout=10.0) as conn:
-                conn.execute("""
-                    UPDATE tasks 
-                    SET updated_at = ?
-                    WHERE id = ?
-                """, (datetime.now().isoformat(), task_id))
-                conn.commit()
-            
-            return True
-        except Exception as e:
-            print(f"Failed to record progress: {e}")
-            return False
-    
-    def get_progress(self, task_id: str) -> List[Dict]:
-        """Get all progress updates for a task"""
-        progress_file = self.db_dir / "contexts" / f"{task_id}_progress.jsonl"
-        updates = []
-        
-        if progress_file.exists():
-            with open(progress_file, 'r') as f:
-                for line in f:
-                    if line.strip():
-                        updates.append(json.loads(line))
-        
-        return updates
     
     def context(self, task_id: str) -> Dict:
         """Get task context (both shared and private)"""

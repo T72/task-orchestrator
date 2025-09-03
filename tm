@@ -2,6 +2,14 @@
 """
 Enhanced Task Manager with Collaboration Features
 Extends the base tm with share, note, discover, sync, context, and join commands
+
+@implements FR-025: Hook Decision Values (approve/block)
+@implements FR-026: Public Repository Support
+@implements UX-001: Command Name - Maintain 'tm' command
+@implements UX-003: Error Messages - Reference 'Task Orchestrator'
+@implements TECH-002: Hook Validation - Claude Code schema compliance
+@implements TECH-003: Variable Initialization - Prevent UnboundLocalError
+@implements TECH-004: Repository Structure - Maintain standard layout
 """
 
 import sys
@@ -9,6 +17,15 @@ import os
 import subprocess
 import shutil
 import json
+
+def update_orchestrator_md(tm):
+    """Helper to update ORCHESTRATOR.md after task changes"""
+    try:
+        from orchestrator_discovery import OrchestratorDiscovery
+        discovery = OrchestratorDiscovery(tm)
+        discovery.update_orchestrator_md()
+    except:
+        pass  # Silently fail to not disrupt workflow
 from pathlib import Path
 
 # Add src directory to path
@@ -25,7 +42,123 @@ except ImportError:
     CollaborationManager = None
 
 def main():
-    """Enhanced main function with collaboration commands"""
+    """Enhanced main function with collaboration commands and enforcement"""
+    
+    # Import enforcement system
+    enforcement_engine = None
+    try:
+        from enforcement import EnforcementEngine
+        from pathlib import Path
+        
+        db_dir = Path.cwd() / ".task-orchestrator"
+        if not db_dir.exists():
+            db_dir.mkdir(exist_ok=True)
+        
+        db_path = db_dir / "tasks.db"
+        enforcement_engine = EnforcementEngine(db_path)
+    except ImportError:
+        # Enforcement is optional - continue without it
+        pass
+    
+    # Check for enforcement-specific commands first
+    if len(sys.argv) > 1:
+        command = sys.argv[1]
+        
+        if command == "validate-orchestration":
+            if enforcement_engine:
+                result = enforcement_engine.validator.validate_context()
+                if result.is_valid:
+                    print("✅ Orchestration context is valid")
+                    sys.exit(0)
+                else:
+                    print(result.guidance)
+                    sys.exit(1)
+            else:
+                print("❌ Enforcement system not available")
+                sys.exit(1)
+        
+        elif command == "fix-orchestration":
+            if enforcement_engine:
+                interactive = "--interactive" in sys.argv
+                if interactive:
+                    success = enforcement_engine.fix_orchestration_interactive()
+                    sys.exit(0 if success else 1)
+                else:
+                    print("Use --interactive flag: tm fix-orchestration --interactive")
+                    sys.exit(1)
+            else:
+                print("❌ Enforcement system not available")
+                sys.exit(1)
+        
+        elif command == "config":
+            # Handle enforcement config
+            if "--enforce-orchestration" in sys.argv:
+                if enforcement_engine:
+                    idx = sys.argv.index("--enforce-orchestration")
+                    if idx + 1 < len(sys.argv):
+                        value = sys.argv[idx + 1].lower()
+                        if value in ["true", "false"]:
+                            from enforcement import EnforcementLevel
+                            level = EnforcementLevel.STANDARD if value == "true" else EnforcementLevel.ADVISORY
+                            if enforcement_engine.config.set_enforcement_level(level):
+                                print(f"✅ Enforcement {'enabled' if value == 'true' else 'disabled'}")
+                                sys.exit(0)
+                            else:
+                                print("❌ Failed to update enforcement setting")
+                                sys.exit(1)
+                        else:
+                            print("Use --enforce-orchestration true|false")
+                            sys.exit(1)
+                    else:
+                        print("Usage: tm config --enforce-orchestration true|false")
+                        sys.exit(1)
+                else:
+                    print("❌ Enforcement system not available")
+                    sys.exit(1)
+            
+            elif "--show-enforcement" in sys.argv:
+                if enforcement_engine:
+                    print(enforcement_engine.show_enforcement_status())
+                    sys.exit(0)
+                else:
+                    print("❌ Enforcement system not available")
+                    sys.exit(1)
+            
+            elif "--enforcement-level" in sys.argv:
+                if enforcement_engine:
+                    idx = sys.argv.index("--enforcement-level")
+                    if idx + 1 < len(sys.argv):
+                        level_str = sys.argv[idx + 1]
+                        if level_str in ["strict", "standard", "advisory"]:
+                            from enforcement import EnforcementLevel
+                            level = EnforcementLevel(level_str)
+                            if enforcement_engine.config.set_enforcement_level(level):
+                                print(f"✅ Enforcement level set to: {level_str}")
+                                sys.exit(0)
+                            else:
+                                print("❌ Failed to set enforcement level")
+                                sys.exit(1)
+                        else:
+                            print("Invalid level - use: strict, standard, or advisory")
+                            sys.exit(1)
+                    else:
+                        print("Usage: tm config --enforcement-level [strict|standard|advisory]")
+                        sys.exit(1)
+                else:
+                    print("❌ Enforcement system not available")
+                    sys.exit(1)
+    
+    # Apply enforcement for orchestrated commands
+    if enforcement_engine and len(sys.argv) > 1:
+        command = sys.argv[1]
+        orchestrated_commands = [
+            'add', 'join', 'share', 'note', 'discover', 'sync', 'context',
+            'assign', 'watch', 'template'
+        ]
+        
+        if command in orchestrated_commands:
+            if not enforcement_engine.enforce_orchestration(command):
+                sys.exit(1)
     
     # Import TaskManager for all commands
     try:
@@ -98,6 +231,15 @@ def main():
         if command == "init":
             tm._init_db()
             print("Task database initialized")
+            
+            # Set up AI agent discovery protocol
+            try:
+                from orchestrator_discovery import setup_discovery
+                setup_discovery(tm)
+            except ImportError:
+                print("ℹ️ AI agent discovery module not found, skipping ORCHESTRATOR.md setup")
+            except Exception as e:
+                print(f"ℹ️ Could not set up AI discovery: {e}")
         elif command == "add":
             if len(sys.argv) < 3:
                 print("Usage: tm add <title> [-d description] [-p priority] [--depends-on task_id] [--file path:line]")
@@ -158,6 +300,7 @@ def main():
                                success_criteria=success_criteria, deadline=deadline,
                                estimated_hours=estimated_hours, assignee=assignee)
                 print(f"Task created with ID: {task_id}")
+                update_orchestrator_md(tm)  # Update discovery file
             except ValueError as e:
                 print(f"Error: {e}")
                 sys.exit(1)
@@ -239,6 +382,7 @@ def main():
             tm.complete(task_id, completion_summary=completion_summary, 
                        actual_hours=actual_hours, validate=validate)
             print(f"Task {task_id} completed")
+            update_orchestrator_md(tm)  # Update discovery file
             
             # If impact review requested, show potentially affected tasks
             if impact_review:
@@ -928,6 +1072,13 @@ Template Commands:
 Interactive Mode:
   wizard              Interactive guided task creation
   wizard --quick      Quick task creation mode
+
+Orchestration Enforcement:
+  validate-orchestration        Check orchestration context
+  fix-orchestration --interactive  Fix orchestration violations
+  config --enforce-orchestration true|false  Enable/disable enforcement
+  config --enforcement-level strict|standard|advisory  Set enforcement level
+  config --show-enforcement     Show enforcement status
 
 Hook Performance:
   hooks report        Show hook performance metrics

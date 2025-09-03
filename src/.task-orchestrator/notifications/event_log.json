@@ -1,0 +1,78 @@
+[
+  {
+    "id": "evt_20250821_205654",
+    "timestamp": "2025-08-21T20:56:54.417404",
+    "type": "task_retry",
+    "priority": "medium",
+    "message": "Task task_001 retry attempt 2",
+    "details": {
+      "task_id": "task_001",
+      "attempt": 2,
+      "reason": "Connection timeout",
+      "delay_seconds": 4.0,
+      "max_attempts": 3
+    },
+    "recipients": [
+      "all"
+    ]
+  },
+  {
+    "id": "evt_20250821_205654",
+    "timestamp": "2025-08-21T20:56:54.428358",
+    "type": "help_requested",
+    "priority": "high",
+    "message": "backend-specialist needs help with task task_002",
+    "details": {
+      "task_id": "task_002",
+      "specialist": "backend-specialist",
+      "issue": "JWT implementation unclear",
+      "urgency": "high"
+    },
+    "recipients": [
+      "backend-specialist",
+      "orchestrator"
+    ]
+  },
+  {
+    "id": "evt_20250821_205654",
+    "timestamp": "2025-08-21T20:56:54.442953",
+    "type": "complexity_alert",
+    "priority": "medium",
+    "message": "High complexity detected in task task_003",
+    "details": {
+      "task_id": "task_003",
+      "complexity_score": 7.5,
+      "factors": [
+        "Multiple dependencies",
+        "Unclear requirements",
+        "New technology"
+      ],
+      "recommendation": "Consider decomposition"
+    },
+    "recipients": [
+      "all"
+    ]
+  },
+  {
+    "id": "evt_20250821_205654",
+    "timestamp": "2025-08-21T20:56:54.457718",
+    "type": "team_event",
+    "priority": "medium",
+    "message": "Team event: Sprint Planning",
+    "details": {
+      "event": "Sprint Planning",
+      "team_members": [
+        "frontend-specialist",
+        "backend-specialist",
+        "database-specialist"
+      ],
+      "phase": 2,
+      "focus": "API Development"
+    },
+    "recipients": [
+      "frontend-specialist",
+      "backend-specialist",
+      "database-specialist"
+    ]
+  }
+]
