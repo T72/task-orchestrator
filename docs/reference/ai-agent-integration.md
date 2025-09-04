@@ -2,7 +2,7 @@
 
 ## Status: Guide
 ## Last Verified: August 23, 2025
-Against version: v2.7.1
+Against version: v2.7.2
 
 ## Overview
 This guide explains how Claude Code can leverage the task orchestrator (`tm`) to orchestrate multiple sub-agents efficiently when delegating complex tasks.

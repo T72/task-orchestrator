@@ -2,11 +2,11 @@
 
 ## Status: Implemented
 ## Last Verified: August 23, 2025
-Against version: v2.7.1
+Against version: v2.7.2
 
 ## Overview
 
-Task Orchestrator provides a comprehensive command-line interface through the `tm` command. This reference covers all commands, options, and parameters available in v2.7.1.
+Task Orchestrator provides a comprehensive command-line interface through the `tm` command. This reference covers all commands, options, and parameters available in v2.7.2.
 
 ## Basic Syntax
 
@@ -649,7 +649,7 @@ tm discover a1b2c3d4 "Found SQL injection vulnerability in login endpoint!"
 
 ### tm wizard
 
-Interactive task creation wizard with template support (v2.7.1).
+Interactive task creation wizard with template support (v2.7.2).
 
 ```bash
 tm wizard [options]
@@ -685,7 +685,7 @@ tm wizard --quick
 
 ### tm template
 
-Manage and apply task templates (v2.7.1).
+Manage and apply task templates (v2.7.2).
 
 ```bash
 tm template <subcommand> [arguments]
@@ -740,7 +740,7 @@ tm template apply bug-fix severity=critical component=auth issue_id=BUG-123
 
 ### tm hooks
 
-Monitor and manage hook performance (v2.7.1).
+Monitor and manage hook performance (v2.7.2).
 
 ```bash
 tm hooks <subcommand> [arguments]

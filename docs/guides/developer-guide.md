@@ -1351,7 +1351,7 @@ Brief description of changes
 - [ ] Release notes prepared
 
 # Release:
-- [ ] Tag created: git tag v2.7.1
+- [ ] Tag created: git tag v2.7.2
 - [ ] Release published on GitHub
 - [ ] Documentation deployed
 - [ ] Community notified

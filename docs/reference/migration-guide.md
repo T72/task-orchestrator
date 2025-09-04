@@ -31,7 +31,7 @@ None - v2.7.x maintains full backward compatibility.
 
 3. Verify installation:
    ```bash
-   ./tm --version  # Should show 2.7.1
+   ./tm --version  # Should show 2.7.2
    ./tm validate-orchestration
    ```
 
@@ -106,4 +106,4 @@ For migration assistance:
 - Request features: `docs/support/templates/feedback.md`
 
 ---
-*Last updated: September 3, 2025 for v2.7.1*
+*Last updated: September 3, 2025 for v2.7.2*

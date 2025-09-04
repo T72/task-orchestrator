@@ -105,7 +105,7 @@ Task Orchestrator is a lightweight, zero-dependency tool that enables AI agents 
 - **Features**: Request via `docs/support/templates/feedback.md`
 
 ## Version Information
-- **Current Version**: 2.7.1
+- **Current Version**: 2.7.2
 - **Released**: September 3, 2025
 - **Highlights**: 91.5% requirements coverage, enforcement system
 - **Migration**: See [Migration Guide](../reference/migration-guide.md)

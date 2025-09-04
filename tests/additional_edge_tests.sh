@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Additional Critical Edge Case Tests for v2.7.1 - ISOLATED VERSION with WSL Safety
+# Additional Critical Edge Case Tests for v2.7.2 - ISOLATED VERSION with WSL Safety
 # These test the most important edge cases for production use
 
 # Detect WSL environment

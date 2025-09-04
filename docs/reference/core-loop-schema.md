@@ -2,7 +2,7 @@
 
 ## Status: Implemented
 ## Last Verified: August 23, 2025
-Against version: v2.7.1
+Against version: v2.7.2
 
 ## Overview
 The Core Loop enhancements add new fields to support success criteria, feedback mechanisms, and completion summaries while maintaining 100% backward compatibility.

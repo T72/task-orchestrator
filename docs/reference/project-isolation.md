@@ -2,19 +2,19 @@
 
 ## Status: Implemented
 ## Last Verified: August 23, 2025
-Against version: v2.7.1
+Against version: v2.7.2
 
 ## Overview
 Task Orchestrator now uses **project-local databases** by default to ensure complete isolation between different projects. This prevents task contamination and maintains project boundaries.
 
 ## Database Location
 
-### Default Behavior (v2.7.1+)
+### Default Behavior (v2.7.2+)
 - Database location: `./.task-orchestrator/tasks.db` (in current working directory)
 - Each project maintains its own separate task database
 - No cross-project contamination
 
-### Previous Behavior (v2.7.1 and earlier)
+### Previous Behavior (v2.7.2 and earlier)
 - Database location: `~/.task-orchestrator/tasks.db` (in user home directory)  
 - All projects shared the same global database
 - Led to task bleeding between projects
@@ -117,6 +117,6 @@ your-project/
 
 ## Version History
 
-- **v2.7.1**: Switched to project-local databases by default
-- **v2.7.1**: Last version using global database
-- **v2.7.1**: Initial multi-agent coordination support
+- **v2.7.2**: Switched to project-local databases by default
+- **v2.7.2**: Last version using global database
+- **v2.7.2**: Initial multi-agent coordination support

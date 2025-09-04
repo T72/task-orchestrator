@@ -2,7 +2,7 @@
 
 ## Status: Guide
 ## Last Verified: August 23, 2025
-Against version: v2.7.1
+Against version: v2.7.2
 
 ## Overview
 This guide shows how to integrate the task manager (`tm`) with Claude Code's hooks system for seamless multi-agent orchestration.

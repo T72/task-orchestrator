@@ -296,4 +296,4 @@ By making Task Orchestrator discoverable, we ensure that AI agents always use th
 
 ---
 
-*The AI Agent Discovery Protocol is implemented in Task Orchestrator v2.7.1+*
+*The AI Agent Discovery Protocol is implemented in Task Orchestrator v2.7.2+*
