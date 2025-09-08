@@ -11,7 +11,8 @@ cd task-orchestrator
 chmod +x tm
 ./tm init
 
-# 3. Test it works
+# 3. Set agent identity and test
+export TM_AGENT_ID="orchestrator_agent"
 ./tm add "My first task"
 ```
 
@@ -34,7 +35,8 @@ chmod +x tm
 # 3. Initialize for this project
 ./tm init
 
-# 4. Start creating tasks
+# 4. Set agent identity and start creating tasks
+export TM_AGENT_ID="orchestrator_agent"
 ./tm add "Implement user authentication"
 ```
 
@@ -68,10 +70,11 @@ UI=$(./tm add "Build login UI" --depends-on $API | grep -o '[a-f0-9]\{8\}')
 
 ```bash
 # Orchestrator Claude sets up project
-./tm add "Build e-commerce platform" --tag epic
-./tm add "Database design" --tag backend --assignee db_specialist
-./tm add "API development" --tag backend --assignee api_specialist
-./tm add "Frontend components" --tag frontend --assignee ui_specialist
+export TM_AGENT_ID="orchestrator_agent"
+./tm add "Build e-commerce platform" --assignee orchestrator_agent
+./tm add "Database design" --assignee db_specialist
+./tm add "API development" --assignee api_specialist
+./tm add "Frontend components" --assignee ui_specialist
 
 # Each specialist agent can then:
 export TM_AGENT_ID="api_specialist"
@@ -83,6 +86,7 @@ export TM_AGENT_ID="api_specialist"
 
 **First Claude session:**
 ```bash
+export TM_AGENT_ID="orchestrator_agent"
 ./tm add "Refactor authentication module"
 ./tm share task_123 "Analyzed existing code, found 3 issues"
 ./tm note task_123 "Need to update JWT library version"

@@ -1,12 +1,12 @@
 # CLI Command Reference
 
 ## Status: Implemented
-## Last Verified: August 23, 2025
-Against version: v2.7.2
+## Last Verified: September 8, 2025
+Against version: v2.8.0
 
 ## Overview
 
-Task Orchestrator provides a comprehensive command-line interface through the `tm` command. This reference covers all commands, options, and parameters available in v2.7.2.
+Task Orchestrator provides a comprehensive command-line interface through the `tm` command. This reference covers all commands, options, and parameters available in v2.8.0.
 
 ## Basic Syntax
 
@@ -42,9 +42,10 @@ tm add <title> [options]
 - `title` (required): Task description
 
 **Options**:
+- `-d <description>`: Task description with context (WHY/WHAT/DONE format)
+- `-p <level>`: Set priority (low, medium, high, critical)
 - `--depends-on <task-id>`: Set task dependencies (can use multiple times)
 - `--file <path:line>`: Attach file reference (e.g., `src/auth.py:42`)
-- `--priority <level>`: Set priority (low, medium, high, critical)
 - `--assignee <agent>`: Assign to specific agent
 - `--criteria <json>`: Success criteria array (v2.3)
 - `--deadline <iso8601>`: Task deadline (v2.3)
@@ -57,16 +58,21 @@ tm add <title> [options]
 tm add "Fix login bug"
 # Output: Task created with ID: a1b2c3d4
 
+# Task with Commander's Intent description
+tm add "Implement authentication" -d "WHY: Secure user access, WHAT: Login/2FA/sessions, DONE: Users can login safely"
+# Output: Task created with ID: b2c3d4e5
+
 # Task with dependencies
 tm add "Deploy to production" --depends-on a1b2c3d4
 
 # Task with Core Loop features
 tm add "Implement OAuth" \
+  -d "WHY: Modern auth standard, WHAT: OAuth2 flow, token refresh, DONE: Secure third-party login" \
   --criteria '[{"criterion":"All tests pass","measurable":"true"},
                {"criterion":"Documentation complete","measurable":"docs_written == true"}]' \
   --deadline "2025-12-31T23:59:59Z" \
   --estimated-hours 20 \
-  --priority high \
+  -p high \
   --file src/auth.py:100:200
 ```
 
@@ -84,6 +90,7 @@ tm list [options]
 - `--status <status>`: Filter by status (pending, in_progress, completed, blocked)
 - `--assignee <agent>`: Show tasks for specific agent
 - `--has-deps`: Show only tasks with dependencies
+- `--format <format>`: Output format (default, json)
 
 **Examples**:
 
@@ -489,6 +496,7 @@ tm update <task-id> [options]
 **Options**:
 - `--status <status>`: Update status (pending, in_progress, completed)
 - `--priority <level>`: Update priority (low, medium, high, critical)
+- `--assignee <agent>`: Update task assignment
 
 **Example**:
 
