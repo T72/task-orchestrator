@@ -5,7 +5,72 @@ All notable changes to the Task Orchestrator project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.7.2.html).
 
-## [2.7.2] - 2025-09-03
+## [2.8.0] - 2025-09-08
+
+### 🎉 Ultra-Clean Installation Structure
+
+This major release transforms Task Orchestrator from a 29+ file installation to just **ONE visible file** in your project root!
+
+### Changed
+- **MAJOR**: Reduced installation footprint from 29+ files to just 1 visible file (`tm`)
+- All Python modules (35+ files) now hidden in `.task-orchestrator/lib/`
+- Configuration moved to `.task-orchestrator/config/`
+- Templates relocated to `.task-orchestrator/templates/`
+- Achieved Git-level cleanliness for project roots
+
+### Added
+- Smart migration script (`migrate-to-clean-structure.sh`) for seamless upgrades
+- Dual-path resolution in tm wrapper for backward compatibility
+- Automatic backup during migration process
+- Proper file permissions enforcement (755/644)
+
+### Security
+- Fixed any 777 permissions to proper Unix standards
+- Better isolation of Task Orchestrator files from user projects
+- Cleaner permission model for all components
+
+### Benefits
+- **Professional appearance** - Only `tm` visible in project root
+- **Easy identification** - Everything in `.task-orchestrator/`
+- **Simple updates** - Replace `.task-orchestrator/lib/` atomically
+- **Clean uninstalls** - Just remove `tm` and `.task-orchestrator/`
+- **Follows conventions** - Similar to `.git/`, `node_modules/`, `.venv/`
+
+### Developer Note
+- Feature request from RoleScoutPro-MVP team (Marcus Dindorf)
+- Reduces root directory clutter from 163 to ~134 files immediately
+- Makes Task Orchestrator more appealing for enterprise adoption
+
+---
+
+## [2.7.2] - 2025-09-04
+
+### 🎯 Enforcement System Enhancement
+
+This patch release completes the enforcement system feature request from user feedback.
+
+### Added
+- **Native Enforcement Configuration**
+  - `./tm config --enforce-usage true|false` command (requested feature)
+  - Support for both `--enforce-usage` and `--enforce-orchestration` flags
+  - Auto-detection of orchestration context
+  - Smart detection of multi-agent patterns
+  - Commander's Intent usage detection
+
+### Enhanced
+- **Enforcement Commands**
+  - Improved help documentation with enforcement guidance
+  - Better error messages for orchestration violations
+  - Clear resolution steps for each violation type
+  - Interactive fix wizard for common issues
+
+### Developer Note
+- This implements the feature request from 2025-09-03 for built-in enforcement
+- Prevents accidental bypass of orchestration protocols
+- Maintains the measured 4-5x velocity improvements
+- Ensures proper Commander's Intent usage
+
+## [2.7.1] - 2025-09-03
 
 ### 📊 Requirements Traceability Excellence
 

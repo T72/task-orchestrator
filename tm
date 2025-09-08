@@ -91,10 +91,12 @@ def main():
                 sys.exit(1)
         
         elif command == "config":
-            # Handle enforcement config
-            if "--enforce-orchestration" in sys.argv:
+            # Handle enforcement config (support both flag names)
+            if "--enforce-orchestration" in sys.argv or "--enforce-usage" in sys.argv:
                 if enforcement_engine:
-                    idx = sys.argv.index("--enforce-orchestration")
+                    # Support both flag names for compatibility
+                    flag = "--enforce-orchestration" if "--enforce-orchestration" in sys.argv else "--enforce-usage"
+                    idx = sys.argv.index(flag)
                     if idx + 1 < len(sys.argv):
                         value = sys.argv[idx + 1].lower()
                         if value in ["true", "false"]:
@@ -107,10 +109,10 @@ def main():
                                 print("❌ Failed to update enforcement setting")
                                 sys.exit(1)
                         else:
-                            print("Use --enforce-orchestration true|false")
+                            print(f"Use {flag} true|false")
                             sys.exit(1)
                     else:
-                        print("Usage: tm config --enforce-orchestration true|false")
+                        print(f"Usage: tm config {flag} true|false")
                         sys.exit(1)
                 else:
                     print("❌ Enforcement system not available")
@@ -1076,7 +1078,7 @@ Interactive Mode:
 Orchestration Enforcement:
   validate-orchestration        Check orchestration context
   fix-orchestration --interactive  Fix orchestration violations
-  config --enforce-orchestration true|false  Enable/disable enforcement
+  config --enforce-usage true|false  Enable/disable enforcement
   config --enforcement-level strict|standard|advisory  Set enforcement level
   config --show-enforcement     Show enforcement status
 
