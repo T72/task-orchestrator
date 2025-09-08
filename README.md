@@ -8,22 +8,6 @@
 
 **Task Orchestrator is designed to empower meta-agents to orchestrate AI teams with 95%+ completion rates, 4-5x speed, and <5% rework.**
 
-#
-## 🤖 AI Agent Coordination
-
-This project uses **Task Orchestrator** for multi-agent coordination.
-
-- **Current Tasks**: See [ORCHESTRATOR.md](./ORCHESTRATOR.md) for live task status
-- **Coordination**: All task management should use the `./tm` command
-- **For AI Agents**: Check ORCHESTRATOR.md for detailed instructions and patterns
-
-```bash
-# Quick start for AI agents
-./tm list                    # See all tasks
-./tm add "Task" --assignee agent_name  # Create a task
-./tm watch                   # Monitor real-time updates
-```
-
 ## The Problem We Solve
 When meta-agents delegate to specialized sub-agents, they lose 30% productivity to coordination overhead. Context gets lost. Agents wait unnecessarily. Work gets redone.
 
@@ -66,7 +50,7 @@ export TM_AGENT_ID="orchestrator_agent"
 
 # 3. Create AI Agent Workflow with Commander's Intent
 BACKEND=$(./tm add "Build auth API" --assignee backend_agent \
-  -d "WHY: Secure foundation, WHAT: OAuth2/JWT/sessions, DONE: Users can login safely" | grep -o '[a-f0-9]\{8\}')
+  --context "WHY: Secure foundation, WHAT: OAuth2/JWT/sessions, DONE: Users can login safely" | grep -o '[a-f0-9]\{8\}')
 
 FRONTEND=$(./tm add "Create login UI" --assignee frontend_agent --depends-on $BACKEND | grep -o '[a-f0-9]\{8\}')
 
@@ -84,8 +68,8 @@ FRONTEND=$(./tm add "Create login UI" --assignee frontend_agent --depends-on $BA
 # Set agent identity first (always required)
 export TM_AGENT_ID="your_agent_name"
 
-# Create task with Commander's Intent (use -d for description)
-./tm add "Your task" -d "WHY: reason, WHAT: deliverables, DONE: success" --assignee agent_name
+# Create task with Commander's Intent
+./tm add "Your task" --context "WHY: reason, WHAT: deliverables, DONE: success" --assignee agent_name
 
 # Manage dependencies
 ./tm add "Frontend" --depends-on $BACKEND_ID
