@@ -139,11 +139,11 @@ export TM_AGENT_ID="orchestrator_agent"
 
 # Your next task with Commander's Intent
 ./tm add "Build authentication" --assignee backend_agent \
-  -d "WHY: Secure user data, WHAT: Login/2FA/sessions, DONE: Users can login safely"
+  --context "WHY: Secure user data, WHAT: Login/2FA/sessions, DONE: Users can login safely"
 ```
 
 **Ready to orchestrate?** Star us on [GitHub](https://github.com/T72/task-orchestrator).
 
 ---
 
-**Task Orchestrator v2.8.0** - Transform your meta-agent into an orchestration engine.
+**Task Orchestrator v2.8.2** - Transform your meta-agent into an orchestration engine.
