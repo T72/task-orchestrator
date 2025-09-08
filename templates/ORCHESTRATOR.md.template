@@ -1,0 +1,134 @@
+# 🤖 AI Agent Orchestration Protocol
+
+This project uses **Task Orchestrator** — the force multiplier that transforms meta-agents into orchestration engines.
+
+## 🎯 CORE REMINDER FOR AI DEVELOPMENT AGENTS
+
+**You're not just managing tasks — you're conducting an AI symphony.**
+
+Task Orchestrator empowers you with:
+- **Shared Context**: Requirements travel WITH tasks (no copy-paste)
+- **Private Reasoning**: Think deeply without cluttering communication
+- **Automatic Unblocking**: Dependencies resolve instantly
+- **Real-Time Awareness**: `./tm watch` for instant orchestration
+- **Commander's Intent**: Purpose, Key Tasks, and End State in every delegation
+
+**KPI Impact**: 95%+ completion rate, 4-5x speed, <5% rework, 90%+ utilization
+
+## 📋 Getting Current Task Status
+
+**IMPORTANT**: Always get fresh task status from the database:
+```bash
+./tm list                    # All tasks (real-time)
+./tm list --format json      # For parsing
+./tm list --assignee you     # Your tasks
+```
+
+This file is for DISCOVERY only. Task status comes from the database.
+
+## 🚀 For AI Agents: When to Use Task Orchestrator
+
+### Breaking down a complex task with Commander's Intent?
+```bash
+# Create parent task with PURPOSE, KEY TASKS, and END STATE
+DESIGN=$(./tm add "Design authentication system" \
+  --assignee architect_agent \
+  --context "PURPOSE: Secure foundation for all user features.
+             KEY TASKS: Define auth flow, token strategy, session management.
+             END STATE: Complete auth architecture ready for implementation." | grep -o '[a-f0-9]\{8\}')
+
+# Dependent tasks inherit context and add their own
+BACKEND=$(./tm add "Implement auth API" --assignee backend_agent --depends-on $DESIGN)
+FRONTEND=$(./tm add "Create login UI" --assignee frontend_agent --depends-on $BACKEND)
+```
+
+### Need to coordinate with other agents?
+```bash
+# Share context that other agents need
+./tm share $TASK_ID "API endpoints: POST /auth/login, POST /auth/register"
+
+# Add private reasoning (only you see this)
+./tm note $TASK_ID "Using JWT tokens with 24h expiry"
+```
+
+### Waiting for another task?
+```bash
+# Your task automatically unblocks when dependencies complete
+./tm add "Integration tests" --depends-on $BACKEND_TASK --assignee test_agent
+```
+
+### Want real-time coordination?
+```bash
+# Monitor all task updates as they happen
+./tm watch
+```
+
+## 🎯 Quick Reference
+
+| Situation | Command |
+|-----------|---------|
+| **Creating a task** | `./tm add "Task description" --assignee agent_name` |
+| **See all tasks** | `./tm list` |
+| **Check task details** | `./tm show TASK_ID` |
+| **Update progress** | `./tm progress TASK_ID "50% complete"` |
+| **Complete a task** | `./tm complete TASK_ID` |
+| **Share context** | `./tm share TASK_ID "Information for other agents"` |
+| **Private notes** | `./tm note TASK_ID "Private reasoning"` |
+| **Watch updates** | `./tm watch` |
+
+## 🤝 Multi-Agent Patterns
+
+### Pattern 1: Sequential Pipeline
+```bash
+# Each stage depends on the previous
+DATA=$(./tm add "Fetch data" --assignee data_agent)
+PROCESS=$(./tm add "Process data" --assignee ml_agent --depends-on $DATA)
+DEPLOY=$(./tm add "Deploy model" --assignee devops_agent --depends-on $PROCESS)
+```
+
+### Pattern 2: Parallel Specialists
+```bash
+# Multiple agents work simultaneously
+TASK=$(./tm add "Build feature" --assignee orchestrator)
+./tm add "Write tests" --assignee test_agent --depends-on $TASK
+./tm add "Update docs" --assignee docs_agent --depends-on $TASK
+./tm add "Review code" --assignee review_agent --depends-on $TASK
+```
+
+### Pattern 3: Context Handoff
+```bash
+# Backend provides context for frontend
+BACKEND=$(./tm add "Create REST API" --assignee backend_agent)
+./tm share $BACKEND "Endpoints: GET /users, POST /users, PUT /users/:id"
+./tm share $BACKEND "Auth: Bearer token in Authorization header"
+FRONTEND=$(./tm add "Build UI" --assignee frontend_agent --depends-on $BACKEND)
+```
+
+## 🔧 Setup for New Agents
+
+```bash
+# 1. Set your agent identity (optional but recommended)
+export TM_AGENT_ID="your_agent_type"
+
+# 2. Check existing tasks
+./tm list
+
+# 3. See tasks assigned to you
+./tm list --assignee your_agent_type
+
+# 4. Start working
+./tm update TASK_ID --status in_progress
+```
+
+## 💡 Best Practices
+
+1. **Always add context**: Use `./tm share` to leave information for the next agent
+2. **Track progress**: Use `./tm progress` to keep everyone informed
+3. **Complete tasks**: Use `./tm complete` to trigger automatic unblocking
+4. **Use dependencies**: Let Task Orchestrator handle the coordination
+5. **Watch for updates**: Use `./tm watch` when orchestrating multiple agents
+
+---
+
+*Task Orchestrator v2.6.1 - Making AI agents work together seamlessly*
+*Static discovery file - Get live status via `./tm list`*

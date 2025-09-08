@@ -2,13 +2,29 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Version](https://img.shields.io/badge/version-2.8.0-blue.svg)](https://github.com/T72/task-orchestrator/releases)
+[![Version](https://img.shields.io/badge/version-2.8.2-blue.svg)](https://github.com/T72/task-orchestrator/releases)
 
 ## 🎯 Transform Your Meta-Agent Into An Orchestration Engine
 
 **Task Orchestrator is designed to empower meta-agents to orchestrate AI teams with 95%+ completion rates, 4-5x speed, and <5% rework.**
 
-### The Problem We Solve
+#
+## 🤖 AI Agent Coordination
+
+This project uses **Task Orchestrator** for multi-agent coordination.
+
+- **Current Tasks**: See [ORCHESTRATOR.md](./ORCHESTRATOR.md) for live task status
+- **Coordination**: All task management should use the `./tm` command
+- **For AI Agents**: Check ORCHESTRATOR.md for detailed instructions and patterns
+
+```bash
+# Quick start for AI agents
+./tm list                    # See all tasks
+./tm add "Task" --assignee agent_name  # Create a task
+./tm watch                   # Monitor real-time updates
+```
+
+## The Problem We Solve
 When meta-agents delegate to specialized sub-agents, they lose 30% productivity to coordination overhead. Context gets lost. Agents wait unnecessarily. Work gets redone.
 
 ### The Solution: Three Unique Capabilities
@@ -45,15 +61,16 @@ git clone https://github.com/T72/task-orchestrator.git
 cd task-orchestrator
 ./tm init
 
-# 2. Create AI Agent Workflow with Commander's Intent
+# 2. Set agent identity (required for coordination)
+export TM_AGENT_ID="orchestrator_agent"
+
+# 3. Create AI Agent Workflow with Commander's Intent
 BACKEND=$(./tm add "Build auth API" --assignee backend_agent \
-  --context "WHY: Secure foundation
-             WHAT: OAuth2, JWT, sessions  
-             DONE: Users can login safely" | grep -o '[a-f0-9]\{8\}')
+  -d "WHY: Secure foundation, WHAT: OAuth2/JWT/sessions, DONE: Users can login safely" | grep -o '[a-f0-9]\{8\}')
 
 FRONTEND=$(./tm add "Create login UI" --assignee frontend_agent --depends-on $BACKEND | grep -o '[a-f0-9]\{8\}')
 
-# 3. Watch Real-Time Orchestration
+# 4. Watch Real-Time Orchestration
 ./tm watch  # See instant updates as agents work
 
 # When backend completes, frontend auto-unblocks!
@@ -64,8 +81,11 @@ FRONTEND=$(./tm add "Create login UI" --assignee frontend_agent --depends-on $BA
 ## 🎯 Core Commands
 
 ```bash
-# Create task with Commander's Intent
-./tm add "Your task" --context "WHY: reason WHAT: deliverables DONE: success"
+# Set agent identity first (always required)
+export TM_AGENT_ID="your_agent_name"
+
+# Create task with Commander's Intent (use -d for description)
+./tm add "Your task" -d "WHY: reason, WHAT: deliverables, DONE: success" --assignee agent_name
 
 # Manage dependencies
 ./tm add "Frontend" --depends-on $BACKEND_ID
@@ -130,11 +150,12 @@ Task Orchestrator turns your meta-agent into an orchestration engine that delive
 The secret? Three simple words: **WHY, WHAT, DONE.**
 
 ```bash
+# Set your agent identity first
+export TM_AGENT_ID="orchestrator_agent"
+
 # Your next task with Commander's Intent
 ./tm add "Build authentication" --assignee backend_agent \
-  --context "WHY: Secure user data
-             WHAT: Login, 2FA, sessions
-             DONE: Users can login safely"
+  -d "WHY: Secure user data, WHAT: Login/2FA/sessions, DONE: Users can login safely"
 ```
 
 **Ready to orchestrate?** Star us on [GitHub](https://github.com/T72/task-orchestrator).

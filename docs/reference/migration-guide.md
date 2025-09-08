@@ -31,7 +31,7 @@ None - v2.7.x maintains full backward compatibility.
 
 3. Verify installation:
    ```bash
-   ./tm --version  # Should show 2.7.2
+   ./tm --version  # Should show 2.7.1
    ./tm validate-orchestration
    ```
 

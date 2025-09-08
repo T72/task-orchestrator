@@ -2,7 +2,7 @@
 
 ## Status: Implemented
 ## Last Verified: September 8, 2025
-Against version: v2.8.0
+Against version: v2.8.2
 
 ## Overview
 
