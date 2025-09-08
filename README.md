@@ -6,7 +6,7 @@
 
 ## 🎯 Transform Your Meta-Agent Into An Orchestration Engine
 
-**Task Orchestrator is the ONLY tool that empowers meta-agents to orchestrate AI teams with 95%+ completion rates, 4-5x speed, and <5% rework.**
+**Task Orchestrator is designed to empower meta-agents to orchestrate AI teams with 95%+ completion rates, 4-5x speed, and <5% rework.**
 
 ### The Problem We Solve
 When meta-agents delegate to specialized sub-agents, they lose 30% productivity to coordination overhead. Context gets lost. Agents wait unnecessarily. Work gets redone.
