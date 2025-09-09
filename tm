@@ -44,6 +44,22 @@ except ImportError:
 def main():
     """Enhanced main function with collaboration commands and enforcement"""
     
+    # Parse agent-id parameter early (before TaskManager initialization)
+    agent_id_override = None
+    if '--agent-id' in sys.argv:
+        try:
+            idx = sys.argv.index('--agent-id')
+            if idx + 1 < len(sys.argv):
+                agent_id_override = sys.argv[idx + 1]
+                # Remove the parameter and its value from sys.argv to avoid conflicts
+                sys.argv.pop(idx + 1)  # Remove value
+                sys.argv.pop(idx)      # Remove parameter
+            else:
+                print("Error: --agent-id requires a value")
+                sys.exit(1)
+        except ValueError:
+            pass  # --agent-id not found, continue normally
+    
     # Import enforcement system
     enforcement_engine = None
     try:
@@ -165,7 +181,7 @@ def main():
     # Import TaskManager for all commands
     try:
         from tm_production import TaskManager
-        tm = TaskManager()
+        tm = TaskManager(agent_id_override=agent_id_override)
     except ImportError as e:
         print(f"Error importing production module: {e}")
         sys.exit(1)
@@ -246,6 +262,7 @@ def main():
             if len(sys.argv) < 3:
                 print("Usage: tm add <title> [-d description] [-p priority] [--depends-on task_id] [--file path:line]")
                 print("       [--criteria JSON] [--deadline ISO8601] [--estimated-hours N] [--assignee name]")
+                print("       [--phase phase_id] [--context 'WHY: reason WHAT: deliverables DONE: criteria']")
                 sys.exit(1)
             # Simple argument parsing for add command
             title = sys.argv[2]
@@ -257,6 +274,8 @@ def main():
             deadline = None
             estimated_hours = None
             assignee = None
+            phase_id = None
+            context = None
             
             # Parse additional arguments
             i = 3
@@ -285,6 +304,12 @@ def main():
                 elif sys.argv[i] == "--assignee" and i + 1 < len(sys.argv):
                     assignee = sys.argv[i + 1]
                     i += 2
+                elif sys.argv[i] == "--phase" and i + 1 < len(sys.argv):
+                    phase_id = sys.argv[i + 1]
+                    i += 2
+                elif sys.argv[i] == "--context" and i + 1 < len(sys.argv):
+                    context = sys.argv[i + 1]
+                    i += 2
                 else:
                     i += 1
             
@@ -300,7 +325,8 @@ def main():
                 task_id = tm.add(title, description=description, priority=priority, 
                                depends_on=depends_on if depends_on else None,
                                success_criteria=success_criteria, deadline=deadline,
-                               estimated_hours=estimated_hours, assignee=assignee)
+                               estimated_hours=estimated_hours, assignee=assignee,
+                               phase_id=phase_id, context=context)
                 print(f"Task created with ID: {task_id}")
                 update_orchestrator_md(tm)  # Update discovery file
             except ValueError as e:
@@ -1025,91 +1051,294 @@ def main():
             else:
                 print(f"Unknown hooks subcommand: {subcommand}")
                 sys.exit(1)
-                
-        # ========== Agent Management Commands ==========
-        elif command == "agent-register":
-            if len(sys.argv) < 4:
-                print("Usage: tm agent-register <agent_id> <name> [--type TYPE] [--capabilities CAPS]")
+        
+        elif command == "phase-create":
+            # Create a new phase
+            if len(sys.argv) < 3:
+                print("Usage: tm phase-create <name> [--description desc] [--parent phase_id]")
                 sys.exit(1)
             
-            agent_id = sys.argv[2]
-            name = sys.argv[3]
-            agent_type = None
-            capabilities = []
+            name = sys.argv[2]
+            description = None
+            parent_id = None
             
-            # Parse optional arguments
-            i = 4
+            # Parse additional arguments
+            i = 3
             while i < len(sys.argv):
-                if sys.argv[i] == "--type" and i + 1 < len(sys.argv):
-                    agent_type = sys.argv[i + 1]
+                if sys.argv[i] == "--description" and i + 1 < len(sys.argv):
+                    description = sys.argv[i + 1]
                     i += 2
-                elif sys.argv[i] == "--capabilities" and i + 1 < len(sys.argv):
-                    capabilities = sys.argv[i + 1].split(',')
+                elif sys.argv[i] == "--parent" and i + 1 < len(sys.argv):
+                    parent_id = sys.argv[i + 1]
                     i += 2
                 else:
                     i += 1
             
-            from agent_manager import AgentManager
+            try:
+                phase_id = tm.phase_manager.create_phase(name, description, parent_id)
+                print(f"Phase created with ID: {phase_id}")
+            except Exception as e:
+                print(f"Error creating phase: {e}")
+                sys.exit(1)
+        
+        elif command == "phase-list":
+            # List phases
+            status = None
+            parent_id = None
+            
+            # Parse additional arguments
+            i = 2
+            while i < len(sys.argv):
+                if sys.argv[i] == "--status" and i + 1 < len(sys.argv):
+                    status = sys.argv[i + 1]
+                    i += 2
+                elif sys.argv[i] == "--parent" and i + 1 < len(sys.argv):
+                    parent_id = sys.argv[i + 1]
+                    i += 2
+                else:
+                    i += 1
+            
+            phases = tm.phase_manager.list_phases(status, parent_id)
+            
+            if not phases:
+                print("No phases found")
+            else:
+                print(f"{'ID':<10} {'Name':<30} {'Status':<12} {'Progress'}")
+                print("-" * 60)
+                for phase in phases:
+                    progress = tm.phase_manager.get_phase_progress(phase['id'])
+                    print(f"{phase['id']:<10} {phase['name'][:30]:<30} {phase['status']:<12} {progress:.0f}%")
+        
+        elif command == "phase-show":
+            # Show phase details
+            if len(sys.argv) < 3:
+                print("Usage: tm phase-show <phase_id>")
+                sys.exit(1)
+            
+            phase_id = sys.argv[2]
+            
+            try:
+                phase = tm.phase_manager.show_phase(phase_id)
+                
+                print(f"\n=== Phase: {phase['name']} ===")
+                print(f"ID: {phase['id']}")
+                print(f"Status: {phase['status']}")
+                if phase['description']:
+                    print(f"Description: {phase['description']}")
+                
+                # Show metrics
+                metrics = phase['metrics']
+                print(f"\nProgress: {metrics['progress_percentage']:.0f}%")
+                print(f"Tasks: {metrics['tasks_completed']}/{metrics['tasks_total']} completed")
+                if metrics['tasks_in_progress'] > 0:
+                    print(f"       {metrics['tasks_in_progress']} in progress")
+                if metrics['tasks_blocked'] > 0:
+                    print(f"       {metrics['tasks_blocked']} blocked")
+                if metrics['duration_days'] is not None:
+                    print(f"Duration: {metrics['duration_days']} days")
+                
+                # Show dependencies
+                if phase['dependencies']:
+                    print("\nDependencies:")
+                    for dep in phase['dependencies']:
+                        print(f"  - {dep['name']} ({dep['status']})")
+                
+                # Show gates
+                if phase['gates']:
+                    print("\nCompletion Gates:")
+                    for gate in phase['gates']:
+                        print(f"  - {gate['gate_type']}: {gate['status']}")
+                
+            except Exception as e:
+                print(f"Error showing phase: {e}")
+                sys.exit(1)
+        
+        elif command == "phase-update":
+            # Update phase
+            if len(sys.argv) < 3:
+                print("Usage: tm phase-update <phase_id> [--name name] [--status status] [--description desc]")
+                sys.exit(1)
+            
+            phase_id = sys.argv[2]
+            updates = {}
+            
+            # Parse additional arguments
+            i = 3
+            while i < len(sys.argv):
+                if sys.argv[i] == "--name" and i + 1 < len(sys.argv):
+                    updates['name'] = sys.argv[i + 1]
+                    i += 2
+                elif sys.argv[i] == "--status" and i + 1 < len(sys.argv):
+                    updates['status'] = sys.argv[i + 1]
+                    i += 2
+                elif sys.argv[i] == "--description" and i + 1 < len(sys.argv):
+                    updates['description'] = sys.argv[i + 1]
+                    i += 2
+                else:
+                    i += 1
+            
+            if updates:
+                try:
+                    tm.phase_manager.update_phase(phase_id, **updates)
+                    print(f"Phase {phase_id} updated successfully")
+                except Exception as e:
+                    print(f"Error updating phase: {e}")
+                    sys.exit(1)
+            else:
+                print("No updates specified")
+        
+        elif command == "phase-add-dependency":
+            # Add phase dependency
+            if len(sys.argv) < 4:
+                print("Usage: tm phase-add-dependency <phase_id> <depends_on_phase_id>")
+                sys.exit(1)
+            
+            phase_id = sys.argv[2]
+            depends_on = sys.argv[3]
+            
+            try:
+                dep_id = tm.phase_manager.add_phase_dependency(phase_id, depends_on)
+                print(f"Dependency added: {phase_id} depends on {depends_on}")
+            except Exception as e:
+                print(f"Error adding dependency: {e}")
+                sys.exit(1)
+        
+        elif command == "phase-add-gate":
+            # Add completion gate
+            if len(sys.argv) < 4:
+                print("Usage: tm phase-add-gate <phase_id> <gate_type> [--threshold N]")
+                print("Gate types: task_completion, approval, custom")
+                sys.exit(1)
+            
+            phase_id = sys.argv[2]
+            gate_type = sys.argv[3]
+            criteria = {}
+            
+            # Parse additional arguments
+            i = 4
+            while i < len(sys.argv):
+                if sys.argv[i] == "--threshold" and i + 1 < len(sys.argv):
+                    criteria['threshold'] = float(sys.argv[i + 1])
+                    i += 2
+                else:
+                    i += 1
+            
+            # Default threshold for task_completion
+            if gate_type == "task_completion" and 'threshold' not in criteria:
+                criteria['threshold'] = 100
+            
+            try:
+                gate_id = tm.phase_manager.add_phase_gate(phase_id, gate_type, criteria)
+                print(f"Gate added with ID: {gate_id}")
+            except Exception as e:
+                print(f"Error adding gate: {e}")
+                sys.exit(1)
+        
+        # ========== Agent Management Commands (FR-017, FR-019, FR-020) ==========
+        elif command == "agent-register":
+            # Register a new agent
+            if len(sys.argv) < 4:
+                print("Usage: tm agent-register <agent_id> <name> [--type <type>] [--capabilities <cap1,cap2>]")
+                sys.exit(1)
+            
+            from src.agent_manager import AgentManager
+            agent_id = sys.argv[2]
+            name = sys.argv[3]
+            
+            # Parse optional arguments
+            agent_type = None
+            capabilities = []
+            
+            if "--type" in sys.argv:
+                idx = sys.argv.index("--type")
+                if idx + 1 < len(sys.argv):
+                    agent_type = sys.argv[idx + 1]
+            
+            if "--capabilities" in sys.argv:
+                idx = sys.argv.index("--capabilities")
+                if idx + 1 < len(sys.argv):
+                    capabilities = sys.argv[idx + 1].split(',')
+            
             with AgentManager() as am:
                 if am.register_agent(agent_id, name, agent_type, capabilities):
-                    print(f"✅ Agent '{name}' registered successfully")
+                    print(f"✅ Agent '{agent_id}' registered successfully")
                 else:
-                    print(f"❌ Failed to register agent '{name}'")
+                    print(f"❌ Failed to register agent '{agent_id}'")
                     sys.exit(1)
-                    
+        
         elif command == "agent-list":
-            from agent_manager import AgentManager
+            # List all agents
+            from src.agent_manager import AgentManager
+            
+            status_filter = "active"
+            type_filter = None
+            
+            if "--status" in sys.argv:
+                idx = sys.argv.index("--status")
+                if idx + 1 < len(sys.argv):
+                    status_filter = sys.argv[idx + 1]
+            
+            if "--type" in sys.argv:
+                idx = sys.argv.index("--type")
+                if idx + 1 < len(sys.argv):
+                    type_filter = sys.argv[idx + 1]
+            
             with AgentManager() as am:
-                agents = am.discover_agents()
+                agents = am.discover_agents(status_filter, type_filter)
                 if agents:
-                    print(f"{'Agent ID':<20} {'Name':<25} {'Type':<15} {'Status':<10} {'Load':<8}")
-                    print("-" * 88)
+                    print(f"{'ID':<20} {'Name':<30} {'Type':<15} {'Status':<10}")
+                    print("-" * 75)
                     for agent in agents:
-                        load = am.calculate_agent_load(agent['id'])
-                        print(f"{agent['id']:<20} {agent['name']:<25} {agent['type'] or 'N/A':<15} {agent['status']:<10} {load:.1f}%")
+                        print(f"{agent['id']:<20} {agent['name']:<30} {agent.get('type', 'N/A'):<15} {agent['status']:<10}")
                 else:
-                    print("No agents registered")
-                    
+                    print("No agents found")
+        
         elif command == "agent-status":
+            # Get agent status and details
             if len(sys.argv) < 3:
                 print("Usage: tm agent-status <agent_id>")
                 sys.exit(1)
             
+            from src.agent_manager import AgentManager
             agent_id = sys.argv[2]
-            from agent_manager import AgentManager
+            
             with AgentManager() as am:
                 agent = am.get_agent(agent_id)
                 if agent:
-                    workload = am.track_workload(agent_id)
-                    print(f"Agent: {agent['name']} ({agent_id})")
-                    print(f"Type: {agent['type'] or 'N/A'}")
+                    print(f"Agent: {agent['name']} ({agent['id']})")
+                    print(f"Type: {agent.get('type', 'N/A')}")
                     print(f"Status: {agent['status']}")
-                    print(f"Capabilities: {agent['capabilities'] or 'N/A'}")
-                    print(f"Load: {workload.get('load_score', 0):.1f}%")
-                    print(f"Active Tasks: {workload.get('task_count', 0)}")
-                    print(f"Last Heartbeat: {agent['last_heartbeat']}")
+                    print(f"Capabilities: {', '.join(agent.get('capabilities', []))}")
+                    print(f"Last Heartbeat: {agent.get('last_heartbeat', 'Never')}")
+                    print(f"Registered: {agent.get('registered_at', 'Unknown')}")
                 else:
-                    print(f"❌ Agent '{agent_id}' not found")
+                    print(f"Agent '{agent_id}' not found")
                     sys.exit(1)
-                    
+        
         elif command == "agent-workload":
-            from agent_manager import AgentManager
+            # Show agent workload information
+            from src.agent_manager import AgentManager
+            
             with AgentManager() as am:
-                agents = am.discover_agents()
+                agents = am.discover_agents(status='active')
                 if agents:
-                    print(f"{'Agent ID':<20} {'Name':<25} {'Active Tasks':<12} {'Load %':<8}")
-                    print("-" * 70)
+                    print(f"{'Agent':<20} {'Tasks':<10} {'Hours':<10} {'Load':<10}")
+                    print("-" * 50)
                     for agent in agents:
                         workload = am.track_workload(agent['id'])
-                        print(f"{agent['id']:<20} {agent['name']:<25} {workload.get('task_count', 0):<12} {workload.get('load_score', 0):.1f}%")
+                        print(f"{agent['id']:<20} {workload.get('task_count', 0):<10} "
+                              f"{workload.get('estimated_hours', 0):<10.1f} "
+                              f"{workload.get('load_score', 0):<10.0f}%")
                 else:
-                    print("No agents registered")
-                    
+                    print("No active agents found")
+        
         elif command == "agent-metrics":
+            # Show agent performance metrics
             if len(sys.argv) < 3:
                 print("Usage: tm agent-metrics <agent_id> [--range daily|weekly|monthly]")
                 sys.exit(1)
             
+            from src.agent_manager import AgentManager
             agent_id = sys.argv[2]
             time_range = "daily"
             
@@ -1118,24 +1347,26 @@ def main():
                 if idx + 1 < len(sys.argv):
                     time_range = sys.argv[idx + 1]
             
-            from agent_manager import AgentManager
             with AgentManager() as am:
                 metrics = am.get_agent_metrics(agent_id, time_range)
                 if metrics:
-                    print(f"Metrics for {agent_id} ({time_range}):")
-                    print(f"Tasks Completed: {metrics.get('tasks_completed', 0)}")
-                    print(f"Avg Duration: {metrics.get('avg_duration', 0):.1f} minutes")
-                    print(f"Completion Rate: {metrics.get('completion_rate', 0):.1f}%")
-                    print(f"Quality Score: {metrics.get('avg_quality_score', 0):.1f}")
-                    print(f"Performance Score: {metrics.get('performance_score', 0):.1f}")
+                    print(f"Performance Metrics for {agent_id} ({time_range}):")
+                    print(f"  Completion Rate: {metrics['completion_rate']}%")
+                    print(f"  Avg Task Duration: {metrics['average_task_duration']} min")
+                    print(f"  Quality Score: {metrics['quality_score']}/100")
+                    print(f"  Tasks Handled: {metrics['tasks_handled']}")
+                    print(f"  Overall Performance: {metrics['performance_score']}/100")
                 else:
-                    print(f"No metrics found for agent '{agent_id}'")
-                    
+                    print(f"No metrics available for agent '{agent_id}'")
+        
         elif command == "agent-message":
+            # Send message between agents
             if len(sys.argv) < 5:
-                print("Usage: tm agent-message <from_agent> <to_agent> <message> [--priority LEVEL]")
+                print("Usage: tm agent-message <from_agent> <to_agent> <message> [--priority low|normal|high|critical]")
+                print("   Or: tm agent-message <from_agent> broadcast <message> [--priority ...]")
                 sys.exit(1)
             
+            from src.agent_manager import AgentManager
             from_agent = sys.argv[2]
             to_agent = sys.argv[3]
             message = sys.argv[4]
@@ -1146,31 +1377,37 @@ def main():
                 if idx + 1 < len(sys.argv):
                     priority = sys.argv[idx + 1]
             
-            from agent_manager import AgentManager
             with AgentManager() as am:
-                if am.send_message(from_agent, to_agent, message, priority):
-                    print(f"✅ Message sent from {from_agent} to {to_agent}")
+                if to_agent == "broadcast":
+                    if am.broadcast_message(from_agent, message, priority):
+                        print(f"✅ Broadcast message sent from {from_agent}")
+                    else:
+                        print(f"❌ Failed to send broadcast message")
+                        sys.exit(1)
                 else:
-                    print(f"❌ Failed to send message")
-                    sys.exit(1)
-                    
+                    if am.send_message(from_agent, to_agent, message, priority):
+                        print(f"✅ Message sent from {from_agent} to {to_agent}")
+                    else:
+                        print(f"❌ Failed to send message")
+                        sys.exit(1)
+        
         elif command == "agent-redistribute":
-            threshold = 80.0
-            if len(sys.argv) > 2:
-                try:
-                    threshold = float(sys.argv[2])
-                except ValueError:
-                    print("Threshold must be a number")
-                    sys.exit(1)
+            # Redistribute tasks from overloaded agents
+            from src.agent_manager import AgentManager
             
-            from agent_manager import AgentManager
+            threshold = 80
+            if "--threshold" in sys.argv:
+                idx = sys.argv.index("--threshold")
+                if idx + 1 < len(sys.argv):
+                    threshold = float(sys.argv[idx + 1])
+            
             with AgentManager() as am:
                 redistributed = am.redistribute_tasks(threshold)
                 if redistributed > 0:
-                    print(f"✅ Redistributed {redistributed} tasks")
+                    print(f"✅ Redistributed {redistributed} tasks from overloaded agents")
                 else:
                     print("No tasks needed redistribution")
-                    
+        
         else:
             print(f"Command '{command}' not yet implemented in enhanced wrapper")
             print("Please use the production module directly for full functionality")
@@ -1203,6 +1440,9 @@ Standard Commands:
   watch               Check for notifications
   export              Export tasks
 
+Global Options:
+  --agent-id <id>     Override agent ID for this session
+
 Collaboration Commands:
   join <id>           Join a task's collaboration
   share <id> <msg>    Share update with all agents
@@ -1210,15 +1450,6 @@ Collaboration Commands:
   discover <id> <msg> Share critical finding (alerts all)
   sync <id> <msg>     Create synchronization point
   context <id>        View all shared context
-
-Agent Management Commands:
-  agent-register <id> <name>  Register new agent with capabilities
-  agent-list                  List all registered agents
-  agent-status <id>           Show detailed agent status
-  agent-workload              Display workload distribution
-  agent-metrics <id>          View agent performance metrics
-  agent-message <from> <to> <msg>  Send message between agents
-  agent-redistribute [threshold]   Redistribute overloaded tasks
 
 Template Commands:
   template list       List available templates
