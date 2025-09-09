@@ -1025,6 +1025,152 @@ def main():
             else:
                 print(f"Unknown hooks subcommand: {subcommand}")
                 sys.exit(1)
+                
+        # ========== Agent Management Commands ==========
+        elif command == "agent-register":
+            if len(sys.argv) < 4:
+                print("Usage: tm agent-register <agent_id> <name> [--type TYPE] [--capabilities CAPS]")
+                sys.exit(1)
+            
+            agent_id = sys.argv[2]
+            name = sys.argv[3]
+            agent_type = None
+            capabilities = []
+            
+            # Parse optional arguments
+            i = 4
+            while i < len(sys.argv):
+                if sys.argv[i] == "--type" and i + 1 < len(sys.argv):
+                    agent_type = sys.argv[i + 1]
+                    i += 2
+                elif sys.argv[i] == "--capabilities" and i + 1 < len(sys.argv):
+                    capabilities = sys.argv[i + 1].split(',')
+                    i += 2
+                else:
+                    i += 1
+            
+            from agent_manager import AgentManager
+            with AgentManager() as am:
+                if am.register_agent(agent_id, name, agent_type, capabilities):
+                    print(f"✅ Agent '{name}' registered successfully")
+                else:
+                    print(f"❌ Failed to register agent '{name}'")
+                    sys.exit(1)
+                    
+        elif command == "agent-list":
+            from agent_manager import AgentManager
+            with AgentManager() as am:
+                agents = am.discover_agents()
+                if agents:
+                    print(f"{'Agent ID':<20} {'Name':<25} {'Type':<15} {'Status':<10} {'Load':<8}")
+                    print("-" * 88)
+                    for agent in agents:
+                        load = am.calculate_agent_load(agent['id'])
+                        print(f"{agent['id']:<20} {agent['name']:<25} {agent['type'] or 'N/A':<15} {agent['status']:<10} {load:.1f}%")
+                else:
+                    print("No agents registered")
+                    
+        elif command == "agent-status":
+            if len(sys.argv) < 3:
+                print("Usage: tm agent-status <agent_id>")
+                sys.exit(1)
+            
+            agent_id = sys.argv[2]
+            from agent_manager import AgentManager
+            with AgentManager() as am:
+                agent = am.get_agent(agent_id)
+                if agent:
+                    workload = am.track_workload(agent_id)
+                    print(f"Agent: {agent['name']} ({agent_id})")
+                    print(f"Type: {agent['type'] or 'N/A'}")
+                    print(f"Status: {agent['status']}")
+                    print(f"Capabilities: {agent['capabilities'] or 'N/A'}")
+                    print(f"Load: {workload.get('load_score', 0):.1f}%")
+                    print(f"Active Tasks: {workload.get('task_count', 0)}")
+                    print(f"Last Heartbeat: {agent['last_heartbeat']}")
+                else:
+                    print(f"❌ Agent '{agent_id}' not found")
+                    sys.exit(1)
+                    
+        elif command == "agent-workload":
+            from agent_manager import AgentManager
+            with AgentManager() as am:
+                agents = am.discover_agents()
+                if agents:
+                    print(f"{'Agent ID':<20} {'Name':<25} {'Active Tasks':<12} {'Load %':<8}")
+                    print("-" * 70)
+                    for agent in agents:
+                        workload = am.track_workload(agent['id'])
+                        print(f"{agent['id']:<20} {agent['name']:<25} {workload.get('task_count', 0):<12} {workload.get('load_score', 0):.1f}%")
+                else:
+                    print("No agents registered")
+                    
+        elif command == "agent-metrics":
+            if len(sys.argv) < 3:
+                print("Usage: tm agent-metrics <agent_id> [--range daily|weekly|monthly]")
+                sys.exit(1)
+            
+            agent_id = sys.argv[2]
+            time_range = "daily"
+            
+            if "--range" in sys.argv:
+                idx = sys.argv.index("--range")
+                if idx + 1 < len(sys.argv):
+                    time_range = sys.argv[idx + 1]
+            
+            from agent_manager import AgentManager
+            with AgentManager() as am:
+                metrics = am.get_agent_metrics(agent_id, time_range)
+                if metrics:
+                    print(f"Metrics for {agent_id} ({time_range}):")
+                    print(f"Tasks Completed: {metrics.get('tasks_completed', 0)}")
+                    print(f"Avg Duration: {metrics.get('avg_duration', 0):.1f} minutes")
+                    print(f"Completion Rate: {metrics.get('completion_rate', 0):.1f}%")
+                    print(f"Quality Score: {metrics.get('avg_quality_score', 0):.1f}")
+                    print(f"Performance Score: {metrics.get('performance_score', 0):.1f}")
+                else:
+                    print(f"No metrics found for agent '{agent_id}'")
+                    
+        elif command == "agent-message":
+            if len(sys.argv) < 5:
+                print("Usage: tm agent-message <from_agent> <to_agent> <message> [--priority LEVEL]")
+                sys.exit(1)
+            
+            from_agent = sys.argv[2]
+            to_agent = sys.argv[3]
+            message = sys.argv[4]
+            priority = "normal"
+            
+            if "--priority" in sys.argv:
+                idx = sys.argv.index("--priority")
+                if idx + 1 < len(sys.argv):
+                    priority = sys.argv[idx + 1]
+            
+            from agent_manager import AgentManager
+            with AgentManager() as am:
+                if am.send_message(from_agent, to_agent, message, priority):
+                    print(f"✅ Message sent from {from_agent} to {to_agent}")
+                else:
+                    print(f"❌ Failed to send message")
+                    sys.exit(1)
+                    
+        elif command == "agent-redistribute":
+            threshold = 80.0
+            if len(sys.argv) > 2:
+                try:
+                    threshold = float(sys.argv[2])
+                except ValueError:
+                    print("Threshold must be a number")
+                    sys.exit(1)
+            
+            from agent_manager import AgentManager
+            with AgentManager() as am:
+                redistributed = am.redistribute_tasks(threshold)
+                if redistributed > 0:
+                    print(f"✅ Redistributed {redistributed} tasks")
+                else:
+                    print("No tasks needed redistribution")
+                    
         else:
             print(f"Command '{command}' not yet implemented in enhanced wrapper")
             print("Please use the production module directly for full functionality")
@@ -1064,6 +1210,15 @@ Collaboration Commands:
   discover <id> <msg> Share critical finding (alerts all)
   sync <id> <msg>     Create synchronization point
   context <id>        View all shared context
+
+Agent Management Commands:
+  agent-register <id> <name>  Register new agent with capabilities
+  agent-list                  List all registered agents
+  agent-status <id>           Show detailed agent status
+  agent-workload              Display workload distribution
+  agent-metrics <id>          View agent performance metrics
+  agent-message <from> <to> <msg>  Send message between agents
+  agent-redistribute [threshold]   Redistribute overloaded tasks
 
 Template Commands:
   template list       List available templates

@@ -87,6 +87,50 @@ export TM_AGENT_ID="your_agent_name"
 ./tm complete $TASK_ID
 ```
 
+## 🤖 Advanced Agent Management
+
+**NEW in v2.8.2**: Complete agent orchestration system for intelligent workload distribution and team coordination.
+
+```bash
+# Register agents with capabilities
+./tm agent-register backend_agent "Backend Developer" --type backend --capabilities "api,database"
+./tm agent-register frontend_agent "Frontend Developer" --type frontend --capabilities "react,ui"
+
+# View team overview
+./tm agent-list
+# Agent ID             Name                      Type            Status     Load    
+# backend_agent        Backend Developer         backend         active     15.0%
+# frontend_agent       Frontend Developer        frontend        active     8.0%
+
+# Get detailed agent status
+./tm agent-status backend_agent
+# Agent: Backend Developer (backend_agent)
+# Type: backend
+# Load: 15.0%
+# Active Tasks: 2
+# Capabilities: ['api', 'database']
+
+# Monitor workload distribution
+./tm agent-workload
+# Agent ID             Name                      Active Tasks Load %  
+# backend_agent        Backend Developer         2            15.0%
+# frontend_agent       Frontend Developer        1            8.0%
+
+# Track performance metrics
+./tm agent-metrics backend_agent --range weekly
+# Metrics for backend_agent (weekly):
+# Tasks Completed: 12
+# Completion Rate: 95.0%
+# Quality Score: 88.5
+# Performance Score: 91.2
+
+# Enable inter-agent communication
+./tm agent-message backend_agent frontend_agent "API endpoints ready" --priority high
+
+# Automatically redistribute overloaded work
+./tm agent-redistribute 80.0  # Redistribute if agent >80% loaded
+```
+
 
 ## 📊 Why It Works
 
@@ -94,6 +138,23 @@ export TM_AGENT_ID="your_agent_name"
 - **Instant Setup**: One command (`./tm init`) and you're running
 - **Scales Infinitely**: Our LEAN architecture handles 100+ agents
 - **Works Today**: No waiting for features - everything works now
+
+### 🚀 Advanced Agent Benefits (v2.8.2)
+
+**Intelligent Workload Distribution**:
+- Automatic task routing based on agent capabilities
+- Real-time load balancing prevents bottlenecks  
+- Smart redistribution when agents become overloaded
+
+**Performance Analytics**:
+- Track completion rates, speed, and quality scores
+- Historical metrics show team performance trends
+- Identify top performers and optimization opportunities
+
+**Seamless Communication**:
+- Direct agent-to-agent messaging with priority levels
+- Broadcast announcements to entire teams
+- Message status tracking (unread, read, acknowledged)
 
 ## 📚 Documentation & Resources
 
