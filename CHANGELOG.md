@@ -5,6 +5,21 @@ All notable changes to the Task Orchestrator project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.3] - 2025-09-09
+
+### 🔧 Advanced Agent Management UX Fixes
+- **Critical UX Fix**: Advanced Agent Management features now discoverable in help system
+- **Enhanced Import Robustness**: Added fallback mechanisms preventing "not yet implemented" errors
+- **Improved Help Display**: All 7 agent management commands now visible in `./tm --help`
+- **Practical Examples**: Added real-world agent workload and communication workflows
+- **Repository Cleanup**: Removed Python cache files for professional presentation
+
+### 🛡️ Version Consistency Prevention System
+- **Enhanced Validator**: Comprehensive version consistency detection and auto-fixing
+- **Pre-commit Hooks**: Prevents commits with version mismatches
+- **Deployment Integration**: Mandatory version validation before public deployment
+- **Documentation**: Complete prevention protocol to eliminate recurring version issues
+
 ## [2.8.2] - 2025-09-09
 
 ### 🚀 Advanced Agent Features Implementation
