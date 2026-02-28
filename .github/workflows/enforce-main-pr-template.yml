@@ -39,5 +39,18 @@ jobs:
                 "- '# Hotfix Pull Request' (and related sections)."
               );
             } else {
+              // Additional release governance requirement for release PRs.
+              if (isRelease) {
+                const managerExecuted =
+                  body.includes("- [x] release-and-changelog-management executed");
+                if (!managerExecuted) {
+                  core.setFailed(
+                    "Release PRs targeting 'main' must confirm execution of release-and-changelog-management.\n" +
+                    "Fix: Check '- [x] release-and-changelog-management executed' in the PR body checklist."
+                  );
+                  return;
+                }
+              }
+
               core.info("Main-branch PR template check passed.");
             }

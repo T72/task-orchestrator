@@ -29,6 +29,8 @@ Describe what this release includes (1–3 sentences).
 - [ ] No skipped tests introduced
 - [ ] Unit + contract tests passing
 - [ ] (If applicable) Integration tests executed and passing
+- [ ] release-and-changelog-management executed
+- [ ] Release artifacts and notes references attached in PR body
 
 ### TDD Compliance
 - [ ] New behavior is covered by tests

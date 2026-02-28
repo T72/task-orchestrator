@@ -9,7 +9,7 @@ release_branch="${RELEASE_BRANCH:-main}"
 allow_non_release_branch="${ALLOW_NON_RELEASE_BRANCH:-0}"
 enforce_release_ref_sync="${ENFORCE_RELEASE_REF_SYNC:-1}"
 release_ref="${RELEASE_REF:-origin/$release_branch}"
-release_changelog_mode="${RELEASE_CHANGELOG_MODE:-auto}"
+release_changelog_mode="${RELEASE_CHANGELOG_MODE:-delegate}"
 release_changelog_tool="${RELEASE_CHANGELOG_TOOL:-scripts/release-and-changelog-management.sh}"
 
 current_branch="$(git rev-parse --abbrev-ref HEAD)"
@@ -296,8 +296,8 @@ cat > "$release_dir/RELEASE_MANIFEST.md" <<EOF
 EOF
 
 if [[ "$release_changelog_mode" != "builtin" ]]; then
-  if [[ -x "$release_changelog_tool" ]]; then
-    if "$release_changelog_tool" \
+  if [[ -f "$release_changelog_tool" ]]; then
+    if bash "$release_changelog_tool" \
       --version "$release_version" \
       --staging "$staging_dir" \
       --release-dir "$release_dir"; then

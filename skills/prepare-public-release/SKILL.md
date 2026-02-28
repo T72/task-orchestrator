@@ -74,9 +74,9 @@ Create a release folder under `public-releases/<version>/` with:
   - Migration notes
   - Upgrade risks
 - Source from commits, merged PR titles, release notes, and ADR summaries when available.
-- If `release-and-changelog-management` is available, allow optional delegation for changelog and release notes generation.
-- If delegation is unavailable or fails in auto mode, fall back to built-in generation.
-- Use delegate-only mode only when external tooling is required and validated.
+- Require delegation to `release-and-changelog-management` by default.
+- Fail release preparation if delegation tool is unavailable or fails.
+- Allow built-in generation only with explicit override in exceptional cases.
 
 5. Prepare public documentation
 - Ensure `README.md`, `INSTALL.md`, and `USAGE.md` exist and are externally usable.
