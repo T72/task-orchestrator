@@ -5,6 +5,31 @@ All notable changes to the Task Orchestrator project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.0] - 2026-02-28
+
+### Added
+- Governance baseline for releases:
+  - main-target PR template enforcement
+  - repository structure validation workflow
+  - label taxonomy sync workflow
+- Explicit single-tag publication helper: `scripts/publish-release-tag.sh`.
+- Chained release managers:
+  - `scripts/release-and-changelog-management.sh`
+  - `scripts/release-public-docs-management.sh`
+
+### Changed
+- `scripts/prepare-public-release.sh` now enforces:
+  - release source branch and release ref parity checks
+  - successor-version computation
+  - mandatory release/changelog manager delegation by default
+  - mandatory public-docs manager delegation by default
+- Release PR template now requires manager execution evidence and artifact references.
+
+### Fixed
+- `scripts/check_repo_structure.py` required-path literal bug and path typos.
+- `tm` nested `TM_DB_PATH` initialization now creates parent directories.
+- `--depends-on` CLI parsing now stops on any next flag (`-...`) to prevent dependency-ID misparse regressions.
+
 ## [2.8.3] - 2025-09-09
 
 ### 🔧 Advanced Agent Management UX Fixes
