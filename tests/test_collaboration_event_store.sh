@@ -9,6 +9,7 @@ cp "$ROOT_DIR/tm" "$TMP_DIR/tm"
 cp -r "$ROOT_DIR/src" "$TMP_DIR/src"
 chmod +x "$TMP_DIR/tm"
 cd "$TMP_DIR"
+export TM_AGENT_ID="collab-test-agent"
 
 ./tm init >/dev/null
 TASK_ID="$(./tm add "Collaboration event-store concurrency test" | grep -o '[a-f0-9]\{8\}')"
