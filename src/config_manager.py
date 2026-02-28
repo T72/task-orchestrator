@@ -4,9 +4,14 @@ Provides feature toggles and settings persistence.
 """
 
 import os
-import yaml
+import json
 from pathlib import Path
 from typing import Dict, Any, Optional
+
+try:
+    import yaml
+except ImportError:
+    yaml = None
 from storage_paths import resolve_config_path
 
 
@@ -56,7 +61,11 @@ class ConfigManager:
         if self.config_path.exists():
             try:
                 with open(self.config_path, 'r') as f:
-                    config = yaml.safe_load(f) or {}
+                    if yaml:
+                        config = yaml.safe_load(f) or {}
+                    else:
+                        # Fallback keeps runtime dependency-free when PyYAML is absent.
+                        config = json.load(f)
                     # Merge with defaults to ensure all keys exist
                     return self._merge_with_defaults(config)
             except Exception as e:
@@ -88,7 +97,11 @@ class ConfigManager:
         
         try:
             with open(self.config_path, 'w') as f:
-                yaml.safe_dump(config, f, default_flow_style=False, sort_keys=False)
+                if yaml:
+                    yaml.safe_dump(config, f, default_flow_style=False, sort_keys=False)
+                else:
+                    # JSON is valid YAML subset and can be parsed by safe_load later.
+                    json.dump(config, f, indent=2)
         except Exception as e:
             print(f"Warning: Failed to save config: {e}")
     

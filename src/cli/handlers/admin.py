@@ -423,6 +423,9 @@ def handle_admin(command: str, context: CLIContext) -> Optional[int]:
 
     if command.startswith("phase-"):
         pm = tm.phase_manager
+        if pm is None:
+            print("Phase management is unavailable in this distribution.")
+            return 1
 
         if command == "phase-create":
             if len(argv) < 3:

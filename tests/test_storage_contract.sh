@@ -12,6 +12,7 @@ cd "$TMP_DIR"
 
 export HOME="$TMP_DIR/home"
 export TM_DB_PATH="$TMP_DIR/custom-store"
+export TM_AGENT_ID="contract-test-agent"
 
 ./tm init >/dev/null
 TASK_ID="$(./tm add "storage-contract-test" | grep -o '[a-f0-9]\{8\}')"

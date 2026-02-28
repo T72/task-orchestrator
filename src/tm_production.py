@@ -30,8 +30,14 @@ from typing import List, Optional, Dict, Any
 import hashlib
 import time
 
-# Import PhaseManager for phase support
-from phase_manager import PhaseManager
+# Import PhaseManager for phase support (optional in trimmed/public builds).
+try:
+    from phase_manager import PhaseManager
+except ModuleNotFoundError as exc:
+    if exc.name == "phase_manager":
+        PhaseManager = None
+    else:
+        raise
 from storage_paths import resolve_db_path, resolve_storage_root
 
 LOGGER = logging.getLogger("task_orchestrator.tm_production")
@@ -71,8 +77,9 @@ class TaskManager:
         # Multi-Layer Agent ID Resolution System
         self.agent_id = self._resolve_agent_id(agent_id_override)
         
-        # Initialize PhaseManager for phase support
-        self.phase_manager = PhaseManager(str(self.db_path))
+        # Initialize PhaseManager for phase support when available.
+        # Some public/lean distributions intentionally omit phase_manager.py.
+        self.phase_manager = PhaseManager(str(self.db_path)) if PhaseManager else None
         self.repo_root = self._find_repo_root()
         
         # Initialize error handler

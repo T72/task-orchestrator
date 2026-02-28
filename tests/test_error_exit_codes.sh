@@ -9,6 +9,7 @@ cp "$ROOT_DIR/tm" "$TMP_DIR/tm"
 cp -r "$ROOT_DIR/src" "$TMP_DIR/src"
 chmod +x "$TMP_DIR/tm"
 cd "$TMP_DIR"
+export TM_AGENT_ID="exit-code-test-agent"
 
 ./tm init >/dev/null
 

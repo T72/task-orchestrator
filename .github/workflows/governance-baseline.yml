@@ -28,11 +28,30 @@ jobs:
       - name: Validate public release boundary
         run: bash scripts/validate-public-boundary.sh
 
-      - name: Contract tests - storage and collaboration
+      - name: Contract test - storage contract
         run: |
-          bash tests/test_storage_contract.sh
-          bash tests/test_collaboration_event_store.sh
-          bash tests/test_error_exit_codes.sh
+          set -euo pipefail
+          bash tests/test_storage_contract.sh 2>&1 | tee /tmp/governance-test-storage.log
+
+      - name: Contract test - collaboration event store
+        run: |
+          set -euo pipefail
+          bash tests/test_collaboration_event_store.sh 2>&1 | tee /tmp/governance-test-collaboration.log
+
+      - name: Contract test - error exit codes
+        run: |
+          set -euo pipefail
+          bash tests/test_error_exit_codes.sh 2>&1 | tee /tmp/governance-test-exit-codes.log
 
       - name: Public manifest integration tests
-        run: bash tests/test_public_manifest_pipeline.sh
+        run: |
+          set -euo pipefail
+          bash tests/test_public_manifest_pipeline.sh 2>&1 | tee /tmp/governance-test-manifest.log
+
+      - name: Upload governance diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: governance-diagnostics-${{ github.run_id }}
+          path: /tmp/governance-test-*.log
+          if-no-files-found: ignore
