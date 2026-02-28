@@ -117,6 +117,9 @@ Create a release folder under `public-releases/<version>/` with:
 - Verify package extraction and install path.
 - Verify doc links and version consistency.
 - Verify no internal references remain.
+- Publish release tag with explicit single-tag command:
+  - `bash scripts/publish-release-tag.sh <version>`
+- Never use bulk tag publication (`git push --tags`) in release flow.
 - Confirm checklist:
   - [ ] Version tagged
   - [ ] License present
