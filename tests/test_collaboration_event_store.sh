@@ -16,10 +16,40 @@ TASK_ID="$(./tm add "Collaboration event-store concurrency test" | grep -o '[a-f
 
 WRITERS=30
 
+run_with_retry() {
+  local attempts=5
+  local delay_s=0.05
+  local n=1
+  while true; do
+    if "$@"; then
+      return 0
+    fi
+    if [ "$n" -ge "$attempts" ]; then
+      return 1
+    fi
+    n=$((n + 1))
+    sleep "$delay_s"
+  done
+}
+
+declare -a discover_pids=()
 for i in $(seq 1 "$WRITERS"); do
-  TM_AGENT_ID="writer_${i}" ./tm discover "$TASK_ID" "discover-${i}" >/dev/null 2>&1 &
+  (
+    run_with_retry env TM_AGENT_ID="writer_${i}" ./tm discover "$TASK_ID" "discover-${i}"
+  ) >".discover_${i}.log" 2>&1 &
+  discover_pids+=("$!")
 done
-wait
+
+discover_failed=0
+for i in $(seq 1 "$WRITERS"); do
+  pid_index=$((i - 1))
+  if ! wait "${discover_pids[$pid_index]}"; then
+    echo "FAIL: writer_${i} discover command failed after retries"
+    sed -n '1,120p' ".discover_${i}.log"
+    discover_failed=1
+  fi
+done
+[ "$discover_failed" -eq 0 ] || exit 1
 
 python3 - "$TASK_ID" "$WRITERS" <<'PY'
 import sqlite3
@@ -57,10 +87,25 @@ if ! ./tm context "$TASK_ID" | grep -q "discover-1"; then
 fi
 
 START_NS="$(date +%s%N)"
+declare -a share_pids=()
 for i in $(seq 1 200); do
-  TM_AGENT_ID="perf_${i}" ./tm share "$TASK_ID" "perf-${i}" >/dev/null 2>&1 &
+  (
+    run_with_retry env TM_AGENT_ID="perf_${i}" ./tm share "$TASK_ID" "perf-${i}"
+  ) >".share_${i}.log" 2>&1 &
+  share_pids+=("$!")
 done
-wait
+
+share_failed=0
+for i in $(seq 1 200); do
+  pid_index=$((i - 1))
+  if ! wait "${share_pids[$pid_index]}"; then
+    echo "FAIL: perf_${i} share command failed after retries"
+    sed -n '1,120p' ".share_${i}.log"
+    share_failed=1
+  fi
+done
+[ "$share_failed" -eq 0 ] || exit 1
+
 END_NS="$(date +%s%N)"
 
 DURATION_MS="$(( (END_NS - START_NS) / 1000000 ))"
