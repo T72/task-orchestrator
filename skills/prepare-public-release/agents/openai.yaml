@@ -1,0 +1,5 @@
+version: 1
+interface:
+  display_name: Prepare Public Release
+  short_description: Build a safe, reproducible public release package
+  default_prompt: Prepare a public software release package from this repository.

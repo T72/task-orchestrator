@@ -1,0 +1,74 @@
+name: Back-merge hotfix to develop
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  backmerge:
+    if: >
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.base.ref == 'main' &&
+      startsWith(github.event.pull_request.head.ref, 'hotfix/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create back-merge PR (main -> develop)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const hotfixPr = context.payload.pull_request;
+            const hotfixBranch = hotfixPr.head.ref;
+            const hotfixTitle = hotfixPr.title;
+            const hotfixNumber = hotfixPr.number;
+
+            // Check if an open back-merge PR already exists
+            const existing = await github.rest.pulls.list({
+              owner,
+              repo,
+              state: "open",
+              base: "develop",
+              head: `${owner}:main`,
+              per_page: 50
+            });
+
+            // If there's already a PR from main -> develop, do nothing
+            if (existing.data && existing.data.length > 0) {
+              core.info("Back-merge PR already exists. Skipping.");
+              return;
+            }
+
+            const title = `chore: back-merge hotfix (${hotfixBranch}) to develop`;
+            const body =
+              `This PR was auto-created after merging a hotfix into **main**.\n\n` +
+              `Source hotfix PR: #${hotfixNumber} (${hotfixTitle})\n` +
+              `Hotfix branch: \`${hotfixBranch}\`\n\n` +
+              `Purpose:\n` +
+              `- Ensure \`develop\` contains the production hotfix changes.\n\n` +
+              `Notes:\n` +
+              `- Please review and merge into \`develop\`.\n`;
+
+            try {
+              const pr = await github.rest.pulls.create({
+                owner,
+                repo,
+                title,
+                head: "main",
+                base: "develop",
+                body
+              });
+
+              core.info(`Created back-merge PR: ${pr.data.html_url}`);
+            } catch (e) {
+              // If GitHub refuses due to conflicts, surface a clear message.
+              core.setFailed(
+                `Failed to create back-merge PR. You may need to back-merge manually.\n` +
+                `Error: ${e.message}`
+              );
+            }

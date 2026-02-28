@@ -18,6 +18,7 @@ import sqlite3
 import argparse
 import uuid
 import logging
+import re
 try:
     import fcntl  # Unix/Linux file locking
 except ImportError:
@@ -535,6 +536,10 @@ class TaskManager:
                 raise ValidationError("Task title cannot be empty")
             else:
                 raise ValueError("Task title cannot be empty")
+        if len(title) > 500:
+            raise ValueError("Task title too long (max 500 characters)")
+        if priority and priority not in {"low", "medium", "high"}:
+            raise ValueError("Invalid priority")
         
         # Validate Commander's Intent when assigning to agents
         if assignee:
@@ -585,6 +590,14 @@ class TaskManager:
             with sqlite3.connect(str(self.db_path), timeout=10.0) as conn:
                 # Check if dependencies exist
                 if depends_on:
+                    normalized_deps = []
+                    for dep in depends_on:
+                        dep = dep.strip()
+                        if not re.fullmatch(r"[a-f0-9]{8}", dep):
+                            raise ValueError(f"Invalid dependency ID: {dep}")
+                        normalized_deps.append(dep)
+                    depends_on = normalized_deps
+
                     placeholders = ','.join('?' for _ in depends_on)
                     cursor = conn.execute(f"""
                         SELECT id FROM tasks WHERE id IN ({placeholders})
@@ -592,10 +605,19 @@ class TaskManager:
                     existing_deps = {row[0] for row in cursor.fetchall()}
                     missing_deps = set(depends_on) - existing_deps
                     if missing_deps:
-                        raise ValueError(f"Dependencies not found: {', '.join(missing_deps)}")
+                        raise ValueError(f"Invalid dependency ID: {', '.join(missing_deps)}")
                 
-                # Determine status based on dependencies
-                status = "blocked" if depends_on else "pending"
+                # Determine status based on dependency completion state.
+                status = "pending"
+                if depends_on:
+                    placeholders = ','.join('?' for _ in depends_on)
+                    cursor = conn.execute(
+                        f"SELECT status FROM tasks WHERE id IN ({placeholders})",
+                        depends_on,
+                    )
+                    dep_statuses = [row[0] for row in cursor.fetchall()]
+                    if any(dep_status != "completed" for dep_status in dep_statuses):
+                        status = "blocked"
                 
                 # Check if table has Core Loop columns (for backward compatibility)
                 cursor = conn.execute("PRAGMA table_info(tasks)")
@@ -799,6 +821,14 @@ class TaskManager:
                 # Check if task exists
                 cursor = conn.execute("SELECT id FROM tasks WHERE id = ?", (task_id,))
                 if not cursor.fetchone():
+                    return False
+
+                # Prevent deleting a task that other tasks still depend on.
+                cursor = conn.execute(
+                    "SELECT 1 FROM dependencies WHERE depends_on = ? LIMIT 1", (task_id,)
+                )
+                if cursor.fetchone():
+                    print(f"Cannot delete task {task_id}: dependent tasks exist")
                     return False
                 
                 # Remove task from dependencies
@@ -1033,7 +1063,13 @@ class TaskManager:
                 output.append(f"{task['id']}\t{task['title']}\t{task['status']}\t{task.get('assignee', '')}")
             return "\n".join(output)
     
-    def list(self, status: str = None, assignee: str = None, has_deps: bool = False) -> List[Dict]:
+    def list(
+        self,
+        status: str = None,
+        assignee: str = None,
+        has_deps: bool = False,
+        limit: int | None = None,
+    ) -> List[Dict]:
         """
         List tasks with optional filters
         
@@ -1063,6 +1099,9 @@ class TaskManager:
             params.append(assignee)
         
         query += " ORDER BY created_at DESC"
+        if limit is not None and limit > 0:
+            query += " LIMIT ?"
+            params.append(limit)
         
         with sqlite3.connect(str(self.db_path)) as conn:
             conn.row_factory = sqlite3.Row
@@ -1071,9 +1110,17 @@ class TaskManager:
     
     def join(self, task_id: str) -> bool:
         """Join a task's collaborative context"""
+        if not task_id or not task_id.strip():
+            return False
+
         now = datetime.now().isoformat()
         
         with sqlite3.connect(str(self.db_path)) as conn:
+            # Only allow joining existing tasks.
+            cursor = conn.execute("SELECT id FROM tasks WHERE id = ?", (task_id,))
+            if not cursor.fetchone():
+                return False
+
             conn.execute("""
                 INSERT OR REPLACE INTO participants (task_id, agent_id, joined_at)
                 VALUES (?, ?, ?)
@@ -1095,8 +1142,12 @@ class TaskManager:
     
     def share(self, task_id: str, content: str, type: str = "update") -> bool:
         """Share information with other agents on the task"""
+        if not content or not content.strip():
+            return False
+
         # Ensure we've joined the task
-        self.join(task_id)
+        if not self.join(task_id):
+            return False
 
         request_id = os.environ.get("TM_REQUEST_ID")
         return self._append_collaboration_event(task_id, type, content, request_id=request_id)

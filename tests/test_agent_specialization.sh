@@ -18,11 +18,15 @@ TESTS_RUN=0
 TESTS_PASSED=0
 TESTS_FAILED=0
 
-# Find tm in parent directory or current directory
-if [ -f "../tm" ]; then
-    TM="../tm"
+# Resolve project paths before changing directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+
+# Find tm in project root or current directory
+if [ -f "$PROJECT_DIR/tm" ]; then
+    TM_ORIG="$PROJECT_DIR/tm"
 elif [ -f "./tm" ]; then
-    TM="./tm"
+    TM_ORIG="./tm"
 else
     echo "Error: tm executable not found"
     exit 1
@@ -32,6 +36,12 @@ fi
 TEST_DIR=$(mktemp -d -t tm_agent_spec_test_XXXXXX)
 cd "$TEST_DIR"
 git init >/dev/null 2>&1
+cp "$TM_ORIG" ./tm
+if [ -d "$PROJECT_DIR/src" ]; then
+    cp -r "$PROJECT_DIR/src" ./
+fi
+chmod +x ./tm
+TM="./tm"
 
 echo -e "${BLUE}===================================${NC}"
 echo -e "${BLUE}  Agent Specialization Tests       ${NC}"
@@ -103,7 +113,7 @@ test_phase_coordination() {
     PHASE3=$($TM add "Phase 3 task" --meta phase:3 --depends-on $PHASE2 | grep -o '[a-f0-9]\{8\}')
     
     # Check phase 2 is blocked until phase 1 completes
-    STATUS=$($TM show $PHASE2 | grep "Status:" | awk '{print $2}')
+    STATUS=$($TM show $PHASE2 | grep "^status:" | awk '{print $2}')
     [ "$STATUS" = "blocked" ]
 }
 
@@ -160,7 +170,7 @@ test_multi_phase_dependencies() {
     $TM complete $P1_T2 >/dev/null 2>&1
     
     # Phase 2 task 1 should now be unblocked
-    STATUS=$($TM show $P2_T1 | grep "Status:" | awk '{print $2}')
+    STATUS=$($TM show $P2_T1 | grep "^status:" | awk '{print $2}')
     [ "$STATUS" = "pending" ]
 }
 
@@ -207,7 +217,7 @@ test_cross_specialist_deps() {
     $TM complete $BE_TASK >/dev/null 2>&1
     
     # Frontend task should be unblocked
-    STATUS=$($TM show $FE_TASK | grep "Status:" | awk '{print $2}')
+    STATUS=$($TM show $FE_TASK | grep "^status:" | awk '{print $2}')
     [ "$STATUS" = "pending" ]
 }
 
@@ -268,9 +278,9 @@ test_parallel_execution() {
     QA=$($TM add "Test prep" --meta specialist:qa-specialist --depends-on $PARENT | grep -o '[a-f0-9]\{8\}')
     
     # All should be pending (not blocked)
-    FE_STATUS=$($TM show $FE | grep "Status:" | awk '{print $2}')
-    BE_STATUS=$($TM show $BE | grep "Status:" | awk '{print $2}')
-    QA_STATUS=$($TM show $QA | grep "Status:" | awk '{print $2}')
+    FE_STATUS=$($TM show $FE | grep "^status:" | awk '{print $2}')
+    BE_STATUS=$($TM show $BE | grep "^status:" | awk '{print $2}')
+    QA_STATUS=$($TM show $QA | grep "^status:" | awk '{print $2}')
     
     [ "$FE_STATUS" = "pending" ] && [ "$BE_STATUS" = "pending" ] && [ "$QA_STATUS" = "pending" ]
 }

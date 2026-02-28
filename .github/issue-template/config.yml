@@ -1,0 +1,18 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: 📖 Read Engineering Playbook First
+    url: ./docs/engineering_playbook.md
+    about: Review governance, TDD requirements, and documentation placement rules before opening an issue.
+
+  - name: 🏗 Architecture or Design Question
+    url: ./docs/developer/architecture/
+    about: Check existing architecture documentation and ADRs before proposing changes.
+
+  - name: 🚀 Release or Deployment Question
+    url: ./docs/operations/
+    about: Review deployment and runtime documentation before opening an issue.
+
+  - name: ❓ General Usage Question
+    url: ./docs/user/
+    about: For API usage or consumer questions, consult the user documentation first.

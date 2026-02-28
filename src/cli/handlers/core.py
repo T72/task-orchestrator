@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import Optional
 
 from cli.context import CLIContext
@@ -46,6 +47,7 @@ def handle_core(command: str, context: CLIContext) -> Optional[int]:
         description = None
         priority = None
         depends_on = []
+        meta_entries = []
         file_refs = []
         success_criteria = None
         deadline = None
@@ -63,10 +65,19 @@ def handle_core(command: str, context: CLIContext) -> Optional[int]:
                 priority = argv[i + 1]
                 i += 2
             elif argv[i] == "--depends-on" and i + 1 < len(argv):
-                depends_on.append(argv[i + 1])
-                i += 2
+                j = i + 1
+                while j < len(argv) and not argv[j].startswith("--"):
+                    depends_on.append(argv[j])
+                    j += 1
+                i = j
             elif argv[i] == "--file" and i + 1 < len(argv):
-                file_refs.append(argv[i + 1])
+                j = i + 1
+                while j < len(argv) and not argv[j].startswith("--"):
+                    file_refs.append(argv[j])
+                    j += 1
+                i = j
+            elif argv[i] == "--meta" and i + 1 < len(argv):
+                meta_entries.append(argv[i + 1])
                 i += 2
             elif argv[i] == "--criteria" and i + 1 < len(argv):
                 success_criteria = argv[i + 1]
@@ -92,6 +103,9 @@ def handle_core(command: str, context: CLIContext) -> Optional[int]:
         if file_refs:
             file_info = "Files: " + ", ".join(file_refs)
             description = f"{description}\n{file_info}" if description else file_info
+        if meta_entries:
+            meta_info = "Meta: " + ", ".join(meta_entries)
+            description = f"{description}\n{meta_info}" if description else meta_info
 
         try:
             task_id = tm.add(
@@ -116,6 +130,7 @@ def handle_core(command: str, context: CLIContext) -> Optional[int]:
     if command == "list":
         status_filter = None
         assignee_filter = None
+        limit_filter = None
         has_deps = "--has-deps" in argv
 
         if "--status" in argv:
@@ -128,7 +143,17 @@ def handle_core(command: str, context: CLIContext) -> Optional[int]:
             if idx + 1 < len(argv):
                 assignee_filter = argv[idx + 1]
 
-        tasks = tm.list(status=status_filter, assignee=assignee_filter, has_deps=has_deps)
+        if "--limit" in argv:
+            idx = argv.index("--limit")
+            if idx + 1 < len(argv):
+                limit_filter = int(argv[idx + 1])
+
+        tasks = tm.list(
+            status=status_filter,
+            assignee=assignee_filter,
+            has_deps=has_deps,
+            limit=limit_filter,
+        )
         if not tasks:
             print("No tasks found")
         else:
@@ -155,9 +180,11 @@ def handle_core(command: str, context: CLIContext) -> Optional[int]:
         if "--status" in argv:
             idx = argv.index("--status")
             if idx + 1 < len(argv):
-                tm.update(argv[2], status=argv[idx + 1])
-                print(f"Task {argv[2]} updated")
-                return 0
+                if tm.update(argv[2], status=argv[idx + 1]):
+                    print(f"Task {argv[2]} updated")
+                    return 0
+                print(f"Invalid task ID: {argv[2]}")
+                return 1
         print("Usage: tm update <task_id> --status <status>")
         return 1
 
@@ -206,13 +233,26 @@ def handle_core(command: str, context: CLIContext) -> Optional[int]:
         if tm.delete(argv[2]):
             print(f"Task {argv[2]} deleted")
             return 0
-        print(f"Failed to delete task {argv[2]}")
+        print(f"Task {argv[2]} not found or cannot be deleted")
         return 1
 
     if command == "assign":
         if len(argv) < 4:
             print("Usage: tm assign <task_id> <assignee>")
             return 1
+        agent_specialty = os.environ.get("TM_AGENT_SPECIALTY")
+        if agent_specialty:
+            task = tm.show(argv[2]) or {}
+            description = task.get("description") or ""
+            required_specialty = None
+            for token in description.replace("\n", " ").split():
+                if token.startswith("specialist:"):
+                    required_specialty = token.split("specialist:", 1)[1].rstrip(",")
+                    break
+            if required_specialty and required_specialty != agent_specialty:
+                print(
+                    f"warning: specialist mismatch (required={required_specialty}, agent={agent_specialty})"
+                )
         if tm.update(argv[2], assignee=argv[3]):
             print(f"Task {argv[2]} assigned to {argv[3]}")
             return 0

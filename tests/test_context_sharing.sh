@@ -1,5 +1,6 @@
 #!/bin/bash
-set -e
+# This suite performs negative-path checks; do not exit on first non-zero.
+set +e
 
 # Test script for context sharing features - ISOLATED VERSION with WSL Safety
 # Tests private notes and shared context collaboration
@@ -130,13 +131,13 @@ run_test() {
 
 # Test 1: Initialize context with task
 test_init_context() {
-    local task_id=$($TM add "Collaborative feature" --with-context | grep "Task ID:" | cut -d' ' -f3)
-    [ -n "$task_id" ] && [ -f ".task-orchestrator/contexts/${task_id}_context.yaml" ]
+    local task_id=$($TM add "Collaborative feature" --with-context 2>&1 | grep -o '[a-f0-9]\{8\}' | head -n1)
+    [ -n "$task_id" ] && $TM context read "$task_id" --type shared > /dev/null 2>&1
 }
 
 # Test 2: Join context as contributor
 test_join_context() {
-    local task_id=$($TM add "Team task" | grep "Task ID:" | cut -d' ' -f3)
+    local task_id=$($TM add "Team task" 2>&1 | grep -o '[a-f0-9]\{8\}' | head -n1)
     export TM_AGENT_ID="agent_001"
     $TM context join "$task_id" --role contributor
     unset TM_AGENT_ID
@@ -144,7 +145,7 @@ test_join_context() {
 
 # Test 3: Write private notes
 test_private_notes() {
-    local task_id=$($TM add "Research task" --with-context | grep "Task ID:" | cut -d' ' -f3)
+    local task_id=$($TM add "Research task" --with-context 2>&1 | grep -o '[a-f0-9]\{8\}' | head -n1)
     export TM_AGENT_ID="researcher_001"
     $TM context join "$task_id"
     $TM context update "$task_id" --type private --content "Initial research findings: API needs refactoring"
@@ -154,7 +155,7 @@ test_private_notes() {
 
 # Test 4: Update shared context
 test_shared_context() {
-    local task_id=$($TM add "Shared work" --with-context | grep "Task ID:" | cut -d' ' -f3)
+    local task_id=$($TM add "Shared work" --with-context 2>&1 | grep -o '[a-f0-9]\{8\}' | head -n1)
     export TM_AGENT_ID="dev_001"
     $TM context join "$task_id"
     $TM context update "$task_id" --type shared --section agent_sections \
@@ -167,7 +168,7 @@ test_shared_context() {
 
 # Test 5: Multiple agents collaborating
 test_multi_agent_collab() {
-    local task_id=$($TM add "Multi-agent project" --with-context | grep "Task ID:" | cut -d' ' -f3)
+    local task_id=$($TM add "Multi-agent project" --with-context 2>&1 | grep -o '[a-f0-9]\{8\}' | head -n1)
     
     # Agent 1 joins and contributes
     export TM_AGENT_ID="frontend_dev"
@@ -191,7 +192,7 @@ test_multi_agent_collab() {
 
 # Test 6: Share discovery
 test_share_discovery() {
-    local task_id=$($TM add "Discovery task" --with-context | grep "Task ID:" | cut -d' ' -f3)
+    local task_id=$($TM add "Discovery task" --with-context 2>&1 | grep -o '[a-f0-9]\{8\}' | head -n1)
     export TM_AGENT_ID="analyst_001"
     $TM context join "$task_id"
     $TM context discover "$task_id" "Found performance bottleneck in query" \
@@ -204,7 +205,7 @@ test_share_discovery() {
 
 # Test 7: Create sync point
 test_sync_point() {
-    local task_id=$($TM add "Sync task" --with-context | grep "Task ID:" | cut -d' ' -f3)
+    local task_id=$($TM add "Sync task" --with-context 2>&1 | grep -o '[a-f0-9]\{8\}' | head -n1)
     export TM_AGENT_ID="coordinator"
     $TM context join "$task_id" --role orchestrator
     $TM context sync "$task_id" "Phase 1 complete" --ready-for frontend_dev backend_dev
@@ -216,7 +217,7 @@ test_sync_point() {
 
 # Test 8: List participants
 test_list_participants() {
-    local task_id=$($TM add "Team project" --with-context | grep "Task ID:" | cut -d' ' -f3)
+    local task_id=$($TM add "Team project" --with-context 2>&1 | grep -o '[a-f0-9]\{8\}' | head -n1)
     
     # Multiple agents join
     export TM_AGENT_ID="dev1"
@@ -237,7 +238,7 @@ test_list_participants() {
 
 # Test 9: Private notes isolation
 test_private_notes_isolation() {
-    local task_id=$($TM add "Private task" --with-context | grep "Task ID:" | cut -d' ' -f3)
+    local task_id=$($TM add "Private task" --with-context 2>&1 | grep -o '[a-f0-9]\{8\}' | head -n1)
     
     # Agent 1 writes private notes
     export TM_AGENT_ID="agent1"
@@ -259,7 +260,7 @@ test_private_notes_isolation() {
 
 # Test 10: Global context update
 test_global_context() {
-    local task_id=$($TM add "Global context task" --with-context | grep "Task ID:" | cut -d' ' -f3)
+    local task_id=$($TM add "Global context task" --with-context 2>&1 | grep -o '[a-f0-9]\{8\}' | head -n1)
     export TM_AGENT_ID="architect"
     $TM context join "$task_id" --role orchestrator
     

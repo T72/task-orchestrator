@@ -1,0 +1,21 @@
+# Local agent/runtime state
+.task-orchestrator/
+**/.task-orchestrator/
+.claude/
+**/.claude/
+
+# Python cache artifacts
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local temporary helper files
+.tmp_issue*_body.txt
+=1
+tm.backup
+
+# Generated release output
+public-releases/
+internal-releases/
