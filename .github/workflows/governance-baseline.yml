@@ -1,0 +1,38 @@
+name: governance-baseline
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+  workflow_dispatch:
+
+jobs:
+  governance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Syntax checks
+        run: |
+          python3 -m py_compile tm src/tm_production.py src/config_manager.py src/storage_paths.py
+
+      - name: Validate public release boundary
+        run: bash scripts/validate-public-boundary.sh
+
+      - name: Contract tests - storage and collaboration
+        run: |
+          bash tests/test_storage_contract.sh
+          bash tests/test_collaboration_event_store.sh
+          bash tests/test_error_exit_codes.sh
+
+      - name: Public manifest integration tests
+        run: bash tests/test_public_manifest_pipeline.sh
