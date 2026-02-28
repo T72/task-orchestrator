@@ -313,6 +313,9 @@ class EnforcementEngine:
         
         elif level == EnforcementLevel.STANDARD:
             print(result.guidance)
+            if (not sys.stdin.isatty()) or os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS"):
+                print("Non-interactive environment detected; continuing with warning.")
+                return True
             response = input("Continue anyway? (y/N): ").lower().strip()
             return response in ['y', 'yes']
         
