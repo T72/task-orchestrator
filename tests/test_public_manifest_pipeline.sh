@@ -86,26 +86,26 @@ make_base_tree "$TEST_ROOT"
 
 expect_success \
   "validator accepts clean tree" \
-  "$VALIDATOR" --root "$TEST_ROOT" --manifest "$BASE_MANIFEST"
+  bash "$VALIDATOR" --root "$TEST_ROOT" --manifest "$BASE_MANIFEST"
 
 mkdir -p "$TEST_ROOT/docs/internal"
 echo "internal agent instructions" > "$TEST_ROOT/docs/internal/AGENTS.md"
 expect_failure \
   "validator rejects nested AGENTS.md" \
-  "$VALIDATOR" --root "$TEST_ROOT" --manifest "$BASE_MANIFEST"
+  bash "$VALIDATOR" --root "$TEST_ROOT" --manifest "$BASE_MANIFEST"
 rm -f "$TEST_ROOT/docs/internal/AGENTS.md"
 
 mkdir -p "$TEST_ROOT/docs/hidden"
 echo "private instructions" > "$TEST_ROOT/docs/hidden/CLAUDE.md"
 expect_failure \
   "validator rejects nested CLAUDE.md" \
-  "$VALIDATOR" --root "$TEST_ROOT" --manifest "$BASE_MANIFEST"
+  bash "$VALIDATOR" --root "$TEST_ROOT" --manifest "$BASE_MANIFEST"
 rm -f "$TEST_ROOT/docs/hidden/CLAUDE.md"
 
 rm -f "$TEST_ROOT/LICENSE"
 expect_failure \
   "validator rejects missing required file" \
-  "$VALIDATOR" --root "$TEST_ROOT" --manifest "$BASE_MANIFEST"
+  bash "$VALIDATOR" --root "$TEST_ROOT" --manifest "$BASE_MANIFEST"
 echo "MIT" > "$TEST_ROOT/LICENSE"
 
 BUILD_ROOT="$TMP_DIR/build-src"
@@ -117,7 +117,7 @@ echo "ignore temp" > "$BUILD_ROOT/src/ignore.tmp"
 ARTIFACT_DIR="$TMP_DIR/artifact"
 expect_success \
   "builder creates deterministic artifact" \
-  "$BUILDER" --root "$BUILD_ROOT" --manifest "$BASE_MANIFEST" --output "$ARTIFACT_DIR"
+  bash "$BUILDER" --root "$BUILD_ROOT" --manifest "$BASE_MANIFEST" --output "$ARTIFACT_DIR"
 
 [ -f "$ARTIFACT_DIR/src/main.py" ] || fail "artifact contains src/main.py"
 [ -f "$ARTIFACT_DIR/README.md" ] || fail "artifact contains README.md"
