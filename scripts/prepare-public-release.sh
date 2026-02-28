@@ -284,6 +284,8 @@ cat > "$release_dir/RELEASE_MANIFEST.md" <<EOF
 - Packaging commands:
   - \`tar -czf task-orchestrator-$release_version.tar.gz -C "$staging_dir" .\`
   - \`zip -qr task-orchestrator-$release_version.zip .\`
+- Tag publication command:
+  - \`bash scripts/publish-release-tag.sh $release_version\`
 - Runtime requirements:
   - Python 3.8+
 - Platform assumptions:
