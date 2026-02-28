@@ -5,7 +5,7 @@ from pathlib import Path
 
 REQUIRED_PATHS = [
     # GitHub templates + issue config
-    ".github/issue-template/config.yml"
+    ".github/issue-template/config.yml",
     ".github/issue-template/engineering-issue.yml",
     ".github/pull-request-template/hotfix.md",
     ".github/pull-request-template/release.md",
@@ -49,9 +49,9 @@ REQUIRED_PATHS = [
     "docs/prompts/project-init/codebase-analysis/analysis-review/document-technical-review-prompt.md",
     "docs/prompts/project-init/codebase-analysis/analysis-review/perform-analysis-review-prompt.md",
     "docs/prompts/project-init/codebase-analysis/initial-analysis",
-    "docs/prompts/project-init/codebase-analysis/initial-analysis/document-technical-analyis-prompt.md",
+    "docs/prompts/project-init/codebase-analysis/initial-analysis/document-technical-analysis-prompt.md",
     "docs/prompts/project-init/codebase-analysis/initial-analysis/perform-codebase-analysis-with-milestone-suggestions-prompt-alt-rev.md",
-    "docs/prompts/project-init/codebase-analysis/initial-analysis/perform-codebase-analysis-witrh-milestone-suggestions-prompt.md",
+    "docs/prompts/project-init/codebase-analysis/initial-analysis/perform-codebase-analysis-with-milestone-suggestions-prompt.md",
     "docs/prompts/project-init/research",
     "docs/prompts/project-init/research/deep-research-[system-type]-boilerplate-capabilities-prompt-template.md",
     "docs/prompts/project-init/research/deep-research-state-of-the-art-[system-type]-capabilities-prompt-template.md",
