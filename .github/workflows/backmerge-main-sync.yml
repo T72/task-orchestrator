@@ -1,0 +1,79 @@
+name: Back-merge main to develop (non-hotfix)
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  backmerge:
+    if: >
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.base.ref == 'main' &&
+      !(github.event.pull_request.head.ref == 'develop' &&
+        github.event.pull_request.head.repo.full_name == github.repository) &&
+      !startsWith(github.event.pull_request.head.ref, 'hotfix/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create back-merge PR (main -> develop)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const mergedPr = context.payload.pull_request;
+            const sourceBranch = mergedPr.head.ref;
+            const sourceTitle = mergedPr.title;
+            const sourceNumber = mergedPr.number;
+
+            // Check if an open back-merge PR already exists.
+            const existing = await github.rest.pulls.list({
+              owner,
+              repo,
+              state: "open",
+              base: "develop",
+              head: `${owner}:main`,
+              per_page: 50
+            });
+
+            if (existing.data && existing.data.length > 0) {
+              core.info("Back-merge PR already exists. Skipping.");
+              return;
+            }
+
+            const title = `chore: back-merge main to develop (after #${sourceNumber})`;
+            const body =
+              `This PR was auto-created after merging a PR into **main**.\n\n` +
+              `Source PR: #${sourceNumber} (${sourceTitle})\n` +
+              `Source branch: \`${sourceBranch}\`\n\n` +
+              `Purpose:\n` +
+              `- Ensure \`develop\` stays in sync with \`main\`.\n\n` +
+              `Notes:\n` +
+              `- Please review and merge into \`develop\`.\n`;
+
+            try {
+              const pr = await github.rest.pulls.create({
+                owner,
+                repo,
+                title,
+                head: "main",
+                base: "develop",
+                body
+              });
+
+              core.info(`Created back-merge PR: ${pr.data.html_url}`);
+            } catch (e) {
+              if (e.message && e.message.includes("No commits between")) {
+                core.info("No commits to back-merge. Branches are already in sync.");
+                return;
+              }
+
+              core.setFailed(
+                `Failed to create back-merge PR. You may need to back-merge manually.\n` +
+                `Error: ${e.message}`
+              );
+            }
