@@ -1,8 +1,8 @@
 # Task Orchestrator API Reference
 
 ## Status: Implemented
-## Last Verified: September 3, 2025
-Against version: v2.7.2
+## Last Verified: February 28, 2026
+Against version: v2.9.0
 
 Complete reference documentation for all public APIs, classes, and functions in Task Orchestrator.
 
@@ -28,27 +28,27 @@ The primary executable providing the command-line interface and core TaskManager
 **Purpose**: Main CLI interface and TaskManager implementation  
 **Dependencies**: Python 3.8+ standard library only
 
-### tm_orchestrator.py
+### src/tm_orchestrator.py
 
 Orchestrator interface for multi-agent coordination and project management.
 
-**Location**: `tm_orchestrator.py`  
+**Location**: `src/tm_orchestrator.py`  
 **Purpose**: Agent coordination and project-level task management  
 **Dependencies**: Python 3.8+ standard library, YAML support
 
-### tm_production.py
+### src/tm_production.py
 
 Production-enhanced version with context sharing and advanced features.
 
-**Location**: `tm_production.py`  
+**Location**: `src/tm_production.py`  
 **Purpose**: Production deployment with context management  
 **Dependencies**: Python 3.8+ standard library
 
-### tm_worker.py
+### src/tm_worker.py
 
 Simplified worker interface for task execution.
 
-**Location**: `tm_worker.py`  
+**Location**: `src/tm_worker.py`  
 **Purpose**: Simple worker interface for task processing  
 **Dependencies**: Python 3.8+ standard library
 
@@ -723,7 +723,7 @@ for task in tasks:
 }
 ```
 
-## v2.7.2 Feature Classes
+## v2.9.0 Feature Classes
 
 ### TemplateParser Class
 
@@ -993,7 +993,7 @@ def _get_agent_id() -> str
 
 ## Database Migration
 
-### Migration System (v2.7.2+)
+### Migration System (v2.9.0+)
 
 Task Orchestrator includes automatic database migration to handle schema changes between versions.
 
@@ -1016,9 +1016,9 @@ tm migrate --apply
 tm migrate --rollback
 ```
 
-#### Migration for v2.7.2
+#### Migration for v2.9.0
 
-The v2.7.2 migration adds multi-agent support:
+The v2.9.0 migration adds multi-agent support:
 - Adds `created_by` field (TEXT NOT NULL DEFAULT 'user')
 - Tracks which agent created each task
 - Automatic backfill for existing tasks
@@ -1028,7 +1028,7 @@ The v2.7.2 migration adds multi-agent support:
 Backup created: ~/.task-orchestrator/backups/tasks_backup_20250822.db
 Applying migration: Add created_by field for multi-agent support...
 ✓ Migration applied successfully
-Database schema updated to v2.7.2
+Database schema updated to v2.9.0
 ```
 
 ## CLI Reference

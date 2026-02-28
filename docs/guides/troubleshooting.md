@@ -7,7 +7,7 @@ Comprehensive troubleshooting guide for common issues, solutions, and debugging 
 - [Quick Diagnostics](#quick-diagnostics)
 - [Installation Problems](#installation-problems)
 - [Database Issues](#database-issues)
-- [Core Loop Issues (v2.3)](#core-loop-issues-v23)
+- [Core Loop Issues](#core-loop-issues)
 - [Lock File Problems](#lock-file-problems)
 - [Performance Issues](#performance-issues)
 - [Claude Code Integration Issues](#claude-code-integration-issues)
@@ -365,7 +365,7 @@ EOF
 ./tm list
 ```
 
-## Core Loop Issues (v2.3)
+## Core Loop Issues
 
 ### Migration Issues
 

@@ -67,9 +67,9 @@ Task Orchestrator follows several key architectural principles:
 | Component | Purpose | Key Classes/Functions |
 |-----------|---------|----------------------|
 | `tm` | Main CLI interface | `TaskManager`, `main()` |
-| `tm_orchestrator.py` | Agent coordination | `Orchestrator` |
-| `tm_production.py` | Production features | `TaskManager` (enhanced) |
-| `tm_worker.py` | Simple worker interface | `Worker` |
+| `src/tm_orchestrator.py` | Agent coordination | `Orchestrator` |
+| `src/tm_production.py` | Production features | `TaskManager` (enhanced) |
+| `src/tm_worker.py` | Simple worker interface | `Worker` |
 
 ## Code Structure
 
@@ -78,9 +78,9 @@ Task Orchestrator follows several key architectural principles:
 ```
 task-orchestrator/
 ├── tm                          # Main CLI executable
-├── tm_orchestrator.py          # Orchestrator interface
-├── tm_production.py            # Production version with context sharing
-├── tm_worker.py               # Worker interface
+├── src/tm_orchestrator.py      # Orchestrator interface
+├── src/tm_production.py        # Production version with context sharing
+├── src/tm_worker.py            # Worker interface
 ├── test_*.py                  # Test files
 ├── test_*.sh                  # Shell test scripts
 ├── docs/                      # Documentation
@@ -94,7 +94,7 @@ task-orchestrator/
 
 ### Core Classes
 
-#### TaskManager (tm, tm_production.py)
+#### TaskManager (tm, src/tm_production.py)
 
 The main business logic class that handles all task operations.
 
@@ -121,7 +121,7 @@ class TaskManager:
         # Shows detailed task information
 ```
 
-#### Orchestrator (tm_orchestrator.py)
+#### Orchestrator (src/tm_orchestrator.py)
 
 Handles multi-agent coordination and project-level operations.
 
@@ -278,14 +278,14 @@ black --check *.py
 
 ```bash
 # Check types
-mypy tm tm_orchestrator.py tm_production.py tm_worker.py
+mypy tm src/tm_orchestrator.py src/tm_production.py src/tm_worker.py
 ```
 
 #### Linting
 
 ```bash
 # Lint code
-pylint tm tm_orchestrator.py tm_production.py tm_worker.py
+pylint tm src/tm_orchestrator.py src/tm_production.py src/tm_worker.py
 ```
 
 ### Development Database
@@ -1351,7 +1351,7 @@ Brief description of changes
 - [ ] Release notes prepared
 
 # Release:
-- [ ] Tag created: git tag v2.7.2
+- [ ] Tag created: git tag v2.9.0
 - [ ] Release published on GitHub
 - [ ] Documentation deployed
 - [ ] Community notified
