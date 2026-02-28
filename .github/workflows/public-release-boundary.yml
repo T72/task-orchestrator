@@ -43,3 +43,35 @@ jobs:
       - name: Run pipeline regression tests
         run: |
           bash tests/test_public_manifest_pipeline.sh
+
+      - name: Validate public docs version consistency
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          import sys
+
+          version = Path("VERSION").read_text(encoding="utf-8").strip()
+          readme = Path("README.md")
+          changelog = Path("CHANGELOG.md")
+          contributing = Path("CONTRIBUTING.md")
+
+          missing = [p for p in [readme, changelog, contributing] if not p.exists()]
+          if missing:
+              print("Missing required public docs:")
+              for p in missing:
+                  print(f"- {p}")
+              sys.exit(1)
+
+          readme_text = readme.read_text(encoding="utf-8", errors="ignore")
+          changelog_text = changelog.read_text(encoding="utf-8", errors="ignore")
+
+          if not re.search(re.escape(version), readme_text):
+              print(f"README.md missing current version marker: {version}")
+              sys.exit(1)
+          if not re.search(re.escape(version), changelog_text):
+              print(f"CHANGELOG.md missing current version marker: {version}")
+              sys.exit(1)
+
+          print("Public docs version consistency check passed.")
+          PY

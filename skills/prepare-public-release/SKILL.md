@@ -66,7 +66,16 @@ Create a release folder under `public-releases/<version>/` with:
   - `NOTICE`
   - `THIRD_PARTY_LICENSES.md`
 
-4. Generate changelog
+4. Execute chained release managers (required by default)
+- Run `release-and-changelog-management` first.
+- Run `release-public-docs-management` second.
+- Treat both stages as mandatory unless explicit override modes are used.
+- Record stage execution evidence in:
+  - `RELEASE_CHANGELOG_MANAGEMENT.md`
+  - `RELEASE_PUBLIC_DOCS_MANAGEMENT.md`
+- Record both stage outcomes in `RELEASE_MANIFEST.md`.
+
+5. Generate changelog
 - Create or update `CHANGELOG.md` with:
   - Added
   - Fixed
@@ -74,15 +83,15 @@ Create a release folder under `public-releases/<version>/` with:
   - Migration notes
   - Upgrade risks
 - Source from commits, merged PR titles, release notes, and ADR summaries when available.
-- If `release-and-changelog-management` is available, allow optional delegation for changelog and release notes generation.
-- If delegation is unavailable or fails in auto mode, fall back to built-in generation.
-- Use delegate-only mode only when external tooling is required and validated.
+- Require delegation to `release-and-changelog-management` by default.
+- Fail release preparation if delegation tool is unavailable or fails.
+- Allow built-in generation only with explicit override in exceptional cases.
 
-5. Prepare public documentation
+6. Prepare public documentation
 - Ensure `README.md`, `INSTALL.md`, and `USAGE.md` exist and are externally usable.
 - Ensure README includes: overview, install, quickstart, configuration, supported environments, version, and license reference.
 
-6. Build and package artifacts
+7. Build and package artifacts
 - Prefer native artifact format by detected project type:
   - Node: npm package/build
   - Python: wheel/sdist
@@ -94,7 +103,7 @@ Create a release folder under `public-releases/<version>/` with:
   - Unix: `.tar.gz`
   - Windows: `.zip`
 
-7. Capture reproducibility snapshot
+8. Capture reproducibility snapshot
 - Generate `RELEASE_MANIFEST.md` with:
   - commit SHA
   - dependency lock references
@@ -102,7 +111,7 @@ Create a release folder under `public-releases/<version>/` with:
   - runtime requirements
   - platform assumptions
 
-8. Generate public release notes
+9. Generate public release notes
 - Create `RELEASE_NOTES.md` for external audiences with:
   - summary
   - new features
@@ -113,7 +122,7 @@ Create a release folder under `public-releases/<version>/` with:
   - support information
 - Record whether changelog/release-notes were delegated or generated in built-in mode in `RELEASE_MANIFEST.md`.
 
-9. Run final validation checklist
+10. Run final validation checklist
 - Verify package extraction and install path.
 - Verify doc links and version consistency.
 - Verify no internal references remain.

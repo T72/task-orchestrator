@@ -39,5 +39,25 @@ jobs:
                 "- '# Hotfix Pull Request' (and related sections)."
               );
             } else {
+              // Additional release governance requirement for release PRs.
+              if (isRelease) {
+                const managerExecuted =
+                  body.includes("- [x] release-and-changelog-management executed");
+                const docsManagerExecuted =
+                  body.includes("- [x] release-public-docs-management executed");
+                const artifactRefsPresent =
+                  body.includes("public-releases/") || body.includes("releases/tag/");
+                if (!managerExecuted || !docsManagerExecuted || !artifactRefsPresent) {
+                  core.setFailed(
+                    "Release PRs targeting 'main' must confirm both management stages and artifact references.\n" +
+                    "Fixes required:\n" +
+                    "- Check '- [x] release-and-changelog-management executed'\n" +
+                    "- Check '- [x] release-public-docs-management executed'\n" +
+                    "- Include artifact references (e.g. 'public-releases/...') in PR body"
+                  );
+                  return;
+                }
+              }
+
               core.info("Main-branch PR template check passed.");
             }
