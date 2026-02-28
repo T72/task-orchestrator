@@ -11,6 +11,8 @@ enforce_release_ref_sync="${ENFORCE_RELEASE_REF_SYNC:-1}"
 release_ref="${RELEASE_REF:-origin/$release_branch}"
 release_changelog_mode="${RELEASE_CHANGELOG_MODE:-delegate}"
 release_changelog_tool="${RELEASE_CHANGELOG_TOOL:-scripts/release-and-changelog-management.sh}"
+release_docs_mode="${RELEASE_DOCS_MODE:-delegate}"
+release_docs_tool="${RELEASE_DOCS_TOOL:-scripts/release-public-docs-management.sh}"
 
 current_branch="$(git rev-parse --abbrev-ref HEAD)"
 if [[ "$current_branch" != "$release_branch" && "$allow_non_release_branch" != "1" ]]; then
@@ -189,6 +191,7 @@ mkdir -p "$release_dir"
 commit_sha="$(git rev-parse --verify HEAD)"
 build_time_utc="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 delegation_used="none"
+docs_management_used="none"
 
 # Build sanitized staging tree from manifest.
 python3 scripts/public_manifest_tool.py build \
@@ -293,6 +296,8 @@ cat > "$release_dir/RELEASE_MANIFEST.md" <<EOF
   - Windows supported via PowerShell + WSL workflow
 - Changelog mode: $release_changelog_mode
 - Changelog delegation: $delegation_used
+- Docs mode: $release_docs_mode
+- Docs management: $docs_management_used
 EOF
 
 if [[ "$release_changelog_mode" != "builtin" ]]; then
@@ -344,6 +349,23 @@ This release provides public packaging hardening and CI governance updates for T
 EOF
 fi
 
+if [[ "$release_docs_mode" != "builtin" ]]; then
+  if [[ -f "$release_docs_tool" ]]; then
+    if bash "$release_docs_tool" \
+      --version "$release_version" \
+      --staging "$staging_dir" \
+      --release-dir "$release_dir"; then
+      docs_management_used="$release_docs_tool"
+    elif [[ "$release_docs_mode" == "delegate" ]]; then
+      echo "Docs manager failed in delegate-only mode: $release_docs_tool" >&2
+      exit 1
+    fi
+  elif [[ "$release_docs_mode" == "delegate" ]]; then
+    echo "Docs manager not found or not executable: $release_docs_tool" >&2
+    exit 1
+  fi
+fi
+
 # Copy key docs to release folder root for one-stop handoff.
 cp "$staging_dir/README.md" "$release_dir/README.md"
 if [[ ! -f "$release_dir/CHANGELOG.md" ]]; then
@@ -353,14 +375,16 @@ cp "$staging_dir/LICENSE" "$release_dir/LICENSE"
 cp "$staging_dir/THIRD_PARTY_LICENSES.md" "$release_dir/THIRD_PARTY_LICENSES.md"
 
 # Refresh manifest with final delegation state after optional delegation phase.
-python3 - "$release_dir/RELEASE_MANIFEST.md" "$delegation_used" <<'PY'
+python3 - "$release_dir/RELEASE_MANIFEST.md" "$delegation_used" "$docs_management_used" <<'PY'
 from pathlib import Path
 import sys
 
 manifest = Path(sys.argv[1])
 delegation_used = sys.argv[2]
+docs_management_used = sys.argv[3]
 text = manifest.read_text(encoding="utf-8")
 text = text.replace("- Changelog delegation: none", f"- Changelog delegation: {delegation_used}")
+text = text.replace("- Docs management: none", f"- Docs management: {docs_management_used}")
 manifest.write_text(text, encoding="utf-8")
 PY
 

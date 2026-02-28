@@ -43,10 +43,17 @@ jobs:
               if (isRelease) {
                 const managerExecuted =
                   body.includes("- [x] release-and-changelog-management executed");
-                if (!managerExecuted) {
+                const docsManagerExecuted =
+                  body.includes("- [x] release-public-docs-management executed");
+                const artifactRefsPresent =
+                  body.includes("public-releases/") || body.includes("releases/tag/");
+                if (!managerExecuted || !docsManagerExecuted || !artifactRefsPresent) {
                   core.setFailed(
-                    "Release PRs targeting 'main' must confirm execution of release-and-changelog-management.\n" +
-                    "Fix: Check '- [x] release-and-changelog-management executed' in the PR body checklist."
+                    "Release PRs targeting 'main' must confirm both management stages and artifact references.\n" +
+                    "Fixes required:\n" +
+                    "- Check '- [x] release-and-changelog-management executed'\n" +
+                    "- Check '- [x] release-public-docs-management executed'\n" +
+                    "- Include artifact references (e.g. 'public-releases/...') in PR body"
                   );
                   return;
                 }
