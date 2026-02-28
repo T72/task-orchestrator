@@ -21,3 +21,7 @@
 - `bash tests/test_error_exit_codes.sh`
 - `bash tests/test_storage_contract.sh`
 - `bash tests/test_collaboration_event_store.sh`
+
+## CI Incident Handling
+- Use [`docs/development/ci-triage-watchdog-runbook.md`](docs/development/ci-triage-watchdog-runbook.md) for required-check failures on protected branches.
+- Enforce watchdog thresholds (`T+5` fallback, `T+10` escalation) to avoid passive monitoring stalls.
