@@ -66,7 +66,7 @@ def handle_core(command: str, context: CLIContext) -> Optional[int]:
                 i += 2
             elif argv[i] == "--depends-on" and i + 1 < len(argv):
                 j = i + 1
-                while j < len(argv) and not argv[j].startswith("--"):
+                while j < len(argv) and not argv[j].startswith("-"):
                     depends_on.append(argv[j])
                     j += 1
                 i = j

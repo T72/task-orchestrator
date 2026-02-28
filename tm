@@ -56,7 +56,7 @@ def build_enforcement_engine() -> object | None:
         from enforcement import EnforcementEngine
 
         db_dir = resolve_storage_root()
-        db_dir.mkdir(exist_ok=True)
+        db_dir.mkdir(parents=True, exist_ok=True)
         return EnforcementEngine(resolve_db_path())
     except ImportError:
         LOGGER.debug("Enforcement module unavailable; continuing without enforcement engine")
