@@ -18,11 +18,15 @@ TESTS_RUN=0
 TESTS_PASSED=0
 TESTS_FAILED=0
 
-# Find tm in parent directory or current directory
-if [ -f "../tm" ]; then
-    TM="../tm"
+# Resolve project paths before changing directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+
+# Find tm in project root or current directory
+if [ -f "$PROJECT_DIR/tm" ]; then
+    TM_ORIG="$PROJECT_DIR/tm"
 elif [ -f "./tm" ]; then
-    TM="./tm"
+    TM_ORIG="./tm"
 else
     echo "Error: tm executable not found"
     exit 1
@@ -32,6 +36,12 @@ fi
 TEST_DIR=$(mktemp -d -t tm_event_test_XXXXXX)
 cd "$TEST_DIR"
 git init >/dev/null 2>&1
+cp "$TM_ORIG" ./tm
+if [ -d "$PROJECT_DIR/src" ]; then
+    cp -r "$PROJECT_DIR/src" ./
+fi
+chmod +x ./tm
+TM="./tm"
 
 echo -e "${BLUE}===================================${NC}"
 echo -e "${BLUE}   Event-Driven Coordination Tests ${NC}"

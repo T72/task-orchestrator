@@ -1,4 +1,6 @@
 #!/bin/bash
+# This suite intentionally invokes commands expected to fail; do not exit on first non-zero.
+set +e
 
 # Additional Critical Edge Case Tests for v2.7.2 - ISOLATED VERSION with WSL Safety
 # These test the most important edge cases for production use
@@ -113,7 +115,7 @@ TASK_ID=$(timeout 5 $TM add "Test task" | grep -o '[a-f0-9]\{8\}')
 echo "corrupt data" > .task-orchestrator/tasks.db
 timeout 5 $TM list >/dev/null 2>&1
 RESULT=$?
-test_result $RESULT "Database corruption detection"
+test_result $(expr 1 - $RESULT) "Database corruption detection"
 
 # Reinitialize for remaining tests
 rm -rf .task-orchestrator
@@ -122,25 +124,25 @@ timeout 5 $TM init >/dev/null 2>&1
 # Test 2: Empty string handling
 timeout 5 $TM add "" >/dev/null 2>&1
 RESULT=$?
-test_result $RESULT "Empty task title rejection"
+test_result $(expr 1 - $RESULT) "Empty task title rejection"
 
 # Test 3: Very long task IDs (simulated)
 TASK_ID=$(timeout 5 $TM add "Normal task" | grep -o '[a-f0-9]\{8\}')
 timeout 5 $TM show "this-is-definitely-not-a-valid-task-id-that-exists" >/dev/null 2>&1
 RESULT=$?
-test_result $RESULT "Invalid task ID handling"
+test_result $(expr 1 - $RESULT) "Invalid task ID handling"
 
 # Test 4: Special character handling in descriptions
 timeout 5 $TM add "Special chars" -d "Test with special chars: !@#$%^&*(){}[]|\\:;\"'<>,.?/~\`" >/dev/null 2>&1
 RESULT=$?
-test_result $(expr 1 - $RESULT) "Special characters in description"
+test_result $RESULT "Special characters in description"
 
 # Test 5: Network/filesystem issues simulation
 chmod 000 .task-orchestrator/tasks.db 2>/dev/null
 timeout 5 $TM list >/dev/null 2>&1
 RESULT=$?
 chmod 644 .task-orchestrator/tasks.db 2>/dev/null
-test_result $RESULT "Filesystem permission handling"
+test_result $(expr 1 - $RESULT) "Filesystem permission handling"
 
 # Test 6: Memory constraint simulation (reduced for WSL)
 if [ $IS_WSL -eq 1 ]; then
@@ -159,7 +161,7 @@ for i in $(seq 1 $TASK_COUNT); do
 done
 timeout 5 $TM list | wc -l >/dev/null 2>&1
 RESULT=$?
-test_result $(expr 1 - $RESULT) "Large task set handling"
+test_result $RESULT "Large task set handling"
 
 # Test 7: Dependency chain depth (reduced for WSL)
 if [ $IS_WSL -eq 1 ]; then
@@ -181,7 +183,7 @@ for i in $(seq 2 $CHAIN_DEPTH); do
 done
 timeout 5 $TM list --status blocked | wc -l | grep -q "$((CHAIN_DEPTH - 1))"
 RESULT=$?
-test_result $(expr 1 - $RESULT) "Deep dependency chain ($CHAIN_DEPTH levels)"
+test_result $RESULT "Deep dependency chain ($CHAIN_DEPTH levels)"
 
 # Test 8: Rapid status changes
 TASK_ID=$(timeout 5 $TM add "Rapid change task" | grep -o '[a-f0-9]\{8\}')
@@ -190,7 +192,7 @@ timeout 2 $TM update $TASK_ID --status blocked >/dev/null 2>&1
 timeout 2 $TM update $TASK_ID --status pending >/dev/null 2>&1
 timeout 2 $TM update $TASK_ID --status completed >/dev/null 2>&1
 RESULT=$?
-test_result $(expr 1 - $RESULT) "Rapid status transitions"
+test_result $RESULT "Rapid status transitions"
 
 # Note: Cleanup is handled by trap
 

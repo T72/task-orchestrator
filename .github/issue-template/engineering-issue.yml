@@ -1,0 +1,101 @@
+name: Engineering Issue
+description: Structured engineering work item (required for non-trivial changes)
+title: "<type>: <concise description>"
+labels: []
+body:
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      description: Select exactly one
+      options:
+        - bug
+        - refactor
+        - feature
+        - architecture
+        - governance
+        - infra
+        - performance
+        - security
+        - test
+        - documentation
+        - verification
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Describe the current situation or problem clearly and objectively.
+    validations:
+      required: true
+  
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies (optional)
+      description: Use the machine-readable format below when needed.
+      placeholder: |
+        ## Dependencies
+        blocked-by: #123
+        blocks: #456
+    validations:
+      required: false
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why This Matters
+      description: Explain impact (correctness, safety, scalability, cost, latency, UX, compliance, etc.)
+    validations:
+      required: true
+
+  - type: textarea
+    id: direction
+    attributes:
+      label: Proposed Direction
+      description: High-level solution approach only. No detailed code yet.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria (Definition of Done)
+      description: Provide measurable, testable criteria.
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+        - [ ] Criterion 3
+    validations:
+      required: true
+
+  - type: textarea
+    id: tdd
+    attributes:
+      label: TDD Plan (Required for behavioral changes)
+      description: Describe the tests that will be added or modified.
+      placeholder: |
+        - Test type: unit / contract / integration
+        - File path:
+        - What behavior is verified:
+        - Will this test initially fail?
+    validations:
+      required: false
+
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of Scope
+      description: Explicitly define what is NOT included.
+    validations:
+      required: true
+
+  - type: input
+    id: milestone
+    attributes:
+      label: Suggested Milestone
+      description: Use pattern "<Phase> – <Objective>" or write "To be assigned."
+    validations:
+      required: false

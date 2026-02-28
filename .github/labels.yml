@@ -1,0 +1,150 @@
+# ----------------------------
+# Type
+# ----------------------------
+- name: type:bug
+  color: "b60205"
+  description: "A defect: something is not working as intended."
+
+- name: type:feature
+  color: "1d76db"
+  description: "New capability or user-facing functionality."
+
+- name: type:refactor
+  color: "fbca04"
+  description: "Internal change that preserves external behavior."
+
+- name: type:architecture
+  color: "0052cc"
+  description: "Structural design or boundary change affecting system architecture."
+
+- name: type:governance
+  color: "5319e7"
+  description: "Process, standards, templates, or engineering governance changes."
+
+- name: type:infra
+  color: "0e8a16"
+  description: "Infrastructure, CI/CD, build, or environment-related work."
+
+- name: type:security
+  color: "d93f0b"
+  description: "Security or safety improvements (auth, policy, access control)."
+
+- name: type:performance
+  color: "c2e0c6"
+  description: "Performance/cost/latency optimization work."
+
+- name: type:test
+  color: "f9d0c4"
+  description: "Testing work (unit/contract/integration), test infra, or coverage improvements."
+
+- name: type:documentation
+  color: "d4c5f9"
+  description: "Documentation improvements or additions."
+
+- name: type:verification
+  color: "bfdadc"
+  description: "Verification activities (audit, validation, review follow-ups)."
+
+# ----------------------------
+# Phase
+# ----------------------------
+- name: phase:research
+  color: "cfd3d7"
+  description: "Feasibility exploration and unknown reduction."
+
+- name: phase:mvp
+  color: "a2eeef"
+  description: "Minimum viable functionality to establish baseline."
+
+- name: phase:stabilization
+  color: "5319e7"
+  description: "Correctness, CI confidence, and reliability improvements."
+
+- name: phase:hardening
+  color: "1d76db"
+  description: "Security/safety/robustness improvements and guardrails."
+
+- name: phase:architecture
+  color: "0052cc"
+  description: "Structural system changes and boundary clarification."
+
+- name: phase:observability
+  color: "006b75"
+  description: "Metrics/logging/tracing improvements."
+
+- name: phase:operations
+  color: "0e8a16"
+  description: "Runtime, deployment, healthchecks, and operability."
+
+- name: phase:optimization
+  color: "c2e0c6"
+  description: "Performance/cost improvements after correctness is stable."
+
+- name: phase:governance
+  color: "5319e7"
+  description: "Governance rollouts, standards enforcement, process updates."
+
+- name: phase:release
+  color: "0e8a16"
+  description: "Release preparation, packaging, and deploy readiness."
+
+# ----------------------------
+# Priority
+# ----------------------------
+- name: priority:critical
+  color: "b60205"
+  description: "Must be addressed immediately."
+
+- name: priority:high
+  color: "d93f0b"
+  description: "High priority; should be scheduled soon."
+
+- name: priority:medium
+  color: "fbca04"
+  description: "Normal priority."
+
+- name: priority:low
+  color: "cfd3d7"
+  description: "Low priority; do last."
+
+# ----------------------------
+# Risk
+# ----------------------------
+- name: risk:critical
+  color: "b60205"
+  description: "High risk to security, correctness, or stability."
+
+- name: risk:high
+  color: "d93f0b"
+  description: "Significant technical or operational risk."
+
+- name: risk:medium
+  color: "fbca04"
+  description: "Moderate risk."
+
+- name: risk:low
+  color: "cfd3d7"
+  description: "Low risk."
+
+# ----------------------------
+# Status
+# ----------------------------
+- name: status:blocked
+  color: "b60205"
+  description: "Blocked by unresolved issues listed under `blocked-by` in the issue body."
+
+- name: status:ready
+  color: "0e8a16"
+  description: "No unresolved `blocked-by` dependencies; eligible to start."
+
+- name: status:needs-clarification
+  color: "fbca04"
+  description: "Cannot proceed until missing info is provided."
+
+- name: status:needs-adr
+  color: "5319e7"
+  description: "Requires an ADR before implementation."
+
+- name: status:needs-tests
+  color: "f9d0c4"
+  description: "Requires test coverage (TDD enforcement)."

@@ -1,0 +1,45 @@
+name: Public Release Boundary
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+  workflow_dispatch:
+
+jobs:
+  boundary-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate source boundary (allowlisted scope)
+        run: |
+          bash scripts/validate-public-manifest.sh \
+            --root . \
+            --manifest release/public-manifest.yaml \
+            --only-included
+
+      - name: Build deterministic public artifact
+        run: |
+          mkdir -p /tmp/public-artifact
+          bash scripts/build-public-artifact.sh \
+            --root . \
+            --manifest release/public-manifest.yaml \
+            --output /tmp/public-artifact
+
+      - name: Verify artifact boundary
+        run: |
+          bash scripts/validate-public-manifest.sh \
+            --root /tmp/public-artifact \
+            --manifest release/public-manifest.yaml
+
+      - name: Run pipeline regression tests
+        run: |
+          bash tests/test_public_manifest_pipeline.sh

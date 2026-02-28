@@ -1,1491 +1,166 @@
 #!/usr/bin/env python3
-"""
-Enhanced Task Manager with Collaboration Features
-Extends the base tm with share, note, discover, sync, context, and join commands
+"""Task Orchestrator CLI entrypoint (thin bootstrap + command dispatch)."""
 
-@implements FR-025: Hook Decision Values (approve/block)
-@implements FR-026: Public Repository Support
-@implements UX-001: Command Name - Maintain 'tm' command
-@implements UX-003: Error Messages - Reference 'Task Orchestrator'
-@implements TECH-002: Hook Validation - Claude Code schema compliance
-@implements TECH-003: Variable Initialization - Prevent UnboundLocalError
-@implements TECH-004: Repository Structure - Maintain standard layout
-"""
+from __future__ import annotations
 
-import sys
-import os
+import logging
 import subprocess
-import shutil
-import json
-
-def update_orchestrator_md(tm):
-    """Helper to update ORCHESTRATOR.md after task changes"""
-    try:
-        from orchestrator_discovery import OrchestratorDiscovery
-        discovery = OrchestratorDiscovery(tm)
-        discovery.update_orchestrator_md()
-    except:
-        pass  # Silently fail to not disrupt workflow
+import sys
 from pathlib import Path
 
+LOGGER = logging.getLogger("task_orchestrator.tm")
+
 # Add src directory to path
-script_dir = Path(__file__).parent
-src_dir = script_dir / "src"
-if src_dir.exists():
-    sys.path.insert(0, str(src_dir))
+SCRIPT_DIR = Path(__file__).parent
+SRC_DIR = SCRIPT_DIR / "src"
+if SRC_DIR.exists():
+    sys.path.insert(0, str(SRC_DIR))
 
-# Import the collaboration module
-try:
-    from tm_collaboration import CollaborationManager
-except ImportError:
-    print("Warning: Collaboration module not found. Some commands will be unavailable.")
-    CollaborationManager = None
+from cli.context import CLIContext
+from cli.dispatcher import CommandDispatcher
+from cli.handlers.admin import ADMIN_COMMANDS, handle_admin
+from cli.handlers.collab import COLLAB_COMMANDS, handle_collab
+from cli.handlers.core import CORE_COMMANDS, handle_core
+from cli.handlers.enforcement import handle_enforcement
+from storage_paths import resolve_db_path, resolve_storage_root
 
-def main():
-    """Enhanced main function with collaboration commands and enforcement"""
-    
-    # Parse agent-id parameter early (before TaskManager initialization)
+
+def update_orchestrator_md(tm: object) -> None:
+    """Update ORCHESTRATOR.md after task lifecycle changes."""
+    try:
+        from orchestrator_discovery import OrchestratorDiscovery
+
+        discovery = OrchestratorDiscovery(tm)
+        discovery.update_orchestrator_md()
+    except Exception as e:
+        print(f"Warning: Failed to update ORCHESTRATOR.md: {e}", file=sys.stderr)
+
+
+def parse_agent_id(argv: list[str]) -> tuple[list[str], str | None]:
+    """Parse and strip --agent-id from argv."""
+    args = list(argv)
     agent_id_override = None
-    if '--agent-id' in sys.argv:
-        try:
-            idx = sys.argv.index('--agent-id')
-            if idx + 1 < len(sys.argv):
-                agent_id_override = sys.argv[idx + 1]
-                # Remove the parameter and its value from sys.argv to avoid conflicts
-                sys.argv.pop(idx + 1)  # Remove value
-                sys.argv.pop(idx)      # Remove parameter
-            else:
-                print("Error: --agent-id requires a value")
-                sys.exit(1)
-        except ValueError:
-            pass  # --agent-id not found, continue normally
-    
-    # Import enforcement system
-    enforcement_engine = None
+    if "--agent-id" in args:
+        idx = args.index("--agent-id")
+        if idx + 1 >= len(args):
+            print("Error: --agent-id requires a value")
+            raise SystemExit(1)
+        agent_id_override = args[idx + 1]
+        del args[idx : idx + 2]
+    return args, agent_id_override
+
+
+def build_enforcement_engine() -> object | None:
+    """Initialize optional enforcement engine."""
     try:
         from enforcement import EnforcementEngine
-        from pathlib import Path
-        
-        db_dir = Path.cwd() / ".task-orchestrator"
-        if not db_dir.exists():
-            db_dir.mkdir(exist_ok=True)
-        
-        db_path = db_dir / "tasks.db"
-        enforcement_engine = EnforcementEngine(db_path)
+
+        db_dir = resolve_storage_root()
+        db_dir.mkdir(parents=True, exist_ok=True)
+        return EnforcementEngine(resolve_db_path())
     except ImportError:
-        # Enforcement is optional - continue without it
-        pass
-    
-    # Check for enforcement-specific commands first
-    if len(sys.argv) > 1:
-        command = sys.argv[1]
-        
-        if command == "validate-orchestration":
-            if enforcement_engine:
-                result = enforcement_engine.validator.validate_context()
-                if result.is_valid:
-                    print("✅ Orchestration context is valid")
-                    sys.exit(0)
-                else:
-                    print(result.guidance)
-                    sys.exit(1)
-            else:
-                print("❌ Enforcement system not available")
-                sys.exit(1)
-        
-        elif command == "fix-orchestration":
-            if enforcement_engine:
-                interactive = "--interactive" in sys.argv
-                if interactive:
-                    success = enforcement_engine.fix_orchestration_interactive()
-                    sys.exit(0 if success else 1)
-                else:
-                    print("Use --interactive flag: tm fix-orchestration --interactive")
-                    sys.exit(1)
-            else:
-                print("❌ Enforcement system not available")
-                sys.exit(1)
-        
-        elif command == "config":
-            # Handle enforcement config (support both flag names)
-            if "--enforce-orchestration" in sys.argv or "--enforce-usage" in sys.argv:
-                if enforcement_engine:
-                    # Support both flag names for compatibility
-                    flag = "--enforce-orchestration" if "--enforce-orchestration" in sys.argv else "--enforce-usage"
-                    idx = sys.argv.index(flag)
-                    if idx + 1 < len(sys.argv):
-                        value = sys.argv[idx + 1].lower()
-                        if value in ["true", "false"]:
-                            from enforcement import EnforcementLevel
-                            level = EnforcementLevel.STANDARD if value == "true" else EnforcementLevel.ADVISORY
-                            if enforcement_engine.config.set_enforcement_level(level):
-                                print(f"✅ Enforcement {'enabled' if value == 'true' else 'disabled'}")
-                                sys.exit(0)
-                            else:
-                                print("❌ Failed to update enforcement setting")
-                                sys.exit(1)
-                        else:
-                            print(f"Use {flag} true|false")
-                            sys.exit(1)
-                    else:
-                        print(f"Usage: tm config {flag} true|false")
-                        sys.exit(1)
-                else:
-                    print("❌ Enforcement system not available")
-                    sys.exit(1)
-            
-            elif "--show-enforcement" in sys.argv:
-                if enforcement_engine:
-                    print(enforcement_engine.show_enforcement_status())
-                    sys.exit(0)
-                else:
-                    print("❌ Enforcement system not available")
-                    sys.exit(1)
-            
-            elif "--enforcement-level" in sys.argv:
-                if enforcement_engine:
-                    idx = sys.argv.index("--enforcement-level")
-                    if idx + 1 < len(sys.argv):
-                        level_str = sys.argv[idx + 1]
-                        if level_str in ["strict", "standard", "advisory"]:
-                            from enforcement import EnforcementLevel
-                            level = EnforcementLevel(level_str)
-                            if enforcement_engine.config.set_enforcement_level(level):
-                                print(f"✅ Enforcement level set to: {level_str}")
-                                sys.exit(0)
-                            else:
-                                print("❌ Failed to set enforcement level")
-                                sys.exit(1)
-                        else:
-                            print("Invalid level - use: strict, standard, or advisory")
-                            sys.exit(1)
-                    else:
-                        print("Usage: tm config --enforcement-level [strict|standard|advisory]")
-                        sys.exit(1)
-                else:
-                    print("❌ Enforcement system not available")
-                    sys.exit(1)
-    
-    # Apply enforcement for orchestrated commands
-    if enforcement_engine and len(sys.argv) > 1:
-        command = sys.argv[1]
-        orchestrated_commands = [
-            'add', 'join', 'share', 'note', 'discover', 'sync', 'context',
-            'assign', 'watch', 'template'
-        ]
-        
-        if command in orchestrated_commands:
-            if not enforcement_engine.enforce_orchestration(command):
-                sys.exit(1)
-    
-    # Import TaskManager for all commands
+        LOGGER.debug("Enforcement module unavailable; continuing without enforcement engine")
+        return None
+
+
+def build_dispatcher() -> CommandDispatcher:
+    """Build command registry."""
+    dispatcher = CommandDispatcher()
+    dispatcher.register(CORE_COMMANDS, handle_core)
+    dispatcher.register(COLLAB_COMMANDS, handle_collab)
+    dispatcher.register(ADMIN_COMMANDS, handle_admin)
+    return dispatcher
+
+
+def print_help() -> None:
+    print(
+        """Task Manager - Modular CLI
+
+Core:
+  init | add | list | show | update | complete | delete | assign | export | watch
+
+Collaboration:
+  join | share | note | discover | sync | context | progress | feedback
+
+Admin:
+  migrate | config | metrics | critical-path | report | template | wizard | hooks
+  phase-* | agent-*
+
+Enforcement:
+  validate-orchestration | fix-orchestration --interactive
+  config --enforce-usage true|false | --show-enforcement | --enforcement-level
+
+Global Options:
+  --agent-id <id>
+
+Environment:
+  TM_DB_PATH
+"""
+    )
+
+
+def main() -> int:
+    argv, agent_id_override = parse_agent_id(sys.argv)
+
+    if len(argv) < 2:
+        print("Usage: tm <command> [args]")
+        print("Commands: init, add, list, show, update, complete, export, etc.")
+        return 1
+
+    command = argv[1]
+    if command in {"--help", "-h", "help"}:
+        print_help()
+        return 0
+
+    enforcement_engine = build_enforcement_engine()
+
+    enforcement_result = handle_enforcement(command, argv, enforcement_engine)
+    if enforcement_result is not None:
+        return enforcement_result
+
+    if enforcement_engine and command in {
+        "add",
+        "join",
+        "share",
+        "note",
+        "discover",
+        "sync",
+        "context",
+        "assign",
+        "watch",
+        "template",
+    }:
+        if not enforcement_engine.enforce_orchestration(command):
+            return 1
+
     try:
         from tm_production import TaskManager
+
         tm = TaskManager(agent_id_override=agent_id_override)
     except ImportError as e:
         print(f"Error importing production module: {e}")
-        sys.exit(1)
-    
-    # Check if this is a collaboration command that needs special handling
-    if len(sys.argv) > 1 and sys.argv[1] in ['join', 'share', 'note', 'sync', 'context']:
-        if CollaborationManager is None:
-            print("Error: Collaboration features not available")
-            sys.exit(1)
-        
-        # Handle collaboration commands
-        repo_root = find_repo_root()
-        collab = CollaborationManager(repo_root)
-        
-        command = sys.argv[1]
-        
-        if len(sys.argv) < 3:
-            print(f"Usage: tm {command} <task_id> [message]")
-            sys.exit(1)
-        
-        task_id = sys.argv[2]
-        
-        if command == 'join':
-            collab.join(task_id)
-        elif command == 'context':
-            print(collab.context(task_id))
-        else:
-            # Commands that require a message
-            if len(sys.argv) < 4:
-                print(f"Usage: tm {command} <task_id> <message>")
-                sys.exit(1)
-            
-            message = ' '.join(sys.argv[3:])
-            
-            if command == 'share':
-                collab.share(task_id, message)
-            elif command == 'note':
-                collab.note(task_id, message)
-            elif command == 'sync':
-                collab.sync(task_id, message)
-    elif len(sys.argv) > 1 and sys.argv[1] == 'discover':
-        # Route discover through tm_production for notifications
-        if len(sys.argv) < 4:
-            print("Usage: tm discover <task_id> <message>")
-            sys.exit(1)
-        
-        task_id = sys.argv[2]
-        message = ' '.join(sys.argv[3:])
-        
-        if tm.discover(task_id, message):
-            print(f"Discovery shared for task {task_id}")
-        else:
-            print(f"Failed to share discovery")
-            sys.exit(1)
-    else:
-        # Handle standard tm commands using tm_production module
-        if len(sys.argv) < 2:
-            print("Usage: tm <command> [args]")
-            print("Commands: init, add, list, show, update, complete, export, etc.")
-            sys.exit(1)
-        
-        command = sys.argv[1]
-        
-        # Route to appropriate TaskManager method
-        if command == "init":
-            tm._init_db()
-            print("Task database initialized")
-            
-            # Set up AI agent discovery protocol
-            try:
-                from orchestrator_discovery import setup_discovery
-                setup_discovery(tm)
-            except ImportError:
-                print("ℹ️ AI agent discovery module not found, skipping ORCHESTRATOR.md setup")
-            except Exception as e:
-                print(f"ℹ️ Could not set up AI discovery: {e}")
-        elif command == "add":
-            if len(sys.argv) < 3:
-                print("Usage: tm add <title> [-d description] [-p priority] [--depends-on task_id] [--file path:line]")
-                print("       [--criteria JSON] [--deadline ISO8601] [--estimated-hours N] [--assignee name]")
-                print("       [--phase phase_id] [--context 'WHY: reason WHAT: deliverables DONE: criteria']")
-                sys.exit(1)
-            # Simple argument parsing for add command
-            title = sys.argv[2]
-            description = None
-            priority = None
-            depends_on = []
-            file_refs = []
-            success_criteria = None
-            deadline = None
-            estimated_hours = None
-            assignee = None
-            phase_id = None
-            context = None
-            
-            # Parse additional arguments
-            i = 3
-            while i < len(sys.argv):
-                if sys.argv[i] == "-d" and i + 1 < len(sys.argv):
-                    description = sys.argv[i + 1]
-                    i += 2
-                elif sys.argv[i] == "-p" and i + 1 < len(sys.argv):
-                    priority = sys.argv[i + 1]
-                    i += 2
-                elif sys.argv[i] == "--depends-on" and i + 1 < len(sys.argv):
-                    depends_on.append(sys.argv[i + 1])
-                    i += 2
-                elif sys.argv[i] == "--file" and i + 1 < len(sys.argv):
-                    file_refs.append(sys.argv[i + 1])
-                    i += 2
-                elif sys.argv[i] == "--criteria" and i + 1 < len(sys.argv):
-                    success_criteria = sys.argv[i + 1]
-                    i += 2
-                elif sys.argv[i] == "--deadline" and i + 1 < len(sys.argv):
-                    deadline = sys.argv[i + 1]
-                    i += 2
-                elif sys.argv[i] == "--estimated-hours" and i + 1 < len(sys.argv):
-                    estimated_hours = float(sys.argv[i + 1])
-                    i += 2
-                elif sys.argv[i] == "--assignee" and i + 1 < len(sys.argv):
-                    assignee = sys.argv[i + 1]
-                    i += 2
-                elif sys.argv[i] == "--phase" and i + 1 < len(sys.argv):
-                    phase_id = sys.argv[i + 1]
-                    i += 2
-                elif sys.argv[i] == "--context" and i + 1 < len(sys.argv):
-                    context = sys.argv[i + 1]
-                    i += 2
-                else:
-                    i += 1
-            
-            # Add file references to description if provided
-            if file_refs:
-                file_info = "Files: " + ", ".join(file_refs)
-                if description:
-                    description = f"{description}\n{file_info}"
-                else:
-                    description = file_info
-            
-            try:
-                task_id = tm.add(title, description=description, priority=priority, 
-                               depends_on=depends_on if depends_on else None,
-                               success_criteria=success_criteria, deadline=deadline,
-                               estimated_hours=estimated_hours, assignee=assignee,
-                               phase_id=phase_id, context=context)
-                print(f"Task created with ID: {task_id}")
-                update_orchestrator_md(tm)  # Update discovery file
-            except ValueError as e:
-                print(f"Error: {e}")
-                sys.exit(1)
-        elif command == "list":
-            # Parse list filters
-            status_filter = None
-            assignee_filter = None
-            has_deps = "--has-deps" in sys.argv
-            
-            if "--status" in sys.argv:
-                idx = sys.argv.index("--status")
-                if idx + 1 < len(sys.argv):
-                    status_filter = sys.argv[idx + 1]
-            
-            if "--assignee" in sys.argv:
-                idx = sys.argv.index("--assignee")
-                if idx + 1 < len(sys.argv):
-                    assignee_filter = sys.argv[idx + 1]
-            
-            tasks = tm.list(status=status_filter, assignee=assignee_filter, has_deps=has_deps)
-            
-            if not tasks:
-                print("No tasks found")
-            else:
-                for task in tasks:
-                    print(f"[{task['id']}] {task['title']} - {task['status']}")
-        elif command == "show":
-            if len(sys.argv) < 3:
-                print("Usage: tm show <task_id>")
-                sys.exit(1)
-            task_id = sys.argv[2]
-            task = tm.show(task_id)
-            if task:
-                for key, value in task.items():
-                    print(f"{key}: {value}")
-            else:
-                print(f"Task {task_id} not found")
-                sys.exit(1)
-        elif command == "update":
-            if len(sys.argv) < 3:
-                print("Usage: tm update <task_id> --status <status>")
-                sys.exit(1)
-            task_id = sys.argv[2]
-            # Simple status update handling
-            if "--status" in sys.argv:
-                idx = sys.argv.index("--status")
-                if idx + 1 < len(sys.argv):
-                    status = sys.argv[idx + 1]
-                    tm.update(task_id, status=status)
-                    print(f"Task {task_id} updated")
-        elif command == "complete":
-            if len(sys.argv) < 3:
-                print("Usage: tm complete <task_id> [--impact-review] [--summary text] [--actual-hours N] [--validate]")
-                sys.exit(1)
-            task_id = sys.argv[2]
-            impact_review = "--impact-review" in sys.argv
-            validate = "--validate" in sys.argv
-            completion_summary = None
-            actual_hours = None
-            
-            # Parse completion arguments
-            if "--summary" in sys.argv:
-                idx = sys.argv.index("--summary")
-                if idx + 1 < len(sys.argv):
-                    # Get all text after --summary until next flag or end
-                    end_idx = len(sys.argv)
-                    for i in range(idx + 2, len(sys.argv)):
-                        if sys.argv[i].startswith("--"):
-                            end_idx = i
-                            break
-                    completion_summary = ' '.join(sys.argv[idx + 1:end_idx])
-            
-            if "--actual-hours" in sys.argv:
-                idx = sys.argv.index("--actual-hours")
-                if idx + 1 < len(sys.argv):
-                    actual_hours = float(sys.argv[idx + 1])
-            
-            # Complete the task
-            tm.complete(task_id, completion_summary=completion_summary, 
-                       actual_hours=actual_hours, validate=validate)
-            print(f"Task {task_id} completed")
-            update_orchestrator_md(tm)  # Update discovery file
-            
-            # If impact review requested, show potentially affected tasks
-            if impact_review:
-                # Get the completed task details to find file references
-                task = tm.show(task_id)
-                if task and task.get('description') and 'Files:' in task['description']:
-                    print("\n=== Impact Review ===")
-                    print("This task referenced files. Other tasks may be affected.")
-                    print("Consider reviewing tasks that reference the same files.")
-                    # Create a notification for impact review
-                    tm.discover(task_id, f"Task completed with impact review - check related file references")
-        elif command == "delete":
-            if len(sys.argv) < 3:
-                print("Usage: tm delete <task_id>")
-                sys.exit(1)
-            task_id = sys.argv[2]
-            if tm.delete(task_id):
-                print(f"Task {task_id} deleted")
-            else:
-                print(f"Failed to delete task {task_id}")
-                sys.exit(1)
-        elif command == "assign":
-            if len(sys.argv) < 4:
-                print("Usage: tm assign <task_id> <assignee>")
-                sys.exit(1)
-            task_id = sys.argv[2]
-            assignee = sys.argv[3]
-            if tm.update(task_id, assignee=assignee):
-                print(f"Task {task_id} assigned to {assignee}")
-            else:
-                print(f"Failed to assign task {task_id}")
-                sys.exit(1)
-        elif command == "export":
-            # Export implementation using tm_production method
-            format_type = "json"  # default
-            if "--format" in sys.argv:
-                idx = sys.argv.index("--format")
-                if idx + 1 < len(sys.argv):
-                    format_type = sys.argv[idx + 1]
-            
-            output = tm.export(format=format_type)
-            print(output)
-        elif command == "watch":
-            # Watch for notifications
-            notifications = tm.watch()
-            if not notifications:
-                print("No new notifications")
-            else:
-                print(f"=== {len(notifications)} New Notification(s) ===")
-                for notif in notifications:
-                    print(f"[{notif['type'].upper()}] {notif['message']}")
-                    if notif['created_at']:
-                        print(f"  Time: {notif['created_at']}")
-                    print()
-        elif command == "progress":
-            # Handle progress updates
-            if len(sys.argv) < 4:
-                print("Usage: tm progress <task_id> <update_message>")
-                sys.exit(1)
-            task_id = sys.argv[2]
-            update_message = ' '.join(sys.argv[3:])
-            
-            if tm.progress(task_id, update_message):
-                print("Progress update added")
-            else:
-                print(f"Failed to add progress update to task {task_id}")
-                sys.exit(1)
-        elif command == "feedback":
-            # Handle feedback recording
-            if len(sys.argv) < 3:
-                print("Usage: tm feedback <task_id> [--quality N] [--timeliness N] [--note text]")
-                sys.exit(1)
-            task_id = sys.argv[2]
-            quality = None
-            timeliness = None
-            note = None
-            
-            # Parse feedback arguments
-            if "--quality" in sys.argv:
-                idx = sys.argv.index("--quality")
-                if idx + 1 < len(sys.argv):
-                    quality = int(sys.argv[idx + 1])
-            
-            if "--timeliness" in sys.argv:
-                idx = sys.argv.index("--timeliness")
-                if idx + 1 < len(sys.argv):
-                    timeliness = int(sys.argv[idx + 1])
-            
-            if "--note" in sys.argv:
-                idx = sys.argv.index("--note")
-                if idx + 1 < len(sys.argv):
-                    # Get all text after --note until next flag or end
-                    end_idx = len(sys.argv)
-                    for i in range(idx + 2, len(sys.argv)):
-                        if sys.argv[i].startswith("--"):
-                            end_idx = i
-                            break
-                    note = ' '.join(sys.argv[idx + 1:end_idx])
-            
-            if tm.feedback(task_id, quality=quality, timeliness=timeliness, notes=note):
-                print("Feedback recorded")
-            else:
-                print(f"Failed to record feedback for task {task_id}")
-                sys.exit(1)
-        elif command == "migrate":
-            # Handle database migrations
-            from migrations import MigrationManager
-            
-            db_path = os.path.join(os.path.expanduser("~"), ".task-orchestrator", "tasks.db")
-            migrator = MigrationManager(db_path)
-            
-            if "--status" in sys.argv:
-                status = migrator.get_status()
-                print(f"Applied migrations: {', '.join(status['applied']) or 'None'}")
-                print(f"Pending migrations: {', '.join(status['pending']) or 'None'}")
-                print(f"Up to date: {'Yes' if status['up_to_date'] else 'No'}")
-            elif "--apply" in sys.argv:
-                # Create backup first
-                backup_path = migrator.create_backup()
-                print(f"Backup created: {backup_path}")
-                
-                # Apply pending migrations
-                pending = migrator.get_pending_migrations()
-                if not pending:
-                    print("No pending migrations")
-                else:
-                    for migration in pending:
-                        print(f"Applying migration {migration['version']}: {migration['description']}")
-                        migrator.apply_migration(
-                            migration['version'],
-                            migration['up_sql'],
-                            migration['description']
-                        )
-                        print(f"✓ Migration {migration['version']} applied")
-            elif "--rollback" in sys.argv:
-                print("Rollback will restore from backup")
-                backups = sorted(Path(migrator.backups_dir).glob("*.db"))
-                if backups:
-                    latest_backup = backups[-1]
-                    print(f"Restoring from: {latest_backup}")
-                    shutil.copy2(latest_backup, db_path)
-                    print("Database restored from backup")
-                else:
-                    print("No backups available")
-            elif "--dry-run" in sys.argv:
-                pending = migrator.get_pending_migrations()
-                if not pending:
-                    print("No pending migrations")
-                else:
-                    for migration in pending:
-                        print(f"Would apply: {migration['version']} - {migration['description']}")
-                        changes = migrator.dry_run(migration['version'], migration['up_sql'])
-                        for change in changes:
-                            print(f"  - {change}")
-            else:
-                print("Usage: tm migrate [--status|--apply|--rollback|--dry-run]")
-        elif command == "config":
-            # Handle configuration management
-            from config_manager import ConfigManager
-            
-            config_path = os.path.join(os.path.expanduser("~"), ".task-orchestrator", "config.yaml")
-            config = ConfigManager(config_path)
-            
-            if "--enable" in sys.argv:
-                idx = sys.argv.index("--enable")
-                if idx + 1 < len(sys.argv):
-                    feature = sys.argv[idx + 1]
-                    config.enable_feature(feature)
-                    print(f"Feature '{feature}' enabled")
-            elif "--disable" in sys.argv:
-                idx = sys.argv.index("--disable")
-                if idx + 1 < len(sys.argv):
-                    feature = sys.argv[idx + 1]
-                    config.disable_feature(feature)
-                    print(f"Feature '{feature}' disabled")
-            elif "--minimal-mode" in sys.argv:
-                config.set_minimal_mode(True)
-                print("Minimal mode enabled - all Core Loop features disabled")
-            elif "--show" in sys.argv:
-                settings = config.get_all_settings()
-                print("Current configuration:")
-                for key, value in settings.items():
-                    print(f"  {key}: {value}")
-            elif "--reset" in sys.argv:
-                config.reset_to_defaults()
-                print("Configuration reset to defaults")
-            else:
-                print("Usage: tm config [--enable|--disable <feature>|--minimal-mode|--show|--reset]")
-        elif command == "feedback":
-            # Handle feedback command
-            if len(sys.argv) < 3:
-                print("Usage: tm feedback <task_id> [--quality N] [--timeliness N] [--note text]")
-                sys.exit(1)
-            
-            task_id = sys.argv[2]
-            quality = None
-            timeliness = None
-            note = None
-            
-            # Parse feedback arguments
-            if "--quality" in sys.argv:
-                idx = sys.argv.index("--quality")
-                if idx + 1 < len(sys.argv):
-                    quality = int(sys.argv[idx + 1])
-            
-            if "--timeliness" in sys.argv:
-                idx = sys.argv.index("--timeliness")
-                if idx + 1 < len(sys.argv):
-                    timeliness = int(sys.argv[idx + 1])
-            
-            if "--note" in sys.argv:
-                idx = sys.argv.index("--note")
-                if idx + 1 < len(sys.argv):
-                    note = ' '.join(sys.argv[idx + 1:])
-            
-            # Store feedback using TaskManager
-            if tm.feedback(task_id, quality, timeliness, note):
-                print(f"Feedback recorded for task {task_id}")
-            else:
-                print(f"Failed to record feedback for task {task_id}")
-                sys.exit(1)
-        elif command == "progress":
-            # Handle progress updates
-            if len(sys.argv) < 4:
-                print("Usage: tm progress <task_id> <update_message>")
-                sys.exit(1)
-            
-            task_id = sys.argv[2]
-            update = ' '.join(sys.argv[3:])
-            
-            if tm.progress(task_id, update):
-                print(f"Progress update added to task {task_id}")
-            else:
-                print(f"Failed to add progress update")
-                sys.exit(1)
-        elif command == "metrics":
-            # Handle metrics command with real calculations
-            if "--feedback" in sys.argv:
-                from metrics_calculator import MetricsCalculator
-                calculator = MetricsCalculator(tm.db_path)
-                metrics = calculator.get_feedback_metrics()
-                
-                print("Feedback metrics:")
-                print(f"  Average quality: {metrics['avg_quality']:.1f}/5")
-                print(f"  Average timeliness: {metrics['avg_timeliness']:.1f}/5")
-                print(f"  Tasks with feedback: {metrics['tasks_with_feedback']}")
-                print(f"  Total tasks: {metrics['total_tasks']}")
-                print(f"  Feedback coverage: {metrics['feedback_coverage']:.1%}")
-            else:
-                print("Usage: tm metrics [--feedback]")
-        elif command == "critical-path":
-            # Critical path visualization
-            # @implements FR-043: Critical Path Visualization Support
-            
-            # Import dependency graph
-            sys.path.insert(0, str(Path(__file__).parent / "src"))
-            from dependency_graph import DependencyGraph
-            
-            # Get all tasks (exclude completed)
-            tasks = tm.list(status="pending")
-            
-            if not tasks:
-                print("No active tasks to analyze")
-                sys.exit(0)
-            
-            # Build dependency graph
-            graph = DependencyGraph()
-            task_map = {}  # Map task ID to task details
-            
-            # Add nodes
-            for task in tasks:
-                task_id = task.get('id', '')
-                task_map[task_id] = task
-                estimated_hours = task.get('estimated_hours', 1.0)
-                graph.add_node(task_id, weight=estimated_hours)
-            
-            # Add edges based on dependencies
-            for task in tasks:
-                task_id = task.get('id', '')
-                depends_on = task.get('depends_on', [])
-                for dep_id in depends_on:
-                    # Note: task depends on dep_id
-                    graph.add_edge(task_id, dep_id)
-            
-            # Find critical path
-            critical_path, total_hours = graph.find_critical_path()
-            
-            if not critical_path:
-                print("No critical path found (possible cycle or no dependencies)")
-                sys.exit(0)
-            
-            # Identify blocking tasks
-            blocking_scores = graph.identify_blocking_tasks()
-            
-            # Sort tasks by blocking score
-            sorted_blockers = sorted(
-                blocking_scores.items(), 
-                key=lambda x: x[1], 
-                reverse=True
-            )[:5]  # Top 5 blockers
-            
-            # Display results
-            print("\n🎯 CRITICAL PATH ANALYSIS")
-            print("=" * 60)
-            
-            print(f"\n📊 Critical Path ({total_hours:.1f} hours total):")
-            print("-" * 40)
-            for i, node_id in enumerate(critical_path, 1):
-                task = task_map.get(node_id, {})
-                description = task.get('description') or task.get('title') or 'Unknown task'
-                description = description[:50] if description else 'Unknown'
-                hours = graph.weights.get(node_id, 1.0)
-                print(f"{i}. [{node_id[:8]}] {description} ({hours:.1f}h)")
-            
-            print(f"\n⏱️  Total Critical Path Duration: {total_hours:.1f} hours")
-            
-            print("\n🚫 Top Blocking Tasks:")
-            print("-" * 40)
-            for node_id, score in sorted_blockers:
-                task = task_map.get(node_id, {})
-                description = task.get('description') or task.get('title') or 'Unknown task'
-                description = description[:50] if description else 'Unknown'
-                dependents = len(graph.get_dependents(node_id))
-                on_critical = "🔴 CRITICAL" if node_id in critical_path else ""
-                print(f"• [{node_id[:8]}] {description}")
-                print(f"  Blocks: {dependents} tasks | Score: {score:.1f} {on_critical}")
-            
-            # Optional: Generate DOT file for graphical visualization
-            if len(sys.argv) > 2 and sys.argv[2] == "--dot":
-                dot_content = graph.to_dot()
-                dot_file = Path(".task-orchestrator/critical-path.dot")
-                dot_file.parent.mkdir(parents=True, exist_ok=True)
-                dot_file.write_text(dot_content)
-                print(f"\n📈 DOT file saved to: {dot_file}")
-                print("   Visualize with: dot -Tpng critical-path.dot -o critical-path.png")
-        
-        elif command == "report":
-            # Handle assessment report generation (FR-037)
-            if "--assessment" in sys.argv:
-                from assessment_reporter import AssessmentReporter
-                reporter = AssessmentReporter(tm.db_path)
-                
-                # Generate comprehensive assessment
-                assessment_data = reporter.generate_30_day_assessment()
-                
-                # Format and display report
-                formatted_report = reporter.format_assessment_report(assessment_data)
-                print(formatted_report)
-                
-                # Save report to file
-                report_file = Path(".task-orchestrator/reports/30_day_assessment.txt")
-                report_file.parent.mkdir(parents=True, exist_ok=True)
-                report_file.write_text(formatted_report)
-                print(f"\nReport saved to: {report_file}")
-                
-                # Also save raw JSON data
-                json_file = Path(".task-orchestrator/reports/30_day_assessment.json")
-                json_file.write_text(json.dumps(assessment_data, indent=2))
-                print(f"Raw data saved to: {json_file}")
-            else:
-                print("Usage: tm report [--assessment]")
-        elif command == "template":
-            # Template management commands
-            from template_parser import TemplateParser
-            from template_instantiator import TemplateInstantiator
-            
-            parser = TemplateParser()
-            instantiator = TemplateInstantiator()
-            
-            if len(sys.argv) < 3:
-                print("Usage: tm template <subcommand> [options]")
-                print("Subcommands:")
-                print("  list                    List available templates")
-                print("  show <name>            Show template details")
-                print("  apply <name> [vars]    Apply template with variables")
-                print("  create                 Interactive template builder")
-                sys.exit(1)
-            
-            subcommand = sys.argv[2]
-            
-            if subcommand == "list":
-                # List all available templates
-                templates = parser.list_templates()
-                if not templates:
-                    print("No templates found in .task-orchestrator/templates/")
-                else:
-                    print("Available Templates:")
-                    print("=" * 50)
-                    for tmpl in templates:
-                        print(f"\n{tmpl['name']} (v{tmpl['version']})")
-                        print(f"  {tmpl['description']}")
-                        if tmpl['tags']:
-                            print(f"  Tags: {', '.join(tmpl['tags'])}")
-                            
-            elif subcommand == "show":
-                # Show template details
-                if len(sys.argv) < 4:
-                    print("Usage: tm template show <name>")
-                    sys.exit(1)
-                    
-                template_name = sys.argv[3]
-                try:
-                    template = parser.get_template(template_name)
-                    print(f"Template: {template['name']} (v{template['version']})")
-                    print(f"Description: {template['description']}")
-                    print("\nVariables:")
-                    for var_name, var_def in template.get('variables', {}).items():
-                        required = " (required)" if var_def.get('required', False) else ""
-                        default = f" [default: {var_def.get('default')}]" if 'default' in var_def else ""
-                        print(f"  {var_name}: {var_def['type']}{required}{default}")
-                        print(f"    {var_def['description']}")
-                    print(f"\nTasks: {len(template['tasks'])} tasks will be created")
-                    for i, task in enumerate(template['tasks']):
-                        print(f"  {i+1}. {task['title']}")
-                except Exception as e:
-                    print(f"Error: {e}")
-                    sys.exit(1)
-                    
-            elif subcommand == "apply":
-                # Apply a template
-                if len(sys.argv) < 4:
-                    print("Usage: tm template apply <name> [--var name=value ...]")
-                    sys.exit(1)
-                    
-                template_name = sys.argv[3]
-                variables = {}
-                
-                # Parse variable arguments
-                i = 4
-                while i < len(sys.argv):
-                    if sys.argv[i] == "--var" and i + 1 < len(sys.argv):
-                        var_assignment = sys.argv[i + 1]
-                        if '=' in var_assignment:
-                            var_name, var_value = var_assignment.split('=', 1)
-                            # Try to parse as number or boolean
-                            if var_value.lower() in ['true', 'false']:
-                                variables[var_name] = var_value.lower() == 'true'
-                            elif var_value.isdigit():
-                                variables[var_name] = int(var_value)
-                            elif '.' in var_value and var_value.replace('.', '').isdigit():
-                                variables[var_name] = float(var_value)
-                            else:
-                                variables[var_name] = var_value
-                        i += 2
-                    else:
-                        i += 1
-                
-                try:
-                    # Load and instantiate template
-                    template = parser.get_template(template_name)
-                    tasks = instantiator.instantiate(template, variables)
-                    
-                    # Create tasks in Task Orchestrator
-                    created_ids = []
-                    for task in tasks:
-                        # Build add command arguments
-                        title = task['title']
-                        
-                        # Create the task
-                        task_id = tm.add(title, 
-                                       description=task.get('description'),
-                                       priority=task.get('priority'),
-                                       assignee=task.get('assignee'),
-                                       depends_on=None,  # We'll handle dependencies separately
-                                       estimated_hours=task.get('estimated_hours'))
-                        
-                        if task_id:
-                            created_ids.append(task_id)
-                            print(f"Created task {task_id}: {title}")
-                            
-                            # Update with dependencies if present
-                            if 'depends_on' in task and task['depends_on']:
-                                # Dependencies already have the correct IDs from instantiator
-                                for dep_id in task['depends_on']:
-                                    # Find the actual created ID that corresponds to this template ID
-                                    actual_dep_id = None
-                                    for orig_idx, template_task_id in instantiator.task_id_map.items():
-                                        if template_task_id == dep_id:
-                                            # This is the index, get the created ID
-                                            if orig_idx < len(created_ids):
-                                                actual_dep_id = created_ids[orig_idx]
-                                                break
-                                    
-                                    if actual_dep_id:
-                                        # Update task to add dependency
-                                        # Note: This would need to be implemented in tm_production
-                                        pass
-                        else:
-                            print(f"Failed to create task: {title}")
-                    
-                    print(f"\nSuccessfully created {len(created_ids)} tasks from template '{template_name}'")
-                    
-                except Exception as e:
-                    print(f"Error applying template: {e}")
-                    import traceback
-                    traceback.print_exc()
-                    sys.exit(1)
-                    
-            elif subcommand == "create":
-                # Interactive template builder
-                print("Interactive template builder - Coming soon!")
-                print("For now, create templates manually in .task-orchestrator/templates/")
-                
-            else:
-                print(f"Unknown template subcommand: {subcommand}")
-                sys.exit(1)
-        elif command == "wizard":
-            # Interactive wizard for guided task creation
-            from interactive_wizard import InteractiveWizard
-            from template_parser import TemplateParser
-            from template_instantiator import TemplateInstantiator
-            
-            parser = TemplateParser()
-            instantiator = TemplateInstantiator()
-            wizard = InteractiveWizard(parser, instantiator, tm)
-            
-            # Check for quick mode
-            if len(sys.argv) > 2 and sys.argv[2] == "--quick":
-                success = wizard.quick_start()
-            else:
-                success = wizard.run()
-            
-            if not success:
-                sys.exit(1)
-        elif command == "hooks":
-            # Hook performance monitoring commands
-            from hook_performance_monitor import HookPerformanceMonitor
-            
-            monitor = HookPerformanceMonitor()
-            
-            if len(sys.argv) < 3:
-                print("Usage: tm hooks <subcommand> [options]")
-                print("Subcommands:")
-                print("  report [hook_name]     Show performance report")
-                print("  alerts [severity]      Show recent alerts")
-                print("  thresholds             Configure performance thresholds")
-                print("  cleanup [days]         Clean up old metrics")
-                sys.exit(1)
-            
-            subcommand = sys.argv[2]
-            
-            if subcommand == "report":
-                # Generate performance report
-                hook_name = sys.argv[3] if len(sys.argv) > 3 else None
-                days = int(sys.argv[4]) if len(sys.argv) > 4 else 7
-                
-                report = monitor.get_performance_report(hook_name, days)
-                
-                if hook_name:
-                    # Specific hook report
-                    print(f"\n=== Performance Report: {hook_name} ===")
-                    print(f"Period: Last {days} days\n")
-                    
-                    summary = report.get('summary', {})
-                    print("Summary Statistics:")
-                    print(f"  Total Executions: {summary.get('total_executions', 0)}")
-                    print(f"  Success Rate: {summary.get('success_rate', 0):.1f}%")
-                    print(f"  Avg Duration: {summary.get('avg_duration_ms', 0):.1f}ms")
-                    print(f"  P50 Duration: {summary.get('p50_duration_ms', 0):.1f}ms")
-                    print(f"  P95 Duration: {summary.get('p95_duration_ms', 0):.1f}ms")
-                    print(f"  P99 Duration: {summary.get('p99_duration_ms', 0):.1f}ms")
-                    
-                    if report.get('alerts'):
-                        print(f"\nRecent Alerts ({len(report['alerts'])}):")
-                        for alert in report['alerts'][:5]:
-                            print(f"  [{alert['severity'].upper()}] {alert['message']}")
-                else:
-                    # Overall report
-                    print(f"\n=== Hook Performance Report ===")
-                    print(f"Period: Last {days} days\n")
-                    
-                    overall = report.get('overall', {})
-                    print("Overall Statistics:")
-                    print(f"  Total Executions: {overall.get('total_executions', 0)}")
-                    print(f"  Success Rate: {overall.get('success_rate', 0):.1f}%")
-                    print(f"  Avg Duration: {overall.get('avg_duration_ms', 0):.1f}ms")
-                    
-                    if report.get('hooks'):
-                        print("\nTop Hooks by Executions:")
-                        for hook in report['hooks'][:10]:
-                            print(f"  {hook['name']}:")
-                            print(f"    Executions: {hook['total']}")
-                            print(f"    Success Rate: {hook['success_rate']:.1f}%")
-                            print(f"    Avg Duration: {hook['avg_duration_ms']:.1f}ms")
-                            print(f"    P95 Duration: {hook['p95_duration_ms']:.1f}ms")
-                    
-                    if report.get('slow_hooks'):
-                        print("\nSlow Hooks (>" + str(monitor.thresholds['warning_ms']) + "ms):")
-                        for hook in report['slow_hooks']:
-                            print(f"  {hook['name']}: {hook['slow_executions']} slow executions")
-                            
-            elif subcommand == "alerts":
-                # Show recent alerts
-                severity = sys.argv[3] if len(sys.argv) > 3 else None
-                hours = int(sys.argv[4]) if len(sys.argv) > 4 else 24
-                
-                alerts = monitor.get_alerts(severity, hours)
-                
-                if alerts:
-                    print(f"\n=== Hook Performance Alerts ===")
-                    print(f"Last {hours} hours")
-                    if severity:
-                        print(f"Severity: {severity}\n")
-                    
-                    for alert in alerts:
-                        timestamp = alert['timestamp'].split('.')[0] if alert['timestamp'] else 'Unknown'
-                        print(f"[{timestamp}] {alert['severity'].upper()}: {alert['hook_name']}")
-                        print(f"  {alert['message']}")
-                        if alert['duration_ms']:
-                            print(f"  Duration: {alert['duration_ms']:.0f}ms")
-                        print()
-                else:
-                    print(f"No alerts in the last {hours} hours")
-                    
-            elif subcommand == "thresholds":
-                # Configure thresholds
-                if len(sys.argv) > 3:
-                    # Set thresholds
-                    warning = int(sys.argv[3]) if len(sys.argv) > 3 else None
-                    critical = int(sys.argv[4]) if len(sys.argv) > 4 else None
-                    timeout = int(sys.argv[5]) if len(sys.argv) > 5 else None
-                    
-                    monitor.configure_thresholds(warning, critical, timeout)
-                    print("Thresholds updated successfully")
-                
-                # Show current thresholds
-                print("\nCurrent Performance Thresholds:")
-                print(f"  Warning: {monitor.thresholds['warning_ms']}ms")
-                print(f"  Critical: {monitor.thresholds['critical_ms']}ms")
-                print(f"  Timeout: {monitor.thresholds['timeout_ms']}ms")
-                
-            elif subcommand == "cleanup":
-                # Clean up old metrics
-                days = int(sys.argv[3]) if len(sys.argv) > 3 else 30
-                deleted = monitor.cleanup_old_metrics(days)
-                print(f"Cleaned up {deleted} old metric records (older than {days} days)")
-                
-            else:
-                print(f"Unknown hooks subcommand: {subcommand}")
-                sys.exit(1)
-        
-        elif command == "phase-create":
-            # Create a new phase
-            if len(sys.argv) < 3:
-                print("Usage: tm phase-create <name> [--description desc] [--parent phase_id]")
-                sys.exit(1)
-            
-            name = sys.argv[2]
-            description = None
-            parent_id = None
-            
-            # Parse additional arguments
-            i = 3
-            while i < len(sys.argv):
-                if sys.argv[i] == "--description" and i + 1 < len(sys.argv):
-                    description = sys.argv[i + 1]
-                    i += 2
-                elif sys.argv[i] == "--parent" and i + 1 < len(sys.argv):
-                    parent_id = sys.argv[i + 1]
-                    i += 2
-                else:
-                    i += 1
-            
-            try:
-                phase_id = tm.phase_manager.create_phase(name, description, parent_id)
-                print(f"Phase created with ID: {phase_id}")
-            except Exception as e:
-                print(f"Error creating phase: {e}")
-                sys.exit(1)
-        
-        elif command == "phase-list":
-            # List phases
-            status = None
-            parent_id = None
-            
-            # Parse additional arguments
-            i = 2
-            while i < len(sys.argv):
-                if sys.argv[i] == "--status" and i + 1 < len(sys.argv):
-                    status = sys.argv[i + 1]
-                    i += 2
-                elif sys.argv[i] == "--parent" and i + 1 < len(sys.argv):
-                    parent_id = sys.argv[i + 1]
-                    i += 2
-                else:
-                    i += 1
-            
-            phases = tm.phase_manager.list_phases(status, parent_id)
-            
-            if not phases:
-                print("No phases found")
-            else:
-                print(f"{'ID':<10} {'Name':<30} {'Status':<12} {'Progress'}")
-                print("-" * 60)
-                for phase in phases:
-                    progress = tm.phase_manager.get_phase_progress(phase['id'])
-                    print(f"{phase['id']:<10} {phase['name'][:30]:<30} {phase['status']:<12} {progress:.0f}%")
-        
-        elif command == "phase-show":
-            # Show phase details
-            if len(sys.argv) < 3:
-                print("Usage: tm phase-show <phase_id>")
-                sys.exit(1)
-            
-            phase_id = sys.argv[2]
-            
-            try:
-                phase = tm.phase_manager.show_phase(phase_id)
-                
-                print(f"\n=== Phase: {phase['name']} ===")
-                print(f"ID: {phase['id']}")
-                print(f"Status: {phase['status']}")
-                if phase['description']:
-                    print(f"Description: {phase['description']}")
-                
-                # Show metrics
-                metrics = phase['metrics']
-                print(f"\nProgress: {metrics['progress_percentage']:.0f}%")
-                print(f"Tasks: {metrics['tasks_completed']}/{metrics['tasks_total']} completed")
-                if metrics['tasks_in_progress'] > 0:
-                    print(f"       {metrics['tasks_in_progress']} in progress")
-                if metrics['tasks_blocked'] > 0:
-                    print(f"       {metrics['tasks_blocked']} blocked")
-                if metrics['duration_days'] is not None:
-                    print(f"Duration: {metrics['duration_days']} days")
-                
-                # Show dependencies
-                if phase['dependencies']:
-                    print("\nDependencies:")
-                    for dep in phase['dependencies']:
-                        print(f"  - {dep['name']} ({dep['status']})")
-                
-                # Show gates
-                if phase['gates']:
-                    print("\nCompletion Gates:")
-                    for gate in phase['gates']:
-                        print(f"  - {gate['gate_type']}: {gate['status']}")
-                
-            except Exception as e:
-                print(f"Error showing phase: {e}")
-                sys.exit(1)
-        
-        elif command == "phase-update":
-            # Update phase
-            if len(sys.argv) < 3:
-                print("Usage: tm phase-update <phase_id> [--name name] [--status status] [--description desc]")
-                sys.exit(1)
-            
-            phase_id = sys.argv[2]
-            updates = {}
-            
-            # Parse additional arguments
-            i = 3
-            while i < len(sys.argv):
-                if sys.argv[i] == "--name" and i + 1 < len(sys.argv):
-                    updates['name'] = sys.argv[i + 1]
-                    i += 2
-                elif sys.argv[i] == "--status" and i + 1 < len(sys.argv):
-                    updates['status'] = sys.argv[i + 1]
-                    i += 2
-                elif sys.argv[i] == "--description" and i + 1 < len(sys.argv):
-                    updates['description'] = sys.argv[i + 1]
-                    i += 2
-                else:
-                    i += 1
-            
-            if updates:
-                try:
-                    tm.phase_manager.update_phase(phase_id, **updates)
-                    print(f"Phase {phase_id} updated successfully")
-                except Exception as e:
-                    print(f"Error updating phase: {e}")
-                    sys.exit(1)
-            else:
-                print("No updates specified")
-        
-        elif command == "phase-add-dependency":
-            # Add phase dependency
-            if len(sys.argv) < 4:
-                print("Usage: tm phase-add-dependency <phase_id> <depends_on_phase_id>")
-                sys.exit(1)
-            
-            phase_id = sys.argv[2]
-            depends_on = sys.argv[3]
-            
-            try:
-                dep_id = tm.phase_manager.add_phase_dependency(phase_id, depends_on)
-                print(f"Dependency added: {phase_id} depends on {depends_on}")
-            except Exception as e:
-                print(f"Error adding dependency: {e}")
-                sys.exit(1)
-        
-        elif command == "phase-add-gate":
-            # Add completion gate
-            if len(sys.argv) < 4:
-                print("Usage: tm phase-add-gate <phase_id> <gate_type> [--threshold N]")
-                print("Gate types: task_completion, approval, custom")
-                sys.exit(1)
-            
-            phase_id = sys.argv[2]
-            gate_type = sys.argv[3]
-            criteria = {}
-            
-            # Parse additional arguments
-            i = 4
-            while i < len(sys.argv):
-                if sys.argv[i] == "--threshold" and i + 1 < len(sys.argv):
-                    criteria['threshold'] = float(sys.argv[i + 1])
-                    i += 2
-                else:
-                    i += 1
-            
-            # Default threshold for task_completion
-            if gate_type == "task_completion" and 'threshold' not in criteria:
-                criteria['threshold'] = 100
-            
-            try:
-                gate_id = tm.phase_manager.add_phase_gate(phase_id, gate_type, criteria)
-                print(f"Gate added with ID: {gate_id}")
-            except Exception as e:
-                print(f"Error adding gate: {e}")
-                sys.exit(1)
-        
-        # ========== Agent Management Commands (FR-017, FR-019, FR-020) ==========
-        elif command == "agent-register":
-            # Register a new agent
-            if len(sys.argv) < 4:
-                print("Usage: tm agent-register <agent_id> <name> [--type <type>] [--capabilities <cap1,cap2>]")
-                sys.exit(1)
-            
-            from src.agent_manager import AgentManager
-            agent_id = sys.argv[2]
-            name = sys.argv[3]
-            
-            # Parse optional arguments
-            agent_type = None
-            capabilities = []
-            
-            if "--type" in sys.argv:
-                idx = sys.argv.index("--type")
-                if idx + 1 < len(sys.argv):
-                    agent_type = sys.argv[idx + 1]
-            
-            if "--capabilities" in sys.argv:
-                idx = sys.argv.index("--capabilities")
-                if idx + 1 < len(sys.argv):
-                    capabilities = sys.argv[idx + 1].split(',')
-            
-            with AgentManager() as am:
-                if am.register_agent(agent_id, name, agent_type, capabilities):
-                    print(f"✅ Agent '{agent_id}' registered successfully")
-                else:
-                    print(f"❌ Failed to register agent '{agent_id}'")
-                    sys.exit(1)
-        
-        elif command == "agent-list":
-            # List all agents
-            from src.agent_manager import AgentManager
-            
-            status_filter = "active"
-            type_filter = None
-            
-            if "--status" in sys.argv:
-                idx = sys.argv.index("--status")
-                if idx + 1 < len(sys.argv):
-                    status_filter = sys.argv[idx + 1]
-            
-            if "--type" in sys.argv:
-                idx = sys.argv.index("--type")
-                if idx + 1 < len(sys.argv):
-                    type_filter = sys.argv[idx + 1]
-            
-            with AgentManager() as am:
-                agents = am.discover_agents(status_filter, type_filter)
-                if agents:
-                    print(f"{'ID':<20} {'Name':<30} {'Type':<15} {'Status':<10}")
-                    print("-" * 75)
-                    for agent in agents:
-                        print(f"{agent['id']:<20} {agent['name']:<30} {agent.get('type', 'N/A'):<15} {agent['status']:<10}")
-                else:
-                    print("No agents found")
-        
-        elif command == "agent-status":
-            # Get agent status and details
-            if len(sys.argv) < 3:
-                print("Usage: tm agent-status <agent_id>")
-                sys.exit(1)
-            
-            from src.agent_manager import AgentManager
-            agent_id = sys.argv[2]
-            
-            with AgentManager() as am:
-                agent = am.get_agent(agent_id)
-                if agent:
-                    print(f"Agent: {agent['name']} ({agent['id']})")
-                    print(f"Type: {agent.get('type', 'N/A')}")
-                    print(f"Status: {agent['status']}")
-                    print(f"Capabilities: {', '.join(agent.get('capabilities', []))}")
-                    print(f"Last Heartbeat: {agent.get('last_heartbeat', 'Never')}")
-                    print(f"Registered: {agent.get('registered_at', 'Unknown')}")
-                else:
-                    print(f"Agent '{agent_id}' not found")
-                    sys.exit(1)
-        
-        elif command == "agent-workload":
-            # Show agent workload information
-            from src.agent_manager import AgentManager
-            
-            with AgentManager() as am:
-                agents = am.discover_agents(status='active')
-                if agents:
-                    print(f"{'Agent':<20} {'Tasks':<10} {'Hours':<10} {'Load':<10}")
-                    print("-" * 50)
-                    for agent in agents:
-                        workload = am.track_workload(agent['id'])
-                        print(f"{agent['id']:<20} {workload.get('task_count', 0):<10} "
-                              f"{workload.get('estimated_hours', 0):<10.1f} "
-                              f"{workload.get('load_score', 0):<10.0f}%")
-                else:
-                    print("No active agents found")
-        
-        elif command == "agent-metrics":
-            # Show agent performance metrics
-            if len(sys.argv) < 3:
-                print("Usage: tm agent-metrics <agent_id> [--range daily|weekly|monthly]")
-                sys.exit(1)
-            
-            from src.agent_manager import AgentManager
-            agent_id = sys.argv[2]
-            time_range = "daily"
-            
-            if "--range" in sys.argv:
-                idx = sys.argv.index("--range")
-                if idx + 1 < len(sys.argv):
-                    time_range = sys.argv[idx + 1]
-            
-            with AgentManager() as am:
-                metrics = am.get_agent_metrics(agent_id, time_range)
-                if metrics:
-                    print(f"Performance Metrics for {agent_id} ({time_range}):")
-                    print(f"  Completion Rate: {metrics['completion_rate']}%")
-                    print(f"  Avg Task Duration: {metrics['average_task_duration']} min")
-                    print(f"  Quality Score: {metrics['quality_score']}/100")
-                    print(f"  Tasks Handled: {metrics['tasks_handled']}")
-                    print(f"  Overall Performance: {metrics['performance_score']}/100")
-                else:
-                    print(f"No metrics available for agent '{agent_id}'")
-        
-        elif command == "agent-message":
-            # Send message between agents
-            if len(sys.argv) < 5:
-                print("Usage: tm agent-message <from_agent> <to_agent> <message> [--priority low|normal|high|critical]")
-                print("   Or: tm agent-message <from_agent> broadcast <message> [--priority ...]")
-                sys.exit(1)
-            
-            from src.agent_manager import AgentManager
-            from_agent = sys.argv[2]
-            to_agent = sys.argv[3]
-            message = sys.argv[4]
-            priority = "normal"
-            
-            if "--priority" in sys.argv:
-                idx = sys.argv.index("--priority")
-                if idx + 1 < len(sys.argv):
-                    priority = sys.argv[idx + 1]
-            
-            with AgentManager() as am:
-                if to_agent == "broadcast":
-                    if am.broadcast_message(from_agent, message, priority):
-                        print(f"✅ Broadcast message sent from {from_agent}")
-                    else:
-                        print(f"❌ Failed to send broadcast message")
-                        sys.exit(1)
-                else:
-                    if am.send_message(from_agent, to_agent, message, priority):
-                        print(f"✅ Message sent from {from_agent} to {to_agent}")
-                    else:
-                        print(f"❌ Failed to send message")
-                        sys.exit(1)
-        
-        elif command == "agent-redistribute":
-            # Redistribute tasks from overloaded agents
-            from src.agent_manager import AgentManager
-            
-            threshold = 80
-            if "--threshold" in sys.argv:
-                idx = sys.argv.index("--threshold")
-                if idx + 1 < len(sys.argv):
-                    threshold = float(sys.argv[idx + 1])
-            
-            with AgentManager() as am:
-                redistributed = am.redistribute_tasks(threshold)
-                if redistributed > 0:
-                    print(f"✅ Redistributed {redistributed} tasks from overloaded agents")
-                else:
-                    print("No tasks needed redistribution")
-        
-        else:
-            print(f"Command '{command}' not yet implemented in enhanced wrapper")
-            print("Please use the production module directly for full functionality")
+        return 1
+
+    context = CLIContext(argv=argv, tm=tm, update_orchestrator_md=update_orchestrator_md)
+
+    dispatcher = build_dispatcher()
+    result = dispatcher.dispatch(command, context)
+    if result is None:
+        print(f"Command '{command}' not yet implemented in modular CLI")
+        return 1
+    return result
+
 
 def find_repo_root() -> Path:
-    """Find git repository root"""
+    """Find git repository root."""
     try:
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True, text=True, check=True
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True
         )
         return Path(result.stdout.strip())
     except subprocess.CalledProcessError:
         return Path.cwd()
 
+
 if __name__ == "__main__":
-    # Show enhanced help if requested
-    if len(sys.argv) > 1 and sys.argv[1] in ['--help', '-h', 'help']:
-        print("""Task Manager - Enhanced with Collaboration Features
-
-Standard Commands:
-  init                Initialize task database
-  add <title>         Add a new task
-  list                List all tasks
-  show <id>           Show task details
-  update <id>         Update task properties
-  delete <id>         Delete a task
-  complete <id>       Mark task as complete
-  assign <id> <agent> Assign task to agent
-  watch               Check for notifications
-  export              Export tasks
-
-Global Options:
-  --agent-id <id>     Override agent ID for this session
-
-Collaboration Commands:
-  join <id>           Join a task's collaboration
-  share <id> <msg>    Share update with all agents
-  note <id> <msg>     Add private note (only you see)
-  discover <id> <msg> Share critical finding (alerts all)
-  sync <id> <msg>     Create synchronization point
-  context <id>        View all shared context
-
-Template Commands:
-  template list       List available templates
-  template show <name> Show template details
-  template apply <name> Apply template with variables
-  template create     Interactive template builder
-
-Interactive Mode:
-  wizard              Interactive guided task creation
-  wizard --quick      Quick task creation mode
-
-Orchestration Enforcement:
-  validate-orchestration        Check orchestration context
-  fix-orchestration --interactive  Fix orchestration violations
-  config --enforce-usage true|false  Enable/disable enforcement
-  config --enforcement-level strict|standard|advisory  Set enforcement level
-  config --show-enforcement     Show enforcement status
-
-Hook Performance:
-  hooks report        Show hook performance metrics
-  hooks alerts        View performance alerts
-  hooks thresholds    Configure alert thresholds
-  hooks cleanup       Clean up old metrics
-
-Environment Variables:
-  TM_AGENT_ID         Set your agent identifier
-  TM_DB_PATH          Custom database location
-
-Examples:
-  tm add "Build feature"
-  tm join task_123
-  tm share task_123 "Database schema complete"
-  tm note task_123 "Consider using Redis for cache"
-  tm discover task_123 "Security issue in auth flow"
-  tm context task_123
-""")
-        sys.exit(0)
-    
-    main()
+    raise SystemExit(main())

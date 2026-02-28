@@ -1,0 +1,43 @@
+name: Enforce main PR template (release or hotfix)
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  enforce-template:
+    if: github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR body contains Release or Hotfix template headings
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const body = (pr.body || "").toLowerCase();
+
+            // Accept either template by requiring distinctive headings.
+            const isRelease =
+              body.includes("# release pull request") ||
+              body.includes("## deployment readiness checklist") ||
+              body.includes("## post-deploy verification");
+
+            const isHotfix =
+              body.includes("# hotfix pull request") ||
+              body.includes("## rollback plan") ||
+              body.includes("## post-deploy verification");
+
+            if (!isRelease && !isHotfix) {
+              core.setFailed(
+                "PRs targeting 'main' must use either the Release or Hotfix PR template.\n" +
+                "Fix: Edit the PR description and apply the appropriate template headings.\n" +
+                "Expected to find either:\n" +
+                "- '# Release Pull Request' (and related sections), OR\n" +
+                "- '# Hotfix Pull Request' (and related sections)."
+              );
+            } else {
+              core.info("Main-branch PR template check passed.");
+            }

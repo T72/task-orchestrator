@@ -1,0 +1,65 @@
+name: Sync status:blocked label from dependencies
+
+on:
+  issues:
+    types: [opened, edited, reopened]
+
+permissions:
+  issues: write
+
+jobs:
+  sync-blocked:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Apply/remove status labels based on blocked-by
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const issue = context.payload.issue;
+            const issue_number = issue.number;
+            const body = (issue.body || "").toLowerCase();
+
+            // Only manage labels when the issue explicitly opts into dependency annotations.
+            const hasDependenciesSection = body.includes("## dependencies");
+
+            // Consider an issue blocked only when blocked-by contains at least one
+            // explicit issue reference (e.g., blocked-by: #123 or blocked-by: #123, #456).
+            // Values like "blocked-by: none" must not apply status:blocked.
+            const blockedByLines = body
+              .split("\n")
+              .map(l => l.trim())
+              .filter(l => l.startsWith("blocked-by:"));
+            const hasBlockedByIssueRef = blockedByLines.some(line => /#\d+/.test(line));
+
+            const labels = issue.labels.map(l => l.name);
+            const hasBlockedLabel = labels.includes("status:blocked");
+            const hasReadyLabel = labels.includes("status:ready");
+
+            async function addLabel(name) {
+              await github.rest.issues.addLabels({ owner, repo, issue_number, labels: [name] });
+            }
+
+            async function removeLabel(name) {
+              try {
+                await github.rest.issues.removeLabel({ owner, repo, issue_number, name });
+              } catch (e) {
+                // ignore if label doesn't exist or already removed
+              }
+            }
+
+            if (!hasDependenciesSection) {
+              // Do not auto-apply status labels if the issue doesn't use the dependency convention.
+              return;
+            }
+
+            if (hasBlockedByIssueRef) {
+              if (!hasBlockedLabel) await addLabel("status:blocked");
+              if (hasReadyLabel) await removeLabel("status:ready");
+            } else {
+              if (hasBlockedLabel) await removeLabel("status:blocked");
+              // Optional: mark ready when dependencies section exists but no blocked-by lines exist
+              if (!hasReadyLabel) await addLabel("status:ready");
+            }
