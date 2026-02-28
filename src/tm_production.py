@@ -30,11 +30,14 @@ from typing import List, Optional, Dict, Any
 import hashlib
 import time
 
-# Import PhaseManager for phase support (optional in trimmed/public builds)
+# Import PhaseManager for phase support (optional in trimmed/public builds).
 try:
     from phase_manager import PhaseManager
-except ImportError:
-    PhaseManager = None
+except ModuleNotFoundError as exc:
+    if exc.name == "phase_manager":
+        PhaseManager = None
+    else:
+        raise
 from storage_paths import resolve_db_path, resolve_storage_root
 
 LOGGER = logging.getLogger("task_orchestrator.tm_production")

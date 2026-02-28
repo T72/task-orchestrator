@@ -19,6 +19,8 @@ from typing import Dict, List, Optional, Tuple, NamedTuple
 from datetime import datetime
 from enum import Enum
 
+from storage_paths import resolve_db_path
+
 class EnforcementLevel(Enum):
     """Enforcement levels with different behaviors"""
     STRICT = "strict"      # Block violations
@@ -148,7 +150,7 @@ class OrchestrationValidator:
     
     def _check_database_initialized(self) -> bool:
         """Check if Task Orchestrator database is initialized"""
-        db_path = Path.cwd() / ".task-orchestrator" / "tasks.db"
+        db_path = resolve_db_path()
         if not db_path.exists():
             return False
         
@@ -314,8 +316,9 @@ class EnforcementEngine:
         elif level == EnforcementLevel.STANDARD:
             print(result.guidance)
             if (not sys.stdin.isatty()) or os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS"):
-                print("Non-interactive environment detected; continuing with warning.")
-                return True
+                print("Non-interactive environment detected; command blocked in STANDARD mode.")
+                print("Fix orchestration violations or lower enforcement level explicitly.")
+                return False
             response = input("Continue anyway? (y/N): ").lower().strip()
             return response in ['y', 'yes']
         
