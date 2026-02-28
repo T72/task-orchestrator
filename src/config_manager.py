@@ -7,6 +7,7 @@ import os
 import yaml
 from pathlib import Path
 from typing import Dict, Any, Optional
+from storage_paths import resolve_config_path
 
 
 class ConfigManager:
@@ -45,7 +46,7 @@ class ConfigManager:
         if config_path:
             self.config_path = Path(config_path)
         else:
-            self.config_path = Path.home() / ".task-orchestrator" / "config.yaml"
+            self.config_path = resolve_config_path()
         
         self.config_path.parent.mkdir(parents=True, exist_ok=True)
         self.config = self._load_config()

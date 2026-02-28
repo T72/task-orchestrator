@@ -17,6 +17,7 @@ import json
 import sqlite3
 import argparse
 import uuid
+import logging
 try:
     import fcntl  # Unix/Linux file locking
 except ImportError:
@@ -27,8 +28,13 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 import hashlib
-import yaml
 import time
+
+# Import PhaseManager for phase support
+from phase_manager import PhaseManager
+from storage_paths import resolve_db_path, resolve_storage_root
+
+LOGGER = logging.getLogger("task_orchestrator.tm_production")
 
 # Internal constants - not exposed to users
 _DEFAULT_RETENTION_DAYS = 30
@@ -48,31 +54,33 @@ class TaskManager:
     @implements UX-002: Directory Structure (.task-orchestrator/)
     """
     
-    def __init__(self):
+    def __init__(self, agent_id_override=None):
         """
         Initialize Task Orchestrator with agent tracking
         
         @implements FR-015: Agent Type Tracking
         @implements FR-018: Agent Status Tracking
+        @implements FR-058: Multi-Layer Agent ID Resolution System
         """
-        # Always use project-local database for isolation
-        # Check environment variable for custom location, otherwise use current directory
-        if os.environ.get('TM_DB_PATH'):
-            # Allow override via environment variable
-            self.db_dir = Path(os.environ.get('TM_DB_PATH'))
-        else:
-            # Default to project-local database for isolation between projects
-            self.db_dir = Path.cwd() / ".task-orchestrator"
+        # Resolve all storage paths through the shared contract.
+        self.db_dir = resolve_storage_root()
+        self.db_path = resolve_db_path()
+        self.config_dir = self.db_dir / "config"
+        self.agent_id_file = self.config_dir / "agent-id"
         
-        self.db_path = self.db_dir / "tasks.db"
-        self.agent_id = os.environ.get('TM_AGENT_ID', self._generate_agent_id())
+        # Multi-Layer Agent ID Resolution System
+        self.agent_id = self._resolve_agent_id(agent_id_override)
+        
+        # Initialize PhaseManager for phase support
+        self.phase_manager = PhaseManager(str(self.db_path))
         self.repo_root = self._find_repo_root()
         
         # Initialize error handler
         try:
             from error_handler import ErrorHandler
             self.error_handler = ErrorHandler(self.db_dir / "logs")
-        except:
+        except Exception as e:
+            print(f"Warning: Error handler unavailable: {e}", file=sys.stderr)
             self.error_handler = None
         
         # Initialize context manager
@@ -80,7 +88,8 @@ class TaskManager:
         try:
             from context_manager import ProjectContextManager
             self.context_manager = ProjectContextManager(Path.cwd())
-        except:
+        except Exception as e:
+            print(f"Warning: Context manager unavailable: {e}", file=sys.stderr)
             self.context_manager = None
         
         # Initialize database with error handling
@@ -112,7 +121,116 @@ class TaskManager:
             )
             return Path(result.stdout.strip())
         except:
+            LOGGER.debug("Falling back to current working directory for repository root")
             return Path.cwd()
+    
+    def _resolve_agent_id(self, override=None) -> str:
+        """
+        Multi-Layer Agent ID Resolution System
+        Priority: 1) Override 2) Environment 3) Config File 4) Interactive Setup
+        
+        @implements FR-058: Multi-Layer Agent ID Resolution System
+        """
+        # Layer 1: Command-line or direct override (highest priority)
+        if override and override.strip():
+            self._save_agent_id(override.strip())
+            return override.strip()
+        
+        # Layer 2: Environment variable (backward compatibility)
+        env_agent_id = os.environ.get('TM_AGENT_ID', '').strip()
+        if env_agent_id:
+            # Save to config for future persistence
+            self._save_agent_id(env_agent_id)
+            return env_agent_id
+        
+        # Layer 3: Configuration file (persistent across sessions)
+        config_agent_id = self._load_agent_id()
+        if config_agent_id:
+            return config_agent_id
+        
+        # Layer 4: Interactive setup or fallback
+        return self._setup_agent_id()
+    
+    def _load_agent_id(self) -> Optional[str]:
+        """Load agent ID from configuration file"""
+        try:
+            if self.agent_id_file.exists():
+                agent_id = self.agent_id_file.read_text().strip()
+                if agent_id:
+                    return agent_id
+        except Exception as e:
+            LOGGER.warning(f"Could not read agent ID from config: {e}")
+        return None
+    
+    def _save_agent_id(self, agent_id: str) -> None:
+        """Save agent ID to configuration file for persistence"""
+        try:
+            # Ensure config directory exists
+            self.config_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Save agent ID
+            self.agent_id_file.write_text(agent_id.strip() + '\n')
+        except Exception as e:
+            # Non-critical - continue with session agent ID
+            print(f"Warning: Could not save agent ID to config: {e}")
+    
+    def _setup_agent_id(self) -> str:
+        """Setup agent ID through interactive prompt or generate fallback"""
+        # Check if we're in an automated environment (non-interactive)
+        if not sys.stdin.isatty() or os.environ.get('CI') or os.environ.get('GITHUB_ACTIONS'):
+            # Non-interactive environment - use generated ID
+            generated_id = self._generate_agent_id()
+            self._save_agent_id(generated_id)
+            return generated_id
+        
+        # Interactive environment - prompt user
+        print("\n🤖 Task Orchestrator Agent ID Setup")
+        print("An agent ID is required for multi-agent coordination.")
+        print("\nSuggested agent IDs based on your environment:")
+        
+        suggestions = [
+            "orchestrator",
+            "main-agent", 
+            f"{os.environ.get('USER', 'user')}-agent",
+            self._generate_agent_id()
+        ]
+        
+        for i, suggestion in enumerate(suggestions, 1):
+            print(f"  {i}) {suggestion}")
+        
+        while True:
+            response = input("\nEnter agent ID (or number to select): ").strip()
+            
+            if not response:
+                continue
+            
+            # Check if it's a number selection
+            try:
+                selection = int(response)
+                if 1 <= selection <= len(suggestions):
+                    agent_id = suggestions[selection - 1]
+                    break
+            except ValueError:
+                # Direct input
+                if self._validate_agent_id(response):
+                    agent_id = response
+                    break
+                else:
+                    print("Invalid agent ID. Use letters, numbers, hyphens, and underscores only.")
+        
+        self._save_agent_id(agent_id)
+        print(f"\n✅ Agent ID '{agent_id}' saved to configuration.")
+        print(f"Configuration saved to: {self.agent_id_file}")
+        return agent_id
+    
+    def _validate_agent_id(self, agent_id: str) -> bool:
+        """Validate agent ID format"""
+        if not agent_id or len(agent_id) < 2 or len(agent_id) > 50:
+            return False
+        
+        # Allow letters, numbers, hyphens, and underscores
+        import re
+        return bool(re.match(r'^[a-zA-Z0-9_-]+$', agent_id))
     
     def _generate_agent_id(self) -> str:
         """Generate unique agent ID with better defaults"""
@@ -173,7 +291,8 @@ class TaskManager:
                             completion_summary TEXT,
                             deadline TEXT,
                             estimated_hours REAL,
-                            actual_hours REAL
+                            actual_hours REAL,
+                            context TEXT
                         )
                     """)
                     
@@ -205,10 +324,89 @@ class TaskManager:
                             PRIMARY KEY (task_id, agent_id)
                         )
                     """)
+
+                    conn.execute("""
+                        CREATE TABLE IF NOT EXISTS collaboration_events (
+                            seq INTEGER PRIMARY KEY AUTOINCREMENT,
+                            task_id TEXT NOT NULL,
+                            agent_id TEXT NOT NULL,
+                            event_type TEXT NOT NULL,
+                            content TEXT NOT NULL,
+                            request_id TEXT,
+                            created_at TEXT NOT NULL,
+                            UNIQUE(task_id, request_id)
+                        )
+                    """)
+
+                    conn.execute("""
+                        CREATE INDEX IF NOT EXISTS idx_collab_events_task_seq
+                        ON collaboration_events(task_id, seq)
+                    """)
+                    
+                    # Create phase management tables
+                    conn.execute("""
+                        CREATE TABLE IF NOT EXISTS phases (
+                            id TEXT PRIMARY KEY,
+                            name TEXT NOT NULL,
+                            description TEXT,
+                            status TEXT DEFAULT 'planning' CHECK(status IN ('planning', 'active', 'blocked', 'completed', 'archived')),
+                            parent_phase_id TEXT,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            started_at TIMESTAMP,
+                            completed_at TIMESTAMP,
+                            FOREIGN KEY (parent_phase_id) REFERENCES phases(id)
+                        )
+                    """)
+                    
+                    conn.execute("""
+                        CREATE TABLE IF NOT EXISTS phase_dependencies (
+                            id TEXT PRIMARY KEY,
+                            phase_id TEXT NOT NULL,
+                            depends_on_phase_id TEXT NOT NULL,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (phase_id) REFERENCES phases(id),
+                            FOREIGN KEY (depends_on_phase_id) REFERENCES phases(id),
+                            UNIQUE(phase_id, depends_on_phase_id)
+                        )
+                    """)
+                    
+                    conn.execute("""
+                        CREATE TABLE IF NOT EXISTS phase_gates (
+                            id TEXT PRIMARY KEY,
+                            phase_id TEXT NOT NULL,
+                            gate_type TEXT NOT NULL CHECK(gate_type IN ('task_completion', 'approval', 'custom')),
+                            criteria TEXT NOT NULL,
+                            status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'passed', 'failed', 'overridden')),
+                            override_reason TEXT,
+                            override_by TEXT,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            evaluated_at TIMESTAMP,
+                            FOREIGN KEY (phase_id) REFERENCES phases(id)
+                        )
+                    """)
                     
                     # Migration: Add created_by column if it doesn't exist
                     cursor = conn.execute("PRAGMA table_info(tasks)")
                     columns = {row[1] for row in cursor.fetchall()}
+                    
+                    # Migration: Add phase_id column if it doesn't exist
+                    if 'phase_id' not in columns:
+                        try:
+                            conn.execute("""
+                                ALTER TABLE tasks ADD COLUMN phase_id TEXT REFERENCES phases(id)
+                            """)
+                        except sqlite3.OperationalError:
+                            LOGGER.debug("tasks.phase_id already exists; skipping migration step")
+                    
+                    # Migration: Add context column for Commander's Intent framework
+                    if 'context' not in columns:
+                        try:
+                            conn.execute("""
+                                ALTER TABLE tasks ADD COLUMN context TEXT
+                            """)
+                        except sqlite3.OperationalError:
+                            LOGGER.debug("tasks.context already exists; skipping migration step")
                     
                     if 'created_by' not in columns:
                         # Add the created_by column to existing tables
@@ -233,14 +431,84 @@ class TaskManager:
                 print(f"Database initialization attempt {attempt + 1} failed, retrying...")
                 continue
     
+    def _validate_commanders_intent(self, context: str, assignee: str) -> dict:
+        """
+        Validate Commander's Intent framework compliance in task context
+        
+        @implements FR-CORE-1: Task Creation System with Intent Framework
+        @implements COLLAB-001: Multi-Agent Context Sharing with WHY/WHAT/DONE
+        
+        Returns dict with 'valid' boolean and 'message' string
+        """
+        if not context or not context.strip():
+            return {'valid': False, 'message': 'Context is empty'}
+        
+        context_upper = context.upper()
+        
+        # Check for WHY/WHAT/DONE pattern
+        has_why = 'WHY:' in context_upper
+        has_what = 'WHAT:' in context_upper  
+        has_done = 'DONE:' in context_upper
+        
+        missing_components = []
+        if not has_why:
+            missing_components.append('WHY')
+        if not has_what:
+            missing_components.append('WHAT')
+        if not has_done:
+            missing_components.append('DONE')
+        
+        if missing_components:
+            missing_str = ', '.join(missing_components)
+            return {
+                'valid': False, 
+                'message': f'Missing Commander\'s Intent components: {missing_str}'
+            }
+        
+        # Additional quality checks
+        quality_issues = []
+        
+        # Check if WHY section has content (not just "WHY:")
+        why_start = context_upper.find('WHY:')
+        if why_start != -1:
+            why_section = context[why_start + 4:].split('WHAT:')[0].strip()
+            if len(why_section) < 10:
+                quality_issues.append('WHY section too brief (needs clear reasoning)')
+        
+        # Check if WHAT section has multiple deliverables
+        what_start = context_upper.find('WHAT:')
+        if what_start != -1:
+            what_end = context_upper.find('DONE:', what_start)
+            if what_end != -1:
+                what_section = context[what_start + 5:what_end].strip()
+                # Look for multiple items (commas, line breaks, or bullet points)
+                if not any(char in what_section for char in [',', '\n', '-', '•', '1.', '2.']):
+                    quality_issues.append('WHAT section should list 3-5 specific deliverables')
+        
+        # Check if DONE section has measurable criteria
+        done_start = context_upper.find('DONE:')
+        if done_start != -1:
+            done_section = context[done_start + 5:].strip()
+            if len(done_section) < 15:
+                quality_issues.append('DONE section needs clear success criteria')
+        
+        if quality_issues:
+            return {
+                'valid': True,  # Has structure but could be better
+                'message': f'Quality suggestions: {"; ".join(quality_issues)}'
+            }
+        
+        return {'valid': True, 'message': 'Excellent Commander\'s Intent structure!'}
+    
     # ========== SIMPLE PUBLIC INTERFACE ==========
     
     def add(self, title: str, description: str = None, 
             priority: str = "medium", depends_on: List[str] = None,
             success_criteria: str = None, deadline: str = None,
-            estimated_hours: float = None, assignee: str = None) -> str:
+            estimated_hours: float = None, assignee: str = None,
+            phase_id: str = None, context: str = None) -> str:
         """
-        Add a new task with optional Core Loop fields
+        Add a new task with optional Core Loop fields and Commander's Intent validation
         
         @implements FR-CORE-1: Task Creation System
         @implements FR-001: Task Title and Description
@@ -251,6 +519,7 @@ class TaskManager:
         @implements FR-006: Time Estimation
         @implements FR-016: Agent Task Assignment
         @implements COLLAB-003: Task Assignment System
+        @implements COMMANDER-INTENT: WHY/WHAT/DONE Framework
         """
         # Validate title
         if not title or not title.strip():
@@ -259,6 +528,22 @@ class TaskManager:
                 raise ValidationError("Task title cannot be empty")
             else:
                 raise ValueError("Task title cannot be empty")
+        
+        # Validate Commander's Intent when assigning to agents
+        if assignee:
+            if context and context.strip():
+                # Context provided - validate Commander's Intent structure
+                intent_validation = self._validate_commanders_intent(context, assignee)
+                if not intent_validation['valid']:
+                    print(f"⚠️ Commander's Intent Warning: {intent_validation['message']}")
+                    print("📋 For best results, include: WHY: [reason] WHAT: [deliverables] DONE: [criteria]")
+                elif 'Quality suggestions' in intent_validation['message']:
+                    print(f"💡 Commander's Intent: {intent_validation['message']}")
+            else:
+                # No context or empty context - provide recommendation
+                print("🎯 Commander's Intent Recommendation:")
+                print("   For optimal agent coordination, consider adding --context with:")
+                print("   WHY: [reason] WHAT: [3-5 deliverables] DONE: [success criteria]")
         
         # Validate success criteria if provided
         if success_criteria:
@@ -312,34 +597,85 @@ class TaskManager:
                 # Use agent_id for created_by field
                 created_by = self.agent_id
                 
+                # Store context for Commander's Intent framework
+                if context and 'context' not in columns:
+                    # Add context column if it doesn't exist
+                    conn.execute("ALTER TABLE tasks ADD COLUMN context TEXT")
+                    columns.add('context')
+                
                 if 'created_by' in columns and 'success_criteria' in columns:
                     # New schema with created_by and Core Loop fields
-                    conn.execute("""
-                        INSERT INTO tasks (id, title, description, status, priority, assignee, created_by, created_at, updated_at,
-                                         success_criteria, deadline, estimated_hours)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (task_id, title, description, status, priority, assignee, created_by, now, now,
-                          success_criteria, deadline, estimated_hours))
+                    if 'phase_id' in columns:
+                        # Schema with phase support
+                        if 'context' in columns:
+                            conn.execute("""
+                                INSERT INTO tasks (id, title, description, status, priority, assignee, created_by, created_at, updated_at,
+                                                 success_criteria, deadline, estimated_hours, phase_id, context)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            """, (task_id, title, description, status, priority, assignee, created_by, now, now,
+                                  success_criteria, deadline, estimated_hours, phase_id, context))
+                        else:
+                            conn.execute("""
+                                INSERT INTO tasks (id, title, description, status, priority, assignee, created_by, created_at, updated_at,
+                                                 success_criteria, deadline, estimated_hours, phase_id)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            """, (task_id, title, description, status, priority, assignee, created_by, now, now,
+                                  success_criteria, deadline, estimated_hours, phase_id))
+                    else:
+                        if 'context' in columns:
+                            conn.execute("""
+                                INSERT INTO tasks (id, title, description, status, priority, assignee, created_by, created_at, updated_at,
+                                                 success_criteria, deadline, estimated_hours, context)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            """, (task_id, title, description, status, priority, assignee, created_by, now, now,
+                                  success_criteria, deadline, estimated_hours, context))
+                        else:
+                            conn.execute("""
+                                INSERT INTO tasks (id, title, description, status, priority, assignee, created_by, created_at, updated_at,
+                                                 success_criteria, deadline, estimated_hours)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            """, (task_id, title, description, status, priority, assignee, created_by, now, now,
+                                  success_criteria, deadline, estimated_hours))
                 elif 'created_by' in columns:
                     # Schema with created_by but without Core Loop fields
-                    conn.execute("""
-                        INSERT INTO tasks (id, title, description, status, priority, assignee, created_by, created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (task_id, title, description, status, priority, assignee, created_by, now, now))
+                    if 'context' in columns:
+                        conn.execute("""
+                            INSERT INTO tasks (id, title, description, status, priority, assignee, created_by, created_at, updated_at, context)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """, (task_id, title, description, status, priority, assignee, created_by, now, now, context))
+                    else:
+                        conn.execute("""
+                            INSERT INTO tasks (id, title, description, status, priority, assignee, created_by, created_at, updated_at)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """, (task_id, title, description, status, priority, assignee, created_by, now, now))
                 elif 'success_criteria' in columns:
                     # Legacy schema with Core Loop fields but no created_by
-                    conn.execute("""
-                        INSERT INTO tasks (id, title, description, status, priority, assignee, created_at, updated_at,
-                                         success_criteria, deadline, estimated_hours)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (task_id, title, description, status, priority, assignee, now, now,
-                          success_criteria, deadline, estimated_hours))
+                    if 'context' in columns:
+                        conn.execute("""
+                            INSERT INTO tasks (id, title, description, status, priority, assignee, created_at, updated_at,
+                                             success_criteria, deadline, estimated_hours, context)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """, (task_id, title, description, status, priority, assignee, now, now,
+                              success_criteria, deadline, estimated_hours, context))
+                    else:
+                        conn.execute("""
+                            INSERT INTO tasks (id, title, description, status, priority, assignee, created_at, updated_at,
+                                             success_criteria, deadline, estimated_hours)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """, (task_id, title, description, status, priority, assignee, now, now,
+                              success_criteria, deadline, estimated_hours))
                 else:
                     # Legacy schema without created_by or Core Loop fields
-                    conn.execute("""
-                        INSERT INTO tasks (id, title, description, status, priority, assignee, created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (task_id, title, description, status, priority, assignee, now, now))
+                    if 'context' in columns:
+                        conn.execute("""
+                            INSERT INTO tasks (id, title, description, status, priority, assignee, created_at, updated_at, context)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """, (task_id, title, description, status, priority, assignee, now, now, context))
+                    else:
+                        conn.execute("""
+                            INSERT INTO tasks (id, title, description, status, priority, assignee, created_at, updated_at)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        """, (task_id, title, description, status, priority, assignee, now, now))
                 
                 # Add dependencies
                 if depends_on:
@@ -736,16 +1072,6 @@ class TaskManager:
                 VALUES (?, ?, ?)
             """, (task_id, self.agent_id, now))
             conn.commit()
-        
-        # Ensure context exists
-        context_path = self.db_dir / "contexts" / f"{task_id}.yaml"
-        if not context_path.exists():
-            with sqlite3.connect(str(self.db_path)) as conn:
-                cursor = conn.execute("SELECT title FROM tasks WHERE id = ?", (task_id,))
-                row = cursor.fetchone()
-                if row:
-                    self._init_context(task_id, row[0])
-        
         return True
     
     def note(self, task_id: str, content: str) -> bool:
@@ -762,38 +1088,11 @@ class TaskManager:
     
     def share(self, task_id: str, content: str, type: str = "update") -> bool:
         """Share information with other agents on the task"""
-        context_path = self.db_dir / "contexts" / f"{task_id}.yaml"
-        
         # Ensure we've joined the task
         self.join(task_id)
-        
-        # Load context
-        if context_path.exists():
-            with open(context_path, 'r') as f:
-                context = yaml.safe_load(f) or {}
-        else:
-            context = {}
-        
-        # Add contribution
-        if "contributions" not in context:
-            context["contributions"] = []
-        
-        context["contributions"].append({
-            "agent": self.agent_id,
-            "timestamp": datetime.now().isoformat(),
-            "type": type,
-            "content": content
-        })
-        
-        # Keep only last 100 contributions to prevent bloat
-        if len(context["contributions"]) > 100:
-            context["contributions"] = context["contributions"][-100:]
-        
-        # Save context
-        with open(context_path, 'w') as f:
-            yaml.dump(context, f, default_flow_style=False)
-        
-        return True
+
+        request_id = os.environ.get("TM_REQUEST_ID")
+        return self._append_collaboration_event(task_id, type, content, request_id=request_id)
     
     def sync(self, task_id: str, checkpoint: str) -> bool:
         """Create a synchronization point"""
@@ -865,56 +1164,34 @@ class TaskManager:
         @implements COLLAB-002: Shared progress visibility
         """
         try:
-            # Store progress as shared context with type 'progress'
-            progress_data = {
-                'timestamp': datetime.now().isoformat(),
-                'update': update,
-                'agent': self.agent_id
-            }
-            
-            # Add to shared context
-            context_file = self.db_dir / "contexts" / f"{task_id}_progress.jsonl"
-            context_file.parent.mkdir(parents=True, exist_ok=True)
-            
-            with open(context_file, 'a') as f:
-                f.write(json.dumps(progress_data) + '\n')
-            
-            # Also update the task's updated_at timestamp
-            with sqlite3.connect(str(self.db_path), timeout=10.0) as conn:
-                conn.execute("""
-                    UPDATE tasks 
-                    SET updated_at = ?
-                    WHERE id = ?
-                """, (datetime.now().isoformat(), task_id))
-                conn.commit()
-            
-            return True
+            request_id = os.environ.get("TM_REQUEST_ID")
+            return self._append_collaboration_event(task_id, "progress", update, request_id=request_id)
         except Exception as e:
             print(f"Failed to record progress: {e}")
             return False
     
     def get_progress(self, task_id: str) -> List[Dict]:
         """Get all progress updates for a task"""
-        progress_file = self.db_dir / "contexts" / f"{task_id}_progress.jsonl"
-        updates = []
-        
-        if progress_file.exists():
-            with open(progress_file, 'r') as f:
-                for line in f:
-                    if line.strip():
-                        updates.append(json.loads(line))
-        
+        updates: List[Dict] = []
+        for event in self._get_collaboration_events(task_id):
+            if event["type"] == "progress":
+                updates.append({
+                    "timestamp": event["timestamp"],
+                    "update": event["content"],
+                    "agent": event["agent"]
+                })
         return updates
     
     def context(self, task_id: str) -> Dict:
         """Get task context (both shared and private)"""
         result = {"task_id": task_id}
-        
-        # Get shared context
-        context_path = self.db_dir / "contexts" / f"{task_id}.yaml"
-        if context_path.exists():
-            with open(context_path, 'r') as f:
-                result["shared"] = yaml.safe_load(f)
+
+        contributions = self._get_collaboration_events(task_id)
+        if contributions:
+            result["shared"] = {
+                "task_id": task_id,
+                "contributions": contributions
+            }
         
         # Get private notes
         notes_path = self.db_dir / "notes" / f"{task_id}_{self.agent_id}.md"
@@ -927,17 +1204,56 @@ class TaskManager:
     # ========== INTERNAL METHODS (Hidden from users) ==========
     
     def _init_context(self, task_id: str, title: str):
-        """Initialize context for a task"""
-        context_path = self.db_dir / "contexts" / f"{task_id}.yaml"
-        if not context_path.exists():
-            context = {
-                "task_id": task_id,
-                "title": title,
-                "created": datetime.now().isoformat(),
-                "contributions": []
-            }
-            with open(context_path, 'w') as f:
-                yaml.dump(context, f, default_flow_style=False)
+        """Legacy no-op: context is projected from collaboration_events."""
+        return
+
+    def _append_collaboration_event(
+        self,
+        task_id: str,
+        event_type: str,
+        content: str,
+        request_id: Optional[str] = None
+    ) -> bool:
+        """Append a collaboration event atomically."""
+        now = datetime.now().isoformat()
+        try:
+            with sqlite3.connect(str(self.db_path), timeout=10.0) as conn:
+                conn.execute("BEGIN IMMEDIATE")
+                cursor = conn.execute("""
+                    INSERT OR IGNORE INTO collaboration_events
+                    (task_id, agent_id, event_type, content, request_id, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (task_id, self.agent_id, event_type, content, request_id, now))
+                conn.execute("""
+                    UPDATE tasks
+                    SET updated_at = ?
+                    WHERE id = ?
+                """, (now, task_id))
+                conn.commit()
+                return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Database error while recording collaboration event: {e}")
+            return False
+
+    def _get_collaboration_events(self, task_id: str) -> List[Dict]:
+        """Read collaboration events in deterministic sequence order."""
+        with sqlite3.connect(str(self.db_path), timeout=10.0) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.execute("""
+                SELECT seq, agent_id, event_type, content, created_at
+                FROM collaboration_events
+                WHERE task_id = ?
+                ORDER BY seq ASC
+            """, (task_id,))
+            return [
+                {
+                    "agent": row["agent_id"],
+                    "timestamp": row["created_at"],
+                    "type": row["event_type"],
+                    "content": row["content"]
+                }
+                for row in cursor.fetchall()
+            ]
     
     def _archive_and_cleanup(self, task_id: str):
         """Archive and cleanup completed task files"""
@@ -952,10 +1268,17 @@ class TaskManager:
             if _COMPRESS_ARCHIVES:
                 archive_path = archive_dir / f"{archive_name}.tar.gz"
                 with tarfile.open(archive_path, 'w:gz') as tar:
-                    # Add context file
-                    context_file = self.db_dir / "contexts" / f"{task_id}.yaml"
-                    if context_file.exists():
-                        tar.add(context_file, arcname=f"{archive_name}/context.yaml")
+                    # Persist a projected context snapshot for archival.
+                    contributions = self._get_collaboration_events(task_id)
+                    if contributions:
+                        projected_context = {
+                            "task_id": task_id,
+                            "contributions": contributions
+                        }
+                        context_file = self.db_dir / "contexts" / f"{task_id}.json"
+                        with open(context_file, 'w') as f:
+                            json.dump(projected_context, f, indent=2)
+                        tar.add(context_file, arcname=f"{archive_name}/context.json")
                         context_file.unlink()
                     
                     # Add all notes files for this task
@@ -966,8 +1289,8 @@ class TaskManager:
             # Schedule cleanup of old archives
             self._cleanup_old_archives()
             
-        except Exception:
-            pass  # Silently handle cleanup errors
+        except Exception as e:
+            print(f"Warning: Failed to archive task artifacts for {task_id}: {e}", file=sys.stderr)
     
     def _cleanup_old_archives(self):
         """Remove archives older than retention period"""
@@ -984,10 +1307,10 @@ class TaskManager:
                         file_date = datetime.strptime(date_str, "%Y%m%d%H%M%S")
                         if file_date < cutoff:
                             archive.unlink()
-                    except:
-                        pass
-        except Exception:
-            pass
+                    except Exception as e:
+                        LOGGER.debug(f"Skipping archive with unparsable timestamp '{archive}': {e}")
+        except Exception as e:
+            print(f"Warning: Failed to clean up old archives: {e}", file=sys.stderr)
 
 
 def main():

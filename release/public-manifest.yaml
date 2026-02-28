@@ -1,0 +1,61 @@
+include_paths:
+  - src
+  - tests
+  - docs/examples
+  - docs/guides
+  - docs/reference
+  - docs/releases
+  - templates
+  - README.md
+  - LICENSE
+  - CHANGELOG.md
+  - CONTRIBUTING.md
+  - VERSION
+  - tm
+
+exclude_globs:
+  - "**/.claude/**"
+  - "**/__pycache__/**"
+  - "**/*.pyc"
+  - "**/*.pyo"
+  - "**/*.tmp"
+  - "**/*.bak"
+  - "**/*.log"
+  - "**/.task-orchestrator/**"
+  - "**/.task-manager/**"
+  - "**/*.db"
+  - "**/*.sqlite*"
+  - tests/prd-validation/**
+
+required_files:
+  - README.md
+  - LICENSE
+  - CHANGELOG.md
+  - CONTRIBUTING.md
+  - VERSION
+  - tm
+
+forbidden_patterns:
+  - AGENTS.md
+  - "**/AGENTS.md"
+  - CLAUDE.md
+  - "**/CLAUDE.md"
+  - ".claude/**"
+  - "**/.claude/**"
+  - ".task-orchestrator/**"
+  - "**/.task-orchestrator/**"
+  - internal-releases/**
+  - "**/internal-releases/**"
+  - archive/**
+  - "**/archive/**"
+  - docs/protocols/**
+  - "**/docs/protocols/**"
+  - docs/architecture/**
+  - "**/docs/architecture/**"
+  - tests/prd-validation/**
+  - "**/tests/prd-validation/**"
+
+forbidden_content_patterns:
+  - "@implements FR-INTERNAL"
+  - "think ultrahard"
+  - "think-ultrahard"
