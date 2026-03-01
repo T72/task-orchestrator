@@ -7,7 +7,7 @@ Comprehensive troubleshooting guide for common issues, solutions, and debugging 
 - [Quick Diagnostics](#quick-diagnostics)
 - [Installation Problems](#installation-problems)
 - [Database Issues](#database-issues)
-- [Core Loop Issues (v2.3)](#core-loop-issues-v23)
+- [Core Loop Issues](#core-loop-issues)
 - [Lock File Problems](#lock-file-problems)
 - [Performance Issues](#performance-issues)
 - [Claude Code Integration Issues](#claude-code-integration-issues)
@@ -365,7 +365,7 @@ EOF
 ./tm list
 ```
 
-## Core Loop Issues (v2.3)
+## Core Loop Issues
 
 ### Migration Issues
 
@@ -1403,7 +1403,7 @@ For questions and usage help:
 
 - [User Guide](USER_GUIDE.md) - Complete usage documentation
 - [Developer Guide](DEVELOPER_GUIDE.md) - Contributing and extending
-- [API Reference](API_REFERENCE.md) - Complete API documentation
+- [API Reference](../reference/api-reference.md) - Complete API documentation
 - [GitHub Repository](https://github.com/T72/task-orchestrator) - Latest code and issues
 
 ---

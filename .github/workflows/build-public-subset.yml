@@ -1,0 +1,37 @@
+name: Build Public Subset
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-public-subset:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build subset from allowlist
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/public-repo-sync.sh
+          mkdir -p /tmp/public-subset
+          scripts/public-repo-sync.sh sync \
+            --source "$PWD" \
+            --target "/tmp/public-subset" \
+            --allowlist ".github/public-sync-allowlist.txt" \
+            --report "/tmp/public-subset-report.txt"
+          tar -czf /tmp/public-subset.tar.gz -C /tmp/public-subset .
+
+      - name: Upload subset artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-subset-${{ github.sha }}
+          path: |
+            /tmp/public-subset.tar.gz
+            /tmp/public-subset-report.txt

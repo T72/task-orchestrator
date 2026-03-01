@@ -105,7 +105,7 @@ export TM_AGENT_ID="your_agent_name"
 - **[API Reference](docs/reference/api-reference.md)** - Complete technical documentation
 - **[AI Agent Discovery](docs/guides/ai-agent-discovery-protocol.md)** - How agents automatically find and use Task Orchestrator
 - **[Troubleshooting](docs/guides/troubleshooting.md)** - Solutions to common issues
-- **[Claude Code Integration](deploy/CLAUDE_CODE_WHITELIST.md)** - **REQUIRED** for Claude Code users
+- **[Claude Code Integration](docs/guides/quickstart-claude-code.md)** - **REQUIRED** for Claude Code users
 
 ### Working Examples
 Run these directly to learn by doing:
