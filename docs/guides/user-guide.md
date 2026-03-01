@@ -2,6 +2,9 @@
 
 Welcome to Task Orchestrator - the tool that transforms meta-agents into orchestration engines.
 
+> Use Task Orchestrator inside your own project repository.  
+> Cloning `T72/task-orchestrator` is only required when contributing to Task Orchestrator itself.
+
 ## 📚 Documentation Structure
 
 ### Quick Navigation

@@ -42,21 +42,26 @@ Every task delegation includes THREE elements:
 ## ⚡ Quick Start (60 Seconds)
 
 ```bash
-# 1. Setup
-git clone https://github.com/T72/task-orchestrator.git
-cd task-orchestrator
+# 1. In YOUR project root
+cd /path/to/your-project
+
+# 2. Add tm from a release artifact or local install
+cp /path/to/task-orchestrator/tm ./tm
+chmod +x ./tm
+
+# 3. Initialize Task Orchestrator in this project
 ./tm init
 
-# 2. Set agent identity (required for coordination)
+# 4. Set agent identity (required for coordination)
 export TM_AGENT_ID="orchestrator_agent"
 
-# 3. Create AI Agent Workflow with Commander's Intent
+# 5. Create AI Agent Workflow with Commander's Intent
 BACKEND=$(./tm add "Build auth API" --assignee backend_agent \
   -d "WHY: Secure foundation, WHAT: OAuth2/JWT/sessions, DONE: Users can login safely" | grep -o '[a-f0-9]\{8\}')
 
 FRONTEND=$(./tm add "Create login UI" --assignee frontend_agent --depends-on $BACKEND | grep -o '[a-f0-9]\{8\}')
 
-# 4. Watch Real-Time Orchestration
+# 6. Watch Real-Time Orchestration
 ./tm watch  # See instant updates as agents work
 
 # When backend completes, frontend auto-unblocks!
@@ -104,6 +109,9 @@ export TM_AGENT_ID="your_agent_name"
 - **[Developer Guide](docs/guides/developer-guide.md)** - Architecture and contribution guide
 - **[API Reference](docs/reference/api-reference.md)** - Complete technical documentation
 - **[AI Agent Discovery](docs/guides/ai-agent-discovery-protocol.md)** - How agents automatically find and use Task Orchestrator
+- **[Agent Instruction Snippets](docs/guides/agent-instruction-snippets.md)** - Copy/paste blocks for `AGENTS.md` and `CLAUDE.md`
+- **[Official Agent Skill](skills/task-orchestrator/SKILL.md)** - Installable Agent Skills package for Codex/Claude Code style tools
+- **[Agent Skill Install Guide](docs/guides/agent-skill-installation.md)** - How to install/use the packaged skill from repo or release artifacts
 - **[Troubleshooting](docs/guides/troubleshooting.md)** - Solutions to common issues
 - **[Claude Code Integration](docs/guides/quickstart-claude-code.md)** - **REQUIRED** for Claude Code users
 
@@ -118,7 +126,15 @@ python3 docs/examples/multi_agent_workflow.py  # Team coordination
 ## 🚀 Installation
 
 ```bash
-# Requirements: Python 3.8+, 10MB disk space
+# Use in your own project
+cd /path/to/your-project
+cp /path/to/task-orchestrator/tm ./tm
+chmod +x ./tm
+./tm init
+```
+
+```bash
+# Contributor path (develop task-orchestrator itself)
 git clone https://github.com/T72/task-orchestrator.git
 cd task-orchestrator
 ./tm init

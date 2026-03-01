@@ -16,7 +16,7 @@ Task Orchestrator implements automatic discovery through the **ORCHESTRATOR.md P
 ### How It Works
 
 1. **Automatic Generation**: When you run `./tm init`, Task Orchestrator creates `ORCHESTRATOR.md` in your project root
-2. **Live Updates**: The file auto-updates whenever tasks change, showing current status
+2. **Static Discovery Contract**: The file is a stable protocol guide, not a live task board
 3. **AI-Optimized Format**: Written specifically for AI agents to understand and use
 4. **Universal Discovery**: Works with Claude Code, GitHub Copilot, Cursor, and any AI tool
 
@@ -25,8 +25,8 @@ Task Orchestrator implements automatic discovery through the **ORCHESTRATOR.md P
 ```markdown
 # 🤖 AI Agent Orchestration Protocol
 
-## 📋 Current Task Status
-[Auto-updated list of current tasks with status]
+## 📋 Runtime Task Status
+[Retrieved live via `./tm list` from Task Orchestrator data]
 
 ## 🚀 Quick Start for AI Agents
 [Essential commands and patterns]
@@ -50,20 +50,20 @@ class OrchestratorDiscovery:
         # Creates ORCHESTRATOR.md from template
     
     def update_orchestrator_md(self) -> bool
-        # Updates task status section with current data
+        # Compatibility hook: ensure file exists if missing
     
     def add_readme_section(self) -> bool
         # Optionally adds discovery hint to README.md
 ```
 
-### Auto-Update Triggers
+### Runtime Source of Truth
 
-ORCHESTRATOR.md updates automatically when:
-- Tasks are created (`tm add`)
-- Tasks are completed (`tm complete`)
-- Task status changes (`tm update`)
-- Dependencies are resolved
-- Progress is updated
+Task status is not persisted in `ORCHESTRATOR.md`.
+
+Live state is always queried from Task Orchestrator data via:
+- `./tm list`
+- `./tm list --format json`
+- `./tm list --assignee <agent>`
 
 ### Template System
 
@@ -71,7 +71,7 @@ The protocol uses a template at `templates/ORCHESTRATOR.md.template` that includ
 - Quick reference commands
 - Multi-agent coordination patterns
 - Best practices for AI agents
-- Real-time task status placeholders
+- Runtime status retrieval commands
 
 ## Benefits for AI Agents
 
@@ -82,11 +82,10 @@ AI agents can check for ORCHESTRATOR.md existence:
 ```
 
 ### 2. Current Context
-The file always shows the current state:
-- Tasks in progress
-- Blocked tasks waiting for dependencies
-- Recently completed work
-- Pending assignments
+The file points agents to current-state commands:
+- `./tm list`
+- `./tm list --format json`
+- `./tm show TASK_ID`
 
 ### 3. Ready-to-Use Examples
 Each pattern includes working code:
@@ -113,11 +112,11 @@ Tailored guidance for different agent types:
        use_task_orchestrator()
    ```
 
-2. **Read Current Status**
+2. **Read Discovery Contract**
    ```python
    with open("ORCHESTRATOR.md") as f:
        content = f.read()
-       # Parse current tasks and status
+       # Parse orchestration protocol and command patterns
    ```
 
 3. **Follow Patterns**
@@ -160,12 +159,12 @@ You can customize the ORCHESTRATOR.md template:
 2. Add project-specific patterns
 3. Include custom agent instructions
 
-### Update Frequency
+### Status Retrieval Frequency
 
-By default, updates occur after task operations. Adjust in `tm`:
-```python
-# Update after these commands
-UPDATE_TRIGGERS = ["add", "complete", "update", "progress"]
+Agents should retrieve runtime state directly whenever needed:
+```bash
+./tm list
+./tm list --format json
 ```
 
 ## Integration with AI Tools
@@ -194,8 +193,8 @@ def discover_orchestration():
 
 ## Best Practices
 
-### 1. Keep It Updated
-The auto-update mechanism ensures freshness, but you can manually trigger:
+### 1. Keep It Regenerated
+Regenerate from template when needed:
 ```bash
 ./tm init  # Regenerates ORCHESTRATOR.md
 ```
@@ -238,21 +237,21 @@ When starting a session, remind agents:
    TM_VERBOSE=1 ./tm init  # Enable verbose output
    ```
 
-### Updates Not Happening
+### Task Status Seems Stale
 
-1. Verify update triggers are working:
+1. Query runtime state directly:
    ```bash
-   ./tm add "Test task"  # Should update ORCHESTRATOR.md
+   ./tm list
    ```
 
-2. Check modification time:
+2. Use machine-readable output when parsing:
    ```bash
-   ls -la ORCHESTRATOR.md  # Check last modified
+   ./tm list --format json
    ```
 
-3. Enable verbose mode for debugging:
+3. Regenerate discovery file if missing/corrupt:
    ```bash
-   export TM_VERBOSE=1
+   ./tm init
    ```
 
 ### Agents Not Discovering
@@ -288,7 +287,7 @@ We welcome improvements to the discovery protocol:
 The ORCHESTRATOR.md Protocol transforms Task Orchestrator from a tool you have to remember to use into one that AI agents discover and use automatically. This creates a self-organizing ecosystem where:
 
 - **Discovery is automatic** - No manual configuration needed
-- **Context is always current** - Live updates keep agents informed
+- **Context retrieval is deterministic** - Live status always comes from task data
 - **Patterns guide usage** - Ready-to-use examples ensure correct implementation
 - **Coordination is seamless** - Agents naturally work together
 

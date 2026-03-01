@@ -6,12 +6,14 @@ include_paths:
   - docs/reference
   - docs/releases
   - templates
+  - skills/task-orchestrator
   - README.md
   - LICENSE
   - CHANGELOG.md
   - CONTRIBUTING.md
   - VERSION
   - tm
+  - skills/task-orchestrator/SKILL.md
 
 exclude_globs:
   - "**/.claude/**"

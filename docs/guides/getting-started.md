@@ -6,6 +6,17 @@ Start orchestrating AI agents in under 5 minutes.
 
 ### Quick Install
 ```bash
+# In your own project root
+cd /your/project
+
+# Add tm from release artifact or local install
+cp /path/to/task-orchestrator/tm ./tm
+chmod +x tm
+./tm init
+```
+
+### Contributor Install (for developing task-orchestrator itself)
+```bash
 git clone https://github.com/T72/task-orchestrator.git
 cd task-orchestrator
 chmod +x tm
