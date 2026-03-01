@@ -1,25 +1,31 @@
-# Canonical public release subset contract (single-repo model).
-# Paths are relative to repository root.
+  # Canonical public release subset contract (single-repo
+  model).
+  # Paths are relative to repository root.
 
-README.md
-CHANGELOG.md
-VERSION
-LICENSE
-CONTRIBUTING.md
-tm
+  README.md
+  CHANGELOG.md
+  VERSION
+  LICENSE
+  CONTRIBUTING.md
+  tm
 
-docs/guides/user-guide.md
-docs/guides/developer-guide.md
-docs/guides/ai-agent-discovery-protocol.md
-docs/guides/agent-instruction-snippets.md
-docs/guides/agent-skill-installation.md
-docs/guides/troubleshooting.md
-docs/guides/quickstart-claude-code.md
+  docs/guides/user-guide.md
+  docs/guides/developer-guide.md
+  docs/guides/ai-agent-discovery-protocol.md
+  docs/guides/agent-instruction-snippets.md
+  docs/guides/agent-skill-installation.md
+  docs/guides/troubleshooting.md
+  docs/guides/quickstart-claude-code.md
 
-docs/reference/api-reference.md
+  docs/reference/api-reference.md
 
-deploy/CLAUDE_CODE_WHITELIST.md
+  deploy/CLAUDE_CODE_WHITELIST.md
 
-skills/task-orchestrator/SKILL.md
-skills/task-orchestrator/scripts/verify-tm.sh
-skills/task-orchestrator/references/REFERENCE.md
+  skills/task-orchestrator/SKILL.md
+  skills/task-orchestrator/scripts/verify-tm.sh
+  skills/task-orchestrator/references/REFERENCE.md
+  EOF
+
+
+
+quit
