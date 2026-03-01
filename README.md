@@ -110,6 +110,8 @@ export TM_AGENT_ID="your_agent_name"
 - **[API Reference](docs/reference/api-reference.md)** - Complete technical documentation
 - **[AI Agent Discovery](docs/guides/ai-agent-discovery-protocol.md)** - How agents automatically find and use Task Orchestrator
 - **[Agent Instruction Snippets](docs/guides/agent-instruction-snippets.md)** - Copy/paste blocks for `AGENTS.md` and `CLAUDE.md`
+- **[Official Agent Skill](skills/task-orchestrator/SKILL.md)** - Installable Agent Skills package for Codex/Claude Code style tools
+- **[Agent Skill Install Guide](docs/guides/agent-skill-installation.md)** - How to install/use the packaged skill from repo or release artifacts
 - **[Troubleshooting](docs/guides/troubleshooting.md)** - Solutions to common issues
 - **[Claude Code Integration](docs/guides/quickstart-claude-code.md)** - **REQUIRED** for Claude Code users
 
