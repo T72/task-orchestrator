@@ -1,0 +1,20 @@
+# Canonical public sync contract for task-orchestrator-public.
+# Paths are relative to repository root.
+
+README.md
+CHANGELOG.md
+VERSION
+LICENSE
+CONTRIBUTING.md
+tm
+
+docs/guides/user-guide.md
+docs/guides/developer-guide.md
+docs/guides/ai-agent-discovery-protocol.md
+docs/guides/troubleshooting.md
+docs/guides/quickstart-claude-code.md
+
+docs/reference/api-reference.md
+docs/reference/API_REFERENCE.md
+
+deploy/CLAUDE_CODE_WHITELIST.md
