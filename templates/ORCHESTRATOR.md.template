@@ -127,8 +127,9 @@ export TM_AGENT_ID="your_agent_type"
 3. **Complete tasks**: Use `./tm complete` to trigger automatic unblocking
 4. **Use dependencies**: Let Task Orchestrator handle the coordination
 5. **Watch for updates**: Use `./tm watch` when orchestrating multiple agents
+6. **Bootstrap tool memory once**: Add project-level snippets to `AGENTS.md` or `CLAUDE.md` using `docs/guides/agent-instruction-snippets.md`
 
 ---
 
-*Task Orchestrator v2.6.1 - Making AI agents work together seamlessly*
+*Task Orchestrator v2.9.0 - Making AI agents work together seamlessly*
 *Static discovery file - Get live status via `./tm list`*

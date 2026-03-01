@@ -109,6 +109,7 @@ export TM_AGENT_ID="your_agent_name"
 - **[Developer Guide](docs/guides/developer-guide.md)** - Architecture and contribution guide
 - **[API Reference](docs/reference/api-reference.md)** - Complete technical documentation
 - **[AI Agent Discovery](docs/guides/ai-agent-discovery-protocol.md)** - How agents automatically find and use Task Orchestrator
+- **[Agent Instruction Snippets](docs/guides/agent-instruction-snippets.md)** - Copy/paste blocks for `AGENTS.md` and `CLAUDE.md`
 - **[Troubleshooting](docs/guides/troubleshooting.md)** - Solutions to common issues
 - **[Claude Code Integration](docs/guides/quickstart-claude-code.md)** - **REQUIRED** for Claude Code users
 
