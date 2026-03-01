@@ -1,3 +1,7 @@
+## [2.9.1] - 2026-03-01
+
+- Release preparation for v2.9.1.
+
 # Changelog
 
 All notable changes to the Task Orchestrator project will be documented in this file.
