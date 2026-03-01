@@ -3,11 +3,11 @@
 ## 🚀 30-Second Setup
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/T72/task-orchestrator.git
-cd task-orchestrator
+# 1. Go to your project
+cd /your/project
 
-# 2. Make executable and initialize
+# 2. Add tm from release artifact or local install
+cp /path/to/task-orchestrator/tm ./tm
 chmod +x tm
 ./tm init
 
@@ -16,7 +16,7 @@ export TM_AGENT_ID="orchestrator_agent"
 ./tm add "My first task"
 ```
 
-**That's it!** Task Orchestrator is now ready for use with Claude Code.
+**That's it!** Task Orchestrator is now ready in your project for use with Claude Code.
 
 ## 🤖 Claude Code Integration
 
