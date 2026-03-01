@@ -15,6 +15,5 @@ docs/guides/troubleshooting.md
 docs/guides/quickstart-claude-code.md
 
 docs/reference/api-reference.md
-docs/reference/API_REFERENCE.md
 
 deploy/CLAUDE_CODE_WHITELIST.md
