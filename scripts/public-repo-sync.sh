@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Contract-driven sync/check between this repo and task-orchestrator-public.
+# Contract-driven sync/check for public release subset paths.
 #
 # Modes:
 # - sync  : copy allowlisted files from source to target
 # - check : verify allowlisted files are identical between source and target
 #
 # Usage:
-#   scripts/public-repo-sync.sh sync  --source <repo> --target <public-repo> [--allowlist <file>] [--report <file>]
-#   scripts/public-repo-sync.sh check --source <repo> --target <public-repo> [--allowlist <file>] [--report <file>]
+#   scripts/public-repo-sync.sh sync  --source <repo> --target <staging-dir> [--allowlist <file>] [--report <file>]
+#   scripts/public-repo-sync.sh check --source <repo> --target <staging-dir> [--allowlist <file>] [--report <file>]
 
 MODE="${1:-}"
 shift || true
@@ -130,7 +130,7 @@ if [[ -n "$REPORT_FILE" ]]; then
 fi
 
 if [[ "$MODE" == "check" && "${check_rc:-0}" -ne 0 ]]; then
-  echo "Public repo drift detected against allowlist contract." >&2
+  echo "Public subset drift detected against allowlist contract." >&2
   exit 1
 fi
 

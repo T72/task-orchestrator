@@ -1,15 +1,14 @@
-# Two-Repo Governance (Internal + Public)
+# Single-Repo Public Release Governance
 
-This project uses a two-repository model:
+This project uses a single-repository model:
 
-- Internal source repository: `T72/task-orchestrator`
-- Public distribution repository: `T72/task-orchestrator-public`
+- Source + distribution repository: `T72/task-orchestrator`
 
 ## Source of Truth
 
-- `task-orchestrator` is the only development source of truth.
-- `task-orchestrator-public` is a curated release mirror for external consumption.
-- Public content is promoted from internal `main` only, never edited manually first in public.
+- `task-orchestrator` is the development and release source of truth.
+- Public distribution is produced from curated release artifacts and GitHub Releases.
+- Public-facing subset content is built from an allowlist contract.
 
 ## Sync Contract
 
@@ -17,39 +16,22 @@ The file allowlist contract is maintained in:
 
 - `.github/public-sync-allowlist.txt`
 
-Only files listed there are allowed to flow into `task-orchestrator-public`.
+Only files listed there are included in the public subset bundle.
 
 ## Automation
 
-### Promotion workflow
+### Public subset build workflow
 
-- Workflow: `.github/workflows/promote-to-public-repo.yml`
-- Trigger: release published or manual dispatch
+- Workflow: `.github/workflows/build-public-subset.yml`
+- Trigger: push to `main` + manual dispatch
 - Behavior:
-  - sync allowlisted files into public repo branch
-  - open/update PR in public repo
-
-### Drift detection workflow
-
-- Workflow: `.github/workflows/check-public-repo-drift.yml`
-- Trigger: weekly schedule + manual dispatch
-- Behavior:
-  - compare allowlisted files between repos
-  - fail on drift
-  - upload drift report artifact
-
-## Required Secret
-
-These workflows require a token with access to `task-orchestrator-public`:
-
-- `PUBLIC_REPO_TOKEN`
-
-Recommended scope: minimum repo permissions needed to read, push sync branch, and create PR in the public repo.
+  - build allowlisted subset into a staged bundle
+  - upload bundle and report as workflow artifacts
 
 ## Release Mapping
 
-For each public release, maintain deterministic mapping:
+For each public release, maintain deterministic mapping in one repo:
 
-- Version -> internal commit SHA -> public promotion PR/commit
+- Version -> commit SHA -> release artifact(s)
 
-This mapping should be visible in release notes or promotion PR metadata.
+This mapping should be visible in release notes and release artifacts.

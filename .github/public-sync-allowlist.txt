@@ -1,4 +1,4 @@
-# Canonical public sync contract for task-orchestrator-public.
+# Canonical public release subset contract (single-repo model).
 # Paths are relative to repository root.
 
 README.md
