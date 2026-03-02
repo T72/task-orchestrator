@@ -1,5 +1,10 @@
 # Pull Request
 
+> Use specialized templates when applicable:
+> - `.github/pull-request-template/release.md` for `develop -> main` release PRs
+> - `.github/pull-request-template/hotfix.md` for urgent production fixes
+> - `.github/pull-request-template/linear-sync.md` for develop-based linear sync of selected `main` commits
+
 ## Linked Issue
 
 Closes #

@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create back-merge PR (main -> develop)
+        if: vars.ENABLE_MAIN_TO_DEVELOP_AUTOPR == '1'
         uses: actions/github-script@v7
         with:
           script: |
@@ -77,3 +78,9 @@ jobs:
                 `Error: ${e.message}`
               );
             }
+
+      - name: Auto-PR disabled notice
+        if: vars.ENABLE_MAIN_TO_DEVELOP_AUTOPR != '1'
+        run: |
+          echo "Auto main->develop PR creation is disabled by policy."
+          echo "Use linear sync runbook: docs/development/main-develop-sync-runbook.md"

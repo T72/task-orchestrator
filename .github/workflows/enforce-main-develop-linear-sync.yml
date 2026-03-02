@@ -1,0 +1,39 @@
+name: Enforce main->develop linear sync policy
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+    branches: [develop]
+
+permissions:
+  contents: read
+
+jobs:
+  enforce-sync-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Block direct main->develop PRs
+        if: github.event.pull_request.head.ref == 'main'
+        run: |
+          echo "Direct main->develop PRs are blocked by linear sync governance." >&2
+          echo "Use a develop-based sync branch and cherry-pick selected main commits." >&2
+          echo "Runbook: docs/development/main-develop-sync-runbook.md" >&2
+          exit 1
+
+      - name: Checkout PR head for merge-commit policy check
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Ensure sync branch is linear (no merge commits)
+        run: |
+          set -euo pipefail
+          git fetch origin "${{ github.base_ref }}" --depth=1
+          merges="$(git rev-list --merges "origin/${{ github.base_ref }}..HEAD" | wc -l | tr -d ' ')"
+          if [ "$merges" != "0" ]; then
+            echo "PR branch contains merge commits ($merges). Linear sync policy requires a merge-free branch." >&2
+            exit 1
+          fi
+          echo "Linear sync policy check passed."
+
