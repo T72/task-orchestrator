@@ -40,3 +40,19 @@
 
 ### Operational Rule
 - If a direct `main` -> `develop` PR is opened and blocked by merge policy, close it and create a linear sync PR from `develop`.
+
+## Merge Method Decision Matrix (Canonical)
+
+For this repository, the correct merge method depends on the branch pair:
+
+1. feature/* or fix/* -> develop: Squash and merge (recommended).
+2. develop -> main (release PR): Create a merge commit.
+3. hotfix/* -> main: Squash and merge.
+4. main -> develop sync: do not use direct merge or rebase-merge; use the linear cherry-pick sync PR model.
+
+### Rationale
+
+- This policy is defined in this branching strategy and related governance docs.
+- Squash keeps develop clean and supports one-issue-per-commit traceability.
+- Merge commit on develop -> main preserves release boundary/history.
+- Rebase-merge is not a project standard for these flows and can reduce governance traceability in this model.
