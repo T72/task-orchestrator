@@ -42,6 +42,7 @@ if [ -d "$PROJECT_DIR/src" ]; then
 fi
 chmod +x ./tm
 TM="./tm"
+export TM_AGENT_ID="test_suite_agent"
 
 echo -e "${BLUE}===================================${NC}"
 echo -e "${BLUE}    Durability & Resilience Tests  ${NC}"
@@ -83,8 +84,8 @@ test_basic_persistence() {
     # Backup database
     cp .task-orchestrator/tasks.db .task-orchestrator/tasks.db.backup
     
-    # Simulate restart by clearing any cache (if exists)
-    sync
+    # Simulate restart without calling host-wide sync (can hang on mounted filesystems).
+    sleep 0.1
     
     # Verify data persists
     $TM show $TASK1 | grep -q "in_progress" && \
@@ -191,8 +192,8 @@ test_wal_recovery() {
     # Create tasks
     TASK=$($TM add "WAL test task" | grep -o '[a-f0-9]\{8\}')
     
-    # Force checkpoint
-    sync
+    # Force checkpoint simulation without host-wide sync.
+    sleep 0.1
     
     # Verify WAL files exist (if WAL enabled)
     if [ -f .task-orchestrator/tasks.db-wal ]; then

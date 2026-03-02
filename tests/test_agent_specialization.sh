@@ -42,6 +42,7 @@ if [ -d "$PROJECT_DIR/src" ]; then
 fi
 chmod +x ./tm
 TM="./tm"
+export TM_AGENT_ID="test_suite_agent"
 
 echo -e "${BLUE}===================================${NC}"
 echo -e "${BLUE}  Agent Specialization Tests       ${NC}"
