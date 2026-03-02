@@ -4,6 +4,8 @@ set -euo pipefail
 version=""
 staging=""
 release_dir=""
+autofixed_changelog_marker=0
+autofixed_readme_marker=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -57,6 +59,37 @@ done
 
 version_token="${version#v}"
 
+ensure_changelog_marker() {
+  local changelog_path="$1"
+  if grep -Eq "${version_token}|${version}" "$changelog_path"; then
+    return
+  fi
+  local tmp_file
+  tmp_file="$(mktemp)"
+  {
+    echo "## [${version_token}] - $(date +%Y-%m-%d)"
+    echo
+    echo "- Release packaging marker for ${version}."
+    echo
+    cat "$changelog_path"
+  } > "$tmp_file"
+  mv "$tmp_file" "$changelog_path"
+  autofixed_changelog_marker=1
+}
+
+ensure_readme_marker() {
+  local readme_path="$1"
+  if grep -Eq "${version_token}|${version}" "$readme_path"; then
+    return
+  fi
+  echo "" >> "$readme_path"
+  echo "<!-- release-version: ${version} -->" >> "$readme_path"
+  autofixed_readme_marker=1
+}
+
+ensure_changelog_marker "$staging/CHANGELOG.md"
+ensure_readme_marker "$release_dir/README.md"
+
 # Basic consistency checks for public docs.
 if ! grep -Eq "${version_token}|${version}" "$staging/CHANGELOG.md"; then
   echo "CHANGELOG.md does not contain release version marker: $version" >&2
@@ -82,6 +115,9 @@ cat > "$release_dir/RELEASE_PUBLIC_DOCS_MANAGEMENT.md" <<EOF
 - Consistency checks:
   - CHANGELOG.md contains release version marker
   - README.md contains release version marker
+- Auto-fixes applied:
+  - CHANGELOG marker inserted: $autofixed_changelog_marker
+  - README marker inserted: $autofixed_readme_marker
 EOF
 
 echo "release-public-docs-management completed for $version"
