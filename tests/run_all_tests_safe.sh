@@ -112,7 +112,6 @@ run_test_safe() {
     if [ $IS_WSL -eq 1 ]; then
         echo "Waiting 2 seconds before next test (WSL safety)..."
         sleep 2
-        sync
     else
         sleep 0.5
     fi

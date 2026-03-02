@@ -39,6 +39,7 @@ else
 fi
 
 chmod +x tm
+export TM_AGENT_ID="test_suite_agent"
 
 echo -e "${BLUE}===================================${NC}"
 echo -e "${BLUE}   Collaboration Features Tests    ${NC}"

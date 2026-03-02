@@ -61,11 +61,12 @@ setup() {
     fi
     TM="./tm"
     chmod +x "$TM"
+    export TM_AGENT_ID="test_suite_agent"
     
-    # Add WSL-specific delay for filesystem sync
+    # Add WSL-specific delay without host-wide sync (can hang on mounted filesystems)
     if [ $IS_WSL -eq 1 ]; then
         sleep 0.5
-        sync
+        sleep 0.1
     fi
     
     git init > /dev/null 2>&1
@@ -103,7 +104,7 @@ cleanup() {
     # Add delay for WSL
     if [ $IS_WSL -eq 1 ]; then
         sleep 0.5
-        sync
+        sleep 0.1
     fi
     
     cd / 2>/dev/null || cd /tmp

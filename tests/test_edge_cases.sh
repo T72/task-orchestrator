@@ -53,6 +53,9 @@ if [ -d "$PROJECT_DIR/src" ]; then
 fi
 TM="./tm"
 
+# Ensure orchestration enforcement allows non-interactive test commands.
+export TM_AGENT_ID="test_suite_agent"
+
 TEST_COUNT=0
 PASS_COUNT=0
 FAIL_COUNT=0
@@ -67,7 +70,7 @@ cleanup() {
     # Add delay for WSL
     if [ $IS_WSL -eq 1 ]; then
         sleep 0.5
-        sync
+        sleep 0.1
     fi
     
     cd "$SAVED_DIR" 2>/dev/null || cd /tmp

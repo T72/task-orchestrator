@@ -27,10 +27,10 @@ fi
 echo "Running tests in isolated directory: $TEST_DIR"
 cd "$TEST_DIR"
 
-# Add WSL-specific delay for filesystem sync
+# Add WSL-specific delay without host-wide sync (can hang on mounted filesystems)
 if [ $IS_WSL -eq 1 ]; then
     sleep 0.5
-    sync
+    sleep 0.1
 fi
 
 # Find tm executable safely
@@ -54,6 +54,9 @@ if [ -d "$PROJECT_DIR/src" ]; then
 fi
 TM="./tm"
 
+# Ensure orchestration enforcement allows non-interactive test commands.
+export TM_AGENT_ID="test_suite_agent"
+
 # Set environment variables for WSL safety
 if [ $IS_WSL -eq 1 ]; then
     export SQLITE_TMPDIR="$TEST_DIR"
@@ -71,10 +74,10 @@ cleanup() {
     # Kill any remaining tm processes
     pkill -f "tm.*$TEST_DIR" 2>/dev/null || true
     
-    # Add delay for WSL
+    # Add delay for WSL without host-wide sync
     if [ $IS_WSL -eq 1 ]; then
         sleep 0.5
-        sync
+        sleep 0.1
     fi
     
     cd "$SAVED_DIR" 2>/dev/null || cd /tmp
