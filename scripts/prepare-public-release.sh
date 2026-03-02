@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
+source "$ROOT_DIR/scripts/lib/python-resolver.sh"
 
 input_version="${1:-}"
 release_branch="${RELEASE_BRANCH:-main}"
@@ -41,7 +42,7 @@ if [[ "$allow_non_release_branch" != "1" && "$enforce_release_ref_sync" == "1" ]
 fi
 
 compute_release_version() {
-  python3 - "$input_version" <<'PY'
+  tm_python_run - "$input_version" <<'PY'
 import json
 import re
 import subprocess
@@ -194,7 +195,7 @@ delegation_used="none"
 docs_management_used="none"
 
 # Build sanitized staging tree from manifest.
-python3 scripts/public_manifest_tool.py build \
+tm_python_run scripts/public_manifest_tool.py build \
   --root "$ROOT_DIR" \
   --manifest "$ROOT_DIR/release/public-manifest.yaml" \
   --output "$staging_dir"
@@ -283,7 +284,7 @@ cat > "$release_dir/RELEASE_MANIFEST.md" <<EOF
 - Build timestamp (UTC): $build_time_utc
 - Source repository path: $ROOT_DIR
 - Build command:
-  - \`python3 scripts/public_manifest_tool.py build --root "$ROOT_DIR" --manifest "$ROOT_DIR/release/public-manifest.yaml" --output "$staging_dir"\`
+  - \`$(tm_python_label) scripts/public_manifest_tool.py build --root "$ROOT_DIR" --manifest "$ROOT_DIR/release/public-manifest.yaml" --output "$staging_dir"\`
 - Packaging commands:
   - \`tar -czf task-orchestrator-$release_version.tar.gz -C "$staging_dir" .\`
   - \`zip -qr task-orchestrator-$release_version.zip .\`
@@ -375,7 +376,7 @@ cp "$staging_dir/LICENSE" "$release_dir/LICENSE"
 cp "$staging_dir/THIRD_PARTY_LICENSES.md" "$release_dir/THIRD_PARTY_LICENSES.md"
 
 # Refresh manifest with final delegation state after optional delegation phase.
-python3 - "$release_dir/RELEASE_MANIFEST.md" "$delegation_used" "$docs_management_used" <<'PY'
+tm_python_run - "$release_dir/RELEASE_MANIFEST.md" "$delegation_used" "$docs_management_used" <<'PY'
 from pathlib import Path
 import sys
 
@@ -395,7 +396,7 @@ tar -czf "$release_dir/task-orchestrator-$release_version.tar.gz" -C "$staging_d
   if command -v zip >/dev/null 2>&1; then
     zip -qr "$release_dir/task-orchestrator-$release_version.zip" .
   else
-    python3 - "$release_dir/task-orchestrator-$release_version.zip" <<'PY'
+    tm_python_run - "$release_dir/task-orchestrator-$release_version.zip" <<'PY'
 import os
 import sys
 import zipfile
