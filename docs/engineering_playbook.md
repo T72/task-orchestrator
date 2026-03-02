@@ -258,6 +258,37 @@ When using AI:
 
 ---
 
+## 12. Branch Sync Governance (Main <-> Develop)
+
+### 12.1 Sync Model
+
+This repository uses a **linear sync model** for bringing `main` changes into `develop` when branch protections disallow merge commits in PR branches.
+
+Required behavior:
+- Do not rely on direct `main` -> `develop` backmerge PRs if blocked by merge-commit policy.
+- Create a sync branch from `develop`.
+- Cherry-pick required commits from `main`.
+- Open PR from sync branch into `develop`.
+
+### 12.2 Validation Criteria
+
+For linear sync, success is measured by patch parity of targeted commits, not strict ancestry parity.
+
+Recommended checks:
+
+```bash
+git log --oneline --no-merges --right-only --cherry-pick origin/develop...origin/main
+git cherry -v origin/develop origin/main
+```
+
+`git rev-list --left-right --count origin/main...origin/develop` remains useful for diagnostics, but is not the sole pass/fail signal under linear sync.
+
+### 12.3 Policy Alignment
+
+Branch protections, workflows, and PR templates must align to the chosen sync model to avoid contradictory states (blocked PRs with no viable merge path).
+
+---
+
 ## 12. Backlog Health & Engineering Maturity
 
 Backlog health is a leading indicator of system health.
