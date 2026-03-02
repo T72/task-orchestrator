@@ -4,5 +4,6 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/python-resolver.sh"
 
-python3 "$SCRIPT_DIR/public_manifest_tool.py" build "$@"
+tm_python_run "$SCRIPT_DIR/public_manifest_tool.py" build "$@"
